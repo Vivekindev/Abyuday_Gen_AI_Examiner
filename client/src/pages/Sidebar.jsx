@@ -113,7 +113,8 @@ const Sidebar = () => {
     <aside className="sidebar">
        <div className="leftTop">
          <div class='jaro' style={{color:'white'}}>ABYUDAY</div>
-         <div style={{display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',color:'#E1D9D1'}}>A Multi LLM Platform</div> 
+         
+         <center><div style={{display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',width:'fit-content',background:'white',color:'black',paddingRight:'0.5rem',paddingLeft:'0.5rem',borderRadius:'0.4rem'}}>A Generative-AI Examiner Platform</div> </center>
          </div>
       <NavHeader />
       <div className="leftMid">
