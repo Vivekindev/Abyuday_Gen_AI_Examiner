@@ -343,7 +343,7 @@ const counts = calculateTagCounts(selectedOptions);
 
         <div className="leftTop">
          <div class='jaro'>ABYUDAY</div>
-       <center>  <div style={{borderRadius:'0.4rem',display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',color:'#E1D9D1',width:'fit-content',background:'white',color:'black',paddingRight:'0.5rem',paddingLeft:'0.5rem'}}>A Generative-AI Examiner Platform</div> 
+       <center>  <div style={{borderRadius:'0.4rem',display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',width:'fit-content',background:'white',color:'black',paddingRight:'0.5rem',paddingLeft:'0.5rem'}}>A Generative-AI Examiner Platform</div> 
        </center>
       
          </div>
@@ -861,7 +861,10 @@ Submit
       </Modal>
 
     </ThemeProvider>
-    <Confetti numberOfPieces={confettiPieces}  />
+    <div style={{zIndex:'1000000'}}>
+    <Confetti numberOfPieces={confettiPieces}  />  
+    </div>
+    
     </>
   );
 };

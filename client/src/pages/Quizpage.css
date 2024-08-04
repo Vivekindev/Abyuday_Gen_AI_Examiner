@@ -96,7 +96,7 @@
   padding-left: 0.1rem;
   padding-right: 0.1rem;
   box-shadow: 5px 0 10px rgba(35, 35, 35, 0.5); /* Add this line */
-  z-index: 100;
+  z-index: 1;
 }
 
 
