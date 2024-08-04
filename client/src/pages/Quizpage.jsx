@@ -341,9 +341,11 @@ const counts = calculateTagCounts(selectedOptions);
       <div className="mainBox">
         <div className="leftBox">
 
-        <div className="leftTop" >
+        <div className="leftTop">
          <div class='jaro'>ABYUDAY</div>
-         <div style={{display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',color:'#E1D9D1'}}>A Multi LLM Platform</div> 
+       <center>  <div style={{borderRadius:'0.4rem',display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',color:'#E1D9D1',width:'fit-content',background:'white',color:'black',paddingRight:'0.5rem',paddingLeft:'0.5rem'}}>A Generative-AI Examiner Platform</div> 
+       </center>
+      
          </div>
 
 
