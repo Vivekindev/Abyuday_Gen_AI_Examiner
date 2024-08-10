@@ -116,14 +116,168 @@
   position: relative; /* Ensure the container can hold the overlay */
   width: 80%;
   height: 100vh;
-  
+display: flex;
+flex-direction: column;
+align-items: center;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-image: url('../assets/dashBg.jpg');
   
 }
+.rightDashTop{
+  width: 100%;
+  height: 70%;
+  display: flex;
+  flex-direction: row;
+  padding: 2rem;
+  
+}
+.rightDashBottom{
+  width: 100%;
+  height: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  
+}
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.specialBtn {
+  --glow-color: #8FBFFF; /* Soft blue glow */
+  --glow-spread-color: rgba(143, 191, 255, 0.6); /* Soft, semi-transparent blue */
+  --enhanced-glow-color: #ffffff; /* Light, ethereal blue for subtle glow */
+  --btn-color: #5381ED; /* Main button color */
+  --gradient-start: #25315f; /* Gradient start color */
+  --gradient-end: #5668ae; /* Gradient end color */
+  --shadow-color: rgba(83, 129, 237, 0.7); /* Semi-transparent shadow color */
+  --text-shadow-color: rgba(143, 191, 255, 0.8); /* Soft shadow for text */
+  border: .25em solid var(--glow-color);
+  padding: 1em 3em;
+  padding-right: 1.5rem;
+  color: var(--enhanced-glow-color);
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(145deg, var(--gradient-start), var(--gradient-end));
+  border-radius: 1em;
+  outline: none;
+  box-shadow: 0 0 1.5em .35em var(--glow-color),
+              0 0 4.5em 1.5em var(--glow-spread-color),
+              inset 0 0 .75em .25em var(--glow-color),
+              0 0 2em .5em var(--shadow-color);
+  text-shadow: 0 0 0.5em var(--text-shadow-color);
+  position: relative;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 1.5rem;
+  letter-spacing: 0.05em; /* Slight letter spacing for better readability */
+  
+}
+
+.specialBtn::after {
+  pointer-events: none;
+  content: "";
+  position: absolute;
+  top: 120%;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: var(--glow-spread-color);
+  filter: blur(2em);
+  opacity: .8;
+  transform: perspective(1.5em) rotateX(35deg) scale(1, .6);
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+
+.specialBtn:hover {
+  /* color: var(--btn-color); */
+  background: linear-gradient(145deg, var(--gradient-end), var(--gradient-start));
+  box-shadow: 0 0 2em .45em var(--glow-color),
+              0 0 5em 2em var(--glow-spread-color),
+              inset 0 0 .75em .25em var(--glow-color),
+              0 0 2.5em .6em var(--shadow-color);
+}
+
+.specialBtn:active {
+  box-shadow: 0 0 0.7em .35em var(--glow-color),
+              0 0 3em 2.5em var(--glow-spread-color),
+              inset 0 0 .5em .25em var(--glow-color),
+              0 0 2em .4em var(--shadow-color);
+}
+
+.specialBtn:hover::after {
+  opacity: 1;
+  transform: perspective(1.5em) rotateX(45deg) scale(1.1, .7);
+}
+
+/* Adding keyframe animations to make the content inside the button more dynamic */
+.specialBtn span {
+  position: relative;
+  display: inline-block;
+  animation: textGlow 1.5s infinite alternate;
+}
+
+@keyframes textGlow {
+  0% {
+    text-shadow: 0 0 0.5em var(--text-shadow-color),
+                 0 0 1.5em var(--text-shadow-color);
+  }
+  100% {
+    text-shadow: 0 0 1em var(--text-shadow-color),
+                 0 0 2.5em var(--text-shadow-color);
+  }
+}

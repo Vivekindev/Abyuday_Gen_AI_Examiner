@@ -1,0 +1,387 @@
+[
+    {
+      "questionText": "Given a recursive function F(n) = F(n-1) + F(n-2) where F(0) = 0 and F(1) = 1, what is the time complexity of calculating F(n) using memoization?",
+      "options": [
+        "O(n)",
+        "O(log n)",
+        "O(n^2)",
+        "O(2^n)"
+      ],
+      "answer": "O(n)",
+      "tag": ["Recursion", "Memoization", "Time Complexity"]
+    },
+    {
+      "questionText": "In a binary search tree, what is the worst-case time complexity for searching for a specific node?",
+      "options": [
+        "O(log n)",
+        "O(n)",
+        "O(n log n)",
+        "O(n^2)"
+      ],
+      "answer": "O(n)",
+      "tag": ["Binary Search Tree", "Search", "Time Complexity"]
+    },
+    {
+      "questionText": "What is the most efficient way to find the kth largest element in an unsorted array of n elements?",
+      "options": [
+        "Using a min-heap of size k",
+        "Using a max-heap of size k",
+        "Sorting the array and accessing the kth element",
+        "Using a binary search approach"
+      ],
+      "answer": "Using a min-heap of size k",
+      "tag": ["Sorting", "Heap", "Kth Largest Element"]
+    },
+    {
+      "questionText": "A graph with n vertices and e edges is represented using an adjacency list. What is the space complexity of this representation?",
+      "options": [
+        "O(n)",
+        "O(e)",
+        "O(n+e)",
+        "O(n^2)"
+      ],
+      "answer": "O(n+e)",
+      "tag": ["Graph", "Adjacency List", "Space Complexity"]
+    },
+    {
+      "questionText": "What is the difference between a stack and a queue in terms of their data access methods?",
+      "options": [
+        "Stacks allow insertion and deletion at both ends, while queues only allow insertion at one end and deletion at the other",
+        "Stacks follow a LIFO (Last In First Out) principle, while queues follow a FIFO (First In First Out) principle",
+        "Stacks are implemented using arrays, while queues are implemented using linked lists",
+        "Stacks are used for function call management, while queues are used for job scheduling"
+      ],
+      "answer": "Stacks follow a LIFO (Last In First Out) principle, while queues follow a FIFO (First In First Out) principle",
+      "tag": ["Stack", "Queue", "Data Structures"]
+    },
+    {
+      "questionText": "In a dynamic programming approach, what is the purpose of memoization?",
+      "options": [
+        "To reduce the number of recursive calls by storing previously computed results",
+        "To improve the readability of the code by reducing redundancy",
+        "To optimize memory usage by avoiding unnecessary variable declarations",
+        "To ensure that the algorithm terminates within a specified time limit"
+      ],
+      "answer": "To reduce the number of recursive calls by storing previously computed results",
+      "tag": ["Dynamic Programming", "Memoization", "Optimization"]
+    },
+    {
+      "questionText": "What is the time complexity of the following sorting algorithms: Bubble Sort, Merge Sort, Quick Sort?",
+      "options": [
+        "Bubble Sort: O(n log n), Merge Sort: O(n log n), Quick Sort: O(n log n)",
+        "Bubble Sort: O(n^2), Merge Sort: O(n log n), Quick Sort: O(n log n)",
+        "Bubble Sort: O(n), Merge Sort: O(n log n), Quick Sort: O(n log n)",
+        "Bubble Sort: O(n^2), Merge Sort: O(n), Quick Sort: O(n log n)"
+      ],
+      "answer": "Bubble Sort: O(n^2), Merge Sort: O(n log n), Quick Sort: O(n log n)",
+      "tag": ["Sorting", "Time Complexity", "Bubble Sort", "Merge Sort", "Quick Sort"]
+    },
+    {
+      "questionText": "What is the difference between a linked list and an array in terms of memory allocation?",
+      "options": [
+        "Linked lists allocate memory dynamically, while arrays allocate memory statically",
+        "Linked lists allocate memory contiguously, while arrays allocate memory non-contiguously",
+        "Linked lists use pointers to store data, while arrays use indices",
+        "Linked lists are more efficient for searching, while arrays are more efficient for insertion and deletion"
+      ],
+      "answer": "Linked lists allocate memory dynamically, while arrays allocate memory statically",
+      "tag": ["Linked List", "Array", "Memory Allocation"]
+    },
+    {
+      "questionText": "What is the purpose of a hash table in computer science?",
+      "options": [
+        "To store data in a sorted order for efficient searching",
+        "To provide a fast and efficient way to store and retrieve data based on a key",
+        "To implement a stack data structure for efficient function call management",
+        "To represent a graph data structure for efficient path finding"
+      ],
+      "answer": "To provide a fast and efficient way to store and retrieve data based on a key",
+      "tag": ["Hash Table", "Data Structures", "Key-Value Storage"]
+    },
+    {
+      "questionText": "What is the difference between a process and a thread in operating systems?",
+      "options": [
+        "Processes are independent entities with their own memory space, while threads share the same memory space",
+        "Processes are lightweight and share resources, while threads are heavyweight and have their own resources",
+        "Processes are used for multitasking, while threads are used for multithreading",
+        "Processes are created using the fork() system call, while threads are created using the pthread_create() function"
+      ],
+      "answer": "Processes are independent entities with their own memory space, while threads share the same memory space",
+      "tag": ["Process", "Thread", "Operating System"]
+    },
+    {
+      "questionText": "In a relational database, what is the purpose of a foreign key constraint?",
+      "options": [
+        "To ensure that the data in a table is unique",
+        "To define a relationship between two tables by referencing a primary key in another table",
+        "To enforce data integrity by preventing the insertion of duplicate values",
+        "To optimize query performance by creating indexes on frequently accessed columns"
+      ],
+      "answer": "To define a relationship between two tables by referencing a primary key in another table",
+      "tag": ["Relational Database", "Foreign Key", "Data Integrity"]
+    },
+    {
+      "questionText": "What is the difference between a static variable and a dynamic variable in programming?",
+      "options": [
+        "Static variables are declared within a function, while dynamic variables are declared outside a function",
+        "Static variables have a fixed memory address, while dynamic variables have a memory address that can change",
+        "Static variables are allocated on the stack, while dynamic variables are allocated on the heap",
+        "Static variables retain their value between function calls, while dynamic variables do not"
+      ],
+      "answer": "Static variables retain their value between function calls, while dynamic variables do not",
+      "tag": ["Static Variable", "Dynamic Variable", "Variable Scope"]
+    },
+    {
+      "questionText": "What is the purpose of a mutex in multithreaded programming?",
+      "options": [
+        "To ensure that only one thread can access a shared resource at a time",
+        "To allow multiple threads to access a shared resource concurrently",
+        "To synchronize the execution of multiple threads by allowing them to wait for each other",
+        "To communicate data between different threads by passing messages"
+      ],
+      "answer": "To ensure that only one thread can access a shared resource at a time",
+      "tag": ["Mutex", "Multithreading", "Synchronization"]
+    },
+    {
+      "questionText": "What is the difference between a TCP connection and a UDP connection?",
+      "options": [
+        "TCP is a connection-oriented protocol, while UDP is a connectionless protocol",
+        "TCP provides reliable data delivery, while UDP does not guarantee delivery",
+        "TCP is used for streaming applications, while UDP is used for real-time applications",
+        "TCP is more efficient than UDP, but it is also more complex"
+      ],
+      "answer": "TCP is a connection-oriented protocol, while UDP is a connectionless protocol",
+      "tag": ["TCP", "UDP", "Network Protocols"]
+    },
+    {
+      "questionText": "What is the purpose of a virtual memory in operating systems?",
+      "options": [
+        "To provide a larger virtual address space than the physical memory available",
+        "To improve memory access speed by caching frequently used data",
+        "To manage the allocation of disk space for storing files",
+        "To implement a file system for organizing and accessing files"
+      ],
+      "answer": "To provide a larger virtual address space than the physical memory available",
+      "tag": ["Virtual Memory", "Operating System", "Memory Management"]
+    },
+    {
+      "questionText": "In a graph, what is the difference between a depth-first search (DFS) and a breadth-first search (BFS)?",
+      "options": [
+        "DFS explores the graph in a depth-first manner, while BFS explores the graph in a breadth-first manner",
+        "DFS uses a stack to store the visited nodes, while BFS uses a queue",
+        "DFS is more efficient for finding the shortest path, while BFS is more efficient for finding all connected components",
+        "DFS is typically used for traversing a tree, while BFS is typically used for traversing a graph"
+      ],
+      "answer": "DFS explores the graph in a depth-first manner, while BFS explores the graph in a breadth-first manner",
+      "tag": ["Graph", "DFS", "BFS", "Search Algorithms"]
+    },
+    {
+      "questionText": "What is the difference between a compile-time error and a runtime error?",
+      "options": [
+        "Compile-time errors occur during the compilation process, while runtime errors occur during the execution of the program",
+        "Compile-time errors are caused by syntax errors, while runtime errors are caused by logical errors",
+        "Compile-time errors can be fixed by modifying the source code, while runtime errors can only be fixed by debugging the program",
+        "Compile-time errors are typically easier to identify and fix than runtime errors"
+      ],
+      "answer": "Compile-time errors occur during the compilation process, while runtime errors occur during the execution of the program",
+      "tag": ["Compile-time Error", "Runtime Error", "Programming Errors"]
+    },
+    {
+      "questionText": "What is the purpose of a cache in a computer system?",
+      "options": [
+        "To store frequently used data for faster access",
+        "To manage the allocation of memory for different processes",
+        "To implement a file system for organizing and accessing files",
+        "To protect the system from unauthorized access"
+      ],
+      "answer": "To store frequently used data for faster access",
+      "tag": ["Cache", "Computer System", "Performance Optimization"]
+    },
+    {
+      "questionText": "What is the difference between a synchronous and an asynchronous operation in programming?",
+      "options": [
+        "Synchronous operations block the execution of the program until they are completed, while asynchronous operations do not",
+        "Synchronous operations are typically faster than asynchronous operations, but they can block the program",
+        "Synchronous operations are used for I/O operations, while asynchronous operations are used for CPU-bound tasks",
+        "Synchronous operations are implemented using threads, while asynchronous operations are implemented using events"
+      ],
+      "answer": "Synchronous operations block the execution of the program until they are completed, while asynchronous operations do not",
+      "tag": ["Synchronous Operation", "Asynchronous Operation", "Concurrency"]
+    },
+    {
+      "questionText": "What is the difference between a class and an object in object-oriented programming?",
+      "options": [
+        "Classes are blueprints for creating objects, while objects are instances of classes",
+        "Classes are used for data abstraction, while objects are used for data encapsulation",
+        "Classes are static entities, while objects are dynamic entities",
+        "Classes are defined using the class keyword, while objects are created using the new keyword"
+      ],
+      "answer": "Classes are blueprints for creating objects, while objects are instances of classes",
+      "tag": ["Class", "Object", "Object-Oriented Programming"]
+    },
+    {
+      "questionText": "What is the difference between a constructor and a destructor in object-oriented programming?",
+      "options": [
+        "Constructors are used to initialize an object, while destructors are used to clean up resources when an object is destroyed",
+        "Constructors are called implicitly, while destructors are called explicitly",
+        "Constructors can take parameters, while destructors cannot",
+        "Constructors are used for creating new objects, while destructors are used for deleting existing objects"
+      ],
+      "answer": "Constructors are used to initialize an object, while destructors are used to clean up resources when an object is destroyed",
+      "tag": ["Constructor", "Destructor", "Object-Oriented Programming"]
+    },
+    {
+      "questionText": "What is the purpose of a compiler in software development?",
+      "options": [
+        "To convert high-level programming language code into machine-readable code",
+        "To debug and fix errors in the source code",
+        "To manage the allocation of memory for different processes",
+        "To implement a file system for organizing and accessing files"
+      ],
+      "answer": "To convert high-level programming language code into machine-readable code",
+      "tag": ["Compiler", "Software Development", "Code Compilation"]
+    },
+    {
+      "questionText": "What is the difference between a procedural programming language and an object-oriented programming language?",
+      "options": [
+        "Procedural programming languages focus on procedures and functions, while object-oriented programming languages focus on objects and classes",
+        "Procedural programming languages are more efficient than object-oriented programming languages",
+        "Procedural programming languages are typically used for smaller projects, while object-oriented programming languages are typically used for larger projects",
+        "Procedural programming languages are easier to learn than object-oriented programming languages"
+      ],
+      "answer": "Procedural programming languages focus on procedures and functions, while object-oriented programming languages focus on objects and classes",
+      "tag": ["Procedural Programming", "Object-Oriented Programming", "Programming Paradigms"]
+    },
+    {
+      "questionText": "What is the purpose of a database management system (DBMS)?",
+      "options": [
+        "To store and manage data in a structured and organized manner",
+        "To implement a file system for organizing and accessing files",
+        "To protect the system from unauthorized access",
+        "To provide a graphical user interface for interacting with the system"
+      ],
+      "answer": "To store and manage data in a structured and organized manner",
+      "tag": ["DBMS", "Database Management", "Data Storage"]
+    },
+    {
+      "questionText": "What is the difference between a primary key and a foreign key in a relational database?",
+      "options": [
+        "Primary keys are used to uniquely identify rows in a table, while foreign keys are used to define relationships between tables",
+        "Primary keys are typically integers, while foreign keys can be any data type",
+        "Primary keys are required for every table, while foreign keys are optional",
+        "Primary keys are used for indexing, while foreign keys are used for data validation"
+      ],
+      "answer": "Primary keys are used to uniquely identify rows in a table, while foreign keys are used to define relationships between tables",
+      "tag": ["Primary Key", "Foreign Key", "Relational Database"]
+    },
+    {
+      "questionText": "What is the purpose of a data structure in computer science?",
+      "options": [
+        "To organize and store data in a way that allows efficient access and manipulation",
+        "To implement algorithms for solving specific problems",
+        "To provide a graphical user interface for interacting with the system",
+        "To manage the allocation of memory for different processes"
+      ],
+      "answer": "To organize and store data in a way that allows efficient access and manipulation",
+      "tag": ["Data Structure", "Computer Science", "Data Organization"]
+    },
+    {
+      "questionText": "What is the difference between a static website and a dynamic website?",
+      "options": [
+        "Static websites are generated on the server-side, while dynamic websites are generated on the client-side",
+        "Static websites are typically simpler and less interactive than dynamic websites",
+        "Static websites use HTML, CSS, and JavaScript, while dynamic websites use server-side scripting languages",
+        "Static websites are more secure than dynamic websites"
+      ],
+      "answer": "Static websites are typically simpler and less interactive than dynamic websites",
+      "tag": ["Static Website", "Dynamic Website", "Web Development"]
+    },
+    {
+      "questionText": "What is the purpose of a firewall in a computer network?",
+      "options": [
+        "To prevent unauthorized access to the network",
+        "To manage the allocation of network resources",
+        "To route network traffic between different devices",
+        "To encrypt network communication"
+      ],
+      "answer": "To prevent unauthorized access to the network",
+      "tag": ["Firewall", "Computer Network", "Security"]
+    },
+    {
+      "questionText": "What is the difference between a client and a server in a computer network?",
+      "options": [
+        "Clients request services from servers, while servers provide services to clients",
+        "Clients are typically more powerful than servers",
+        "Clients are used for accessing the internet, while servers are used for hosting websites",
+        "Clients are located on the internet, while servers are located on a local network"
+      ],
+      "answer": "Clients request services from servers, while servers provide services to clients",
+      "tag": ["Client", "Server", "Computer Network"]
+    },
+    {
+      "questionText": "What is the purpose of a network protocol in a computer network?",
+      "options": [
+        "To define the rules and procedures for communication between devices",
+        "To manage the allocation of network resources",
+        "To encrypt network communication",
+        "To provide a graphical user interface for interacting with the network"
+      ],
+      "answer": "To define the rules and procedures for communication between devices",
+      "tag": ["Network Protocol", "Computer Network", "Communication"]
+    },
+    {
+      "questionText": "What is the difference between a packet and a frame in a computer network?",
+      "options": [
+        "Packets are used for data transmission over the internet, while frames are used for data transmission over a local network",
+        "Packets are encapsulated in frames for transmission over a network",
+        "Packets are used for TCP communication, while frames are used for UDP communication",
+        "Packets are typically smaller than frames"
+      ],
+      "answer": "Packets are encapsulated in frames for transmission over a network",
+      "tag": ["Packet", "Frame", "Computer Network"]
+    },
+    {
+      "questionText": "What is the purpose of a router in a computer network?",
+      "options": [
+        "To connect different networks together",
+        "To manage the allocation of network resources",
+        "To encrypt network communication",
+        "To provide a graphical user interface for interacting with the network"
+      ],
+      "answer": "To connect different networks together",
+      "tag": ["Router", "Computer Network", "Network Connectivity"]
+    },
+    {
+      "questionText": "What is the difference between a switch and a hub in a computer network?",
+      "options": [
+        "Switches are more intelligent than hubs and can forward data to specific devices based on their MAC addresses",
+        "Switches are used for connecting devices on a local network, while hubs are used for connecting devices on a wide-area network",
+        "Switches are more expensive than hubs",
+        "Switches use a star topology, while hubs use a bus topology"
+      ],
+      "answer": "Switches are more intelligent than hubs and can forward data to specific devices based on their MAC addresses",
+      "tag": ["Switch", "Hub", "Computer Network"]
+    },
+    {
+      "questionText": "What is the purpose of a DNS server in a computer network?",
+      "options": [
+        "To translate domain names into IP addresses",
+        "To manage the allocation of network resources",
+        "To encrypt network communication",
+        "To provide a graphical user interface for interacting with the network"
+      ],
+      "answer": "To translate domain names into IP addresses",
+      "tag": ["DNS Server", "Computer Network", "Domain Name Resolution"]
+    },
+    {
+      "questionText": "What is the difference between a VPN and a proxy server?",
+      "options": [
+        "VPNs encrypt all network traffic, while proxy servers only encrypt specific traffic",
+        "VPNs change your IP address, while proxy servers do not",
+        "VPNs are typically used for accessing restricted websites, while proxy servers are typically used for anonymity",
+        "VPNs are more secure than proxy servers"
+      ],
+      "answer": "VPNs encrypt all network traffic, while proxy servers only encrypt specific traffic",
+      "tag": ["VPN", "Proxy Server", "Network Security"]
+    }
+  ]

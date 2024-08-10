@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Box, Button, Typography, Modal, Backdrop, Fade, TextField, Slider, Switch, FormControlLabel } from '@mui/material';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-
+import { Box, Button, Typography, Modal, Backdrop, Fade, TextField, Slider, Switch,  } from '@mui/material';
+import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+import './modal.css';
+import './Sidebar.css'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 const theme = createTheme({
   palette: {
     mode: 'dark',
     background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+      default: '#000000',
+      paper: '#000000',
     },
     text: {
       primary: '#ffffff',
@@ -38,139 +40,131 @@ const modalStyle = {
   outline: 'none',
 };
 
+
+
 const ConfirmationModal = () => {
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
-  const [numQuestions, setNumQuestions] = useState(10);
+  const [numQuestions, setNumQuestions] = useState(12);
   const [difficulty, setDifficulty] = useState(5);
-  const [logical, setLogical] = useState(false);
-  const [memory, setMemory] = useState(false);
+
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const handleConfirm = () => {
-    // Handle the final submit action here
     setOpen(false);
-    console.log('Final submit confirmed', { prompt, numQuestions, difficulty, logical, memory });
+    console.log('Final submit confirmed', { prompt, numQuestions, difficulty });
+  };
+
+  const getSliderColor = (value) => {
+    if(value <= 3)
+      return 'white';
+    else if(value > 3 && value <= 6)
+      return '#1976d2';
+    else 
+      return '#ff1744';
   };
 
   return (
     <ThemeProvider theme={theme}>
-      <Button variant="contained" color="primary" onClick={handleOpen}>
-        Open Confirmation Modal
-      </Button>
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        open={open}
-        onClose={handleClose}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-          style: {
-            backdropFilter: 'blur(10px)', // Blur effect on the backdrop
-            backgroundColor: 'rgba(255, 255, 255, 0.1)', // White overlay at 10% opacity
-          }
-        }}
-      >
-        <Fade in={open}>
-          <Box sx={modalStyle}>
-            <Typography id="transition-modal-title" variant="h6" component="h2" color="textPrimary" gutterBottom>
-              Generate Questions
-            </Typography>
-            <TextField
-              fullWidth
-              margin="normal"
-              label="Prompt"
-              placeholder="Enter the topic for question generation"
-              variant="outlined"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              InputLabelProps={{ style: { color: '#ffffff' } }}
-              InputProps={{ style: { color: '#ffffff' } }}
-            />
-            <TextField
-              fullWidth
-              margin="normal"
-              label="Number of Questions"
-              type="number"
-              inputProps={{ min: 1 }}
-              variant="outlined"
-              value={numQuestions}
-              onChange={(e) => setNumQuestions(e.target.value)}
-              InputLabelProps={{ style: { color: '#ffffff' } }}
-              InputProps={{ style: { color: '#ffffff' } }}
-            />
-            <Typography id="difficulty-slider" gutterBottom color="textPrimary">
-              Difficulty Level
-            </Typography>
-            <Slider
-              value={difficulty}
-              onChange={(e, newValue) => setDifficulty(newValue)}
-              aria-labelledby="difficulty-slider"
-              valueLabelDisplay="auto"
-              step={1}
-              marks
-              min={1}
-              max={10}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={logical}
-                  onChange={(e) => setLogical(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label="Logical Based"
-              sx={{ color: 'text.primary' }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={memory}
-                  onChange={(e) => setMemory(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label="Memory Based"
-              sx={{ color: 'text.primary' }}
-            />
-            <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
-              <Button
+      <div className="mainBox">
+        
+        <button onClick={handleOpen} className="specialBtn" style={{transform:'translate(0,-1.5rem)'}}><AutoAwesomeIcon sx={{marginRight:'1rem'}}/> Generate Test </button>
+        <Modal
+          aria-labelledby="transition-modal-title"
+          aria-describedby="transition-modal-description"
+          open={open}
+          onClose={handleClose}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{
+            timeout: 500,
+            style: {
+              backdropFilter: 'blur(10px)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            }
+          }}
+        >
+          <Fade in={open}>
+            <Box sx={modalStyle}>
+              <Typography id="transition-modal-title" variant="h6" component="h2" color="textPrimary" gutterBottom>
+                Generate Questions
+              </Typography>
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Prompt"
+                placeholder="Enter the prompt for question generation"
                 variant="outlined"
-                color="secondary"
-                onClick={handleClose}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                InputLabelProps={{ style: { color: '#ffffff' } }}
+                InputProps={{ style: { color: '#ffffff' } }}
+              />
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Number of Questions"
+                type="number"
+                inputProps={{ min: 1 }}
+                variant="outlined"
+                value={numQuestions}
+                onChange={(e) => setNumQuestions(e.target.value)}
+                InputLabelProps={{ style: { color: '#ffffff' } }}
+                InputProps={{ style: { color: '#ffffff' } }}
+              />
+              <Typography id="difficulty-slider" gutterBottom color="textPrimary">
+                Difficulty Level
+              </Typography>
+              <Slider
+                value={difficulty}
+                onChange={(e, newValue) => setDifficulty(newValue)}
+                aria-labelledby="difficulty-slider"
+                valueLabelDisplay="auto"
+                step={1}
+                marks
+                min={1}
+                max={10}
                 sx={{
-                  borderColor: '#ffffff',
-                  color: '#ffffff',
-                  '&:hover': {
+                  color: getSliderColor(difficulty),
+                }}
+              />
+            
+              <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleClose}
+                  sx={{
                     borderColor: '#ffffff',
-                    backgroundColor: '#333333',
-                  },
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleConfirm}
-                sx={{
-                  backgroundColor: '#ffffff',
-                  color: '#000000',
-                  '&:hover': {
-                    backgroundColor: '#e0e0e0',
-                  },
-                }}
-              >
-                Confirm
-              </Button>
+                    color: '#ffffff',
+                    '&:hover': {
+                      borderColor: '#ffffff',
+                      backgroundColor: '#333333',
+                    },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleConfirm}
+                  sx={{
+                    backgroundColor: '#ffffff',
+                    color: '#000000',
+                    '&:hover': {
+                      backgroundColor: '#e0e0e0',
+                    },
+                  }}
+                >
+                  Confirm
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        </Fade>
-      </Modal>
+          </Fade>
+        </Modal>
+      </div>
     </ThemeProvider>
   );
 };
