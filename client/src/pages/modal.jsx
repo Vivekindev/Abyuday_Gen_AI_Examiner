@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Box, Button, Typography, Modal, Backdrop, Fade, TextField, Slider, Switch,  } from '@mui/material';
-import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+import { Box, Button, Typography, Modal, Backdrop, Fade, TextField, Slider, Select, MenuItem } from '@mui/material';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import './modal.css';
-import './Sidebar.css'
+import './Sidebar.css';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+
 const theme = createTheme({
   palette: {
     mode: 'dark',
@@ -40,20 +41,18 @@ const modalStyle = {
   outline: 'none',
 };
 
-
-
 const ConfirmationModal = () => {
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [numQuestions, setNumQuestions] = useState(12);
   const [difficulty, setDifficulty] = useState(5);
-
+  const [selectedOption, setSelectedOption] = useState('Gemini 1.5 Flash');
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const handleConfirm = () => {
     setOpen(false);
-    console.log('Final submit confirmed', { prompt, numQuestions, difficulty });
+    console.log('Final submit confirmed', { prompt, numQuestions, difficulty, selectedOption });
   };
 
   const getSliderColor = (value) => {
@@ -68,8 +67,9 @@ const ConfirmationModal = () => {
   return (
     <ThemeProvider theme={theme}>
       <div className="mainBox">
-        
-        <button onClick={handleOpen} className="specialBtn" style={{transform:'translate(0,-1.5rem)'}}><AutoAwesomeIcon sx={{marginRight:'1rem'}}/> Generate Test </button>
+        <button onClick={handleOpen} className="specialBtn" style={{ transform: 'translate(0,-1.5rem)' }}>
+          <AutoAwesomeIcon sx={{ marginRight: '1rem' }} /> Generate Test
+        </button>
         <Modal
           aria-labelledby="transition-modal-title"
           aria-describedby="transition-modal-description"
@@ -129,7 +129,30 @@ const ConfirmationModal = () => {
                   color: getSliderColor(difficulty),
                 }}
               />
-            
+              <Typography id="select-option" gutterBottom color="textPrimary">
+                Select Model
+              </Typography>
+              <Select
+                fullWidth
+                value={selectedOption}
+                onChange={(e) => setSelectedOption(e.target.value)}
+                variant="outlined"
+                sx={{
+                  color: '#ffffff',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#ffffff',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#ffffff',
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: '#ffffff',
+                  },
+                }}
+              >
+                <MenuItem value="Gemini 1.5 Flash">Gemini 1.5 Flash</MenuItem>
+                <MenuItem value="Gemini 1.5 Pro">Gemini 1.5 Pro</MenuItem>
+              </Select>
               <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
                 <Button
                   variant="outlined"

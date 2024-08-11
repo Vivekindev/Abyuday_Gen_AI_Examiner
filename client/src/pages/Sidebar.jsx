@@ -180,6 +180,10 @@ const Sidebar = () => {
 
     <div className="rightDash">
 
+    <div className="rightDashBottom">
+        <Modal/>
+      </div>
+
       <div className="rightDashTop">
       <StyledCard>
       <CardContent>
@@ -240,9 +244,7 @@ const Sidebar = () => {
     </StyledCard>
       </div>
 
-      <div className="rightDashBottom">
-        <Modal/>
-      </div>
+     
         
     </div>
 

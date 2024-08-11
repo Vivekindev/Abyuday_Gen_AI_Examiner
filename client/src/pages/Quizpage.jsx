@@ -487,14 +487,26 @@ const counts = calculateTagCounts(selectedOptions);
             </Typography>
             {showScore? (
               
-              <Accordion >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                aria-controls="panel1a-content"
-                id="panel1a-header"
-               
-              >
-               <button
+              <Accordion
+  style={{
+    border:'none',
+    backgroundColor: 'transparent',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', // drop shadow
+    borderRadius: '0.5rem', // optional: add border radius for a smoother look
+    border:'1px solid #4B4E55',
+  }}
+  sx={{
+    '&:before': {
+      display: 'none', // remove the default border line
+    },
+  }}
+>
+  <AccordionSummary
+    expandIcon={<ExpandMoreIcon />}
+    aria-controls="panel1a-content"
+    id="panel1a-header"
+  >
+    <button
       style={{
         minWidth: '9rem',
         fontSize: '1.1rem',
@@ -517,41 +529,49 @@ const counts = calculateTagCounts(selectedOptions);
     >
       Question Tags
     </button>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                  {/* Additional content can go here if needed */}
-                </Typography>
-                <Container>
-        <Paper style={{ height: 400, width: '100%', marginTop: '1em' }}>
+  </AccordionSummary>
+  <AccordionDetails>
+    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+      {/* Additional content can go here if needed */}
+    </Typography>
+    <Container>
+      <Paper
+        style={{
+          height: 400,
+          width: '100%',
+          marginTop: '1em',
+          backgroundColor: 'transparent', // transparent background
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', // drop shadow
+        }}
+      >
         <DataGrid
-            rows={rows}
-            columns={columns}
-            pageSize={5}
-            disableSelectionOnClick
-            sx={{
-              '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid #333',
-                backgroundColor:'#292929',
-                color: '#ffffff',
-              },
-              '& .MuiDataGrid-columnHeaders': {
-                borderBottom: '1px solid #333',
-                backgroundColor: '#1C253A',
-                color: '#ffffff',
-              },
-              '& .MuiDataGrid-footerContainer': {
-                borderTop: '1px solid #333',
-                backgroundColor: '#121212',
-                color: '#ffffff',
-              },
-            }}
-          />
-        </Paper>
-      </Container>
-                
-              </AccordionDetails>
-            </Accordion>
+          rows={rows}
+          columns={columns}
+          pageSize={5}
+          disableSelectionOnClick
+          sx={{
+            '& .MuiDataGrid-cell': {
+              borderBottom: '1px solid #333',
+              backgroundColor: 'transparent', // transparent background
+              color: '#ffffff',
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              borderBottom: '1px solid #333',
+              backgroundColor: 'transparent', // transparent background
+              color: '#ffffff',
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderTop: '1px solid #333',
+              backgroundColor: '#121212', // transparent background
+              color: '#ffffff',
+            },
+          }}
+        />
+      </Paper>
+    </Container>
+  </AccordionDetails>
+</Accordion>
+
 
               ):(
                 <></>
@@ -583,14 +603,26 @@ const counts = calculateTagCounts(selectedOptions);
                   <div>
       
 
-                  <Accordion sx={{ boxShadow: theme.shadows[3], borderRadius: '8px', overflow: 'hidden', marginBottom: '1rem' }}>
-      <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        aria-controls="panel2a-content"
-        id="panel2a-header"
-        sx={{ backgroundColor: '#151B26', color: theme.palette.primary.contrastText }}
-      >
-         <button
+                  <Accordion
+  sx={{
+    boxShadow: theme.shadows[3],
+    borderRadius: '8px !important',
+    border:'1px solid #4B4E55',
+    overflow: 'hidden',
+    marginBottom: '1rem',
+    backgroundColor: 'transparent', // transparent background
+    '&:before': {
+      display: 'none', // remove the default border line
+    },
+  }}
+>
+  <AccordionSummary
+    expandIcon={<ExpandMoreIcon />}
+    aria-controls="panel2a-content"
+    id="panel2a-header"
+    sx={{ backgroundColor: '', color: theme.palette.primary.contrastText }}
+  >
+    <button
       style={{
         minWidth: '9rem',
         fontSize: '1.1rem',
@@ -611,67 +643,97 @@ const counts = calculateTagCounts(selectedOptions);
       onMouseDown={(e) => e.currentTarget.style.backgroundColor = 'rgba(180, 180, 180, 0.4)'} // active color
       onMouseUp={(e) => e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.4)'} // hover color after click
     >
-          Solutions
-        </button>
-      </AccordionSummary>
-      <AccordionDetails>
-        {questions.map((q, index) => (
-          <Accordion key={index} sx={{ marginBottom: '1rem', boxShadow: theme.shadows[1], borderRadius: '8px' }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls={`panel${index + 1}-content`}
-              id={`panel${index + 1}-header`}
-              sx={{ backgroundColor: theme.palette.background.default, alignItems: 'center' }}
-            >
-              <Box sx={{ backgroundColor: '#fff', color: '#000', padding: '0.5rem 1rem', borderRadius: '4px', marginRight: '1rem' ,minWidth:'3rem',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                {index + 1}
-              </Box>
-              <Typography sx={{ textAlign: 'left', fontWeight: 400, fontSize: '1rem' }}>
-                {q.questionText}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Box>
-                {q.options.map((option, idx) => (
-                  <Paper
-                    key={idx}
-                    elevation={3}
-                    sx={{
-                     
-                      p: 2,
-                      mb: 1,
-                      backgroundColor: selectedOptions[index] === option
-                        ? option === q.answer
-                          ? '#4caf50'  // Green for correct answer
-                          : '#8B0000'  // Red for incorrect answer
-                        : option === q.answer
-                        ? '#0B6E3B'  // Light green for correct answer
-                        : 'inherit',
-                      color: selectedOptions[index] === option ? '#ffffff' : 'inherit',
-                      borderColor: option === q.answer
-                        ? '#4caf50'
-                        : selectedOptions[index] === option
-                        ? '#f44336'
-                        : 'rgba(255, 255, 255, 0.23)',
-                      borderWidth: '2px',
-                      borderStyle: 'solid',
-                      borderRadius: '8px',
-                      transition: 'background-color 0.3s, border-color 0.3s, color 0.3s',
-                    }}
-                  >
-                    <FormControlLabel
-                      control={<Radio checked={selectedOptions[index] === option} />}
-                      label={option}
-                      sx={{ width: '100%' ,}}
-                    />
-                  </Paper>
-                ))}
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-        ))}
-      </AccordionDetails>
-    </Accordion>
+      Solutions
+    </button>
+  </AccordionSummary>
+  <AccordionDetails>
+    {questions.map((q, index) => (
+      <Accordion
+        key={index}
+        sx={{
+          marginBottom: '1rem',
+          boxShadow: theme.shadows[1],
+          borderRadius: '8px',
+          backgroundColor: 'transparent', // transparent background
+          
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls={`panel${index + 1}-content`}
+          id={`panel${index + 1}-header`}
+          sx={{
+            backgroundColor: theme.palette.background.default,
+            alignItems: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              backgroundColor: '#fff',
+              color: '#000',
+              padding: '0.5rem 1rem',
+              borderRadius: '4px',
+              marginRight: '1rem',
+              minWidth: '3rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {index + 1}
+          </Box>
+          <Typography
+            sx={{ textAlign: 'left', fontWeight: 400, fontSize: '1rem' }}
+          >
+            {q.questionText}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box>
+            {q.options.map((option, idx) => (
+              <Paper
+                key={idx}
+                elevation={3}
+                sx={{
+                  p: 2,
+                  mb: 1,
+                  backgroundColor:
+                    selectedOptions[index] === option
+                      ? option === q.answer
+                        ? '#4caf50' // Green for correct answer
+                        : '#8B0000' // Red for incorrect answer
+                      : option === q.answer
+                      ? '#0B6E3B' // Light green for correct answer
+                      : 'transparent', // transparent background
+                  color:
+                    selectedOptions[index] === option ? '#ffffff' : 'inherit',
+                  borderColor:
+                    option === q.answer
+                      ? '#4caf50'
+                      : selectedOptions[index] === option
+                      ? '#f44336'
+                      : 'rgba(255, 255, 255, 0.23)',
+                  borderWidth: '2px',
+                  borderStyle: 'solid',
+                  borderRadius: '8px',
+                  transition:
+                    'background-color 0.3s, border-color 0.3s, color 0.3s',
+                }}
+              >
+                <FormControlLabel
+                  control={<Radio checked={selectedOptions[index] === option} />}
+                  label={option}
+                  sx={{ width: '100%' }}
+                />
+              </Paper>
+            ))}
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+    ))}
+  </AccordionDetails>
+</Accordion>
+
     </div>
             </Box>
           </Box>
