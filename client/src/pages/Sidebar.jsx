@@ -186,7 +186,7 @@ const Sidebar = () => {
 
       <div className="rightDashTop">
       <StyledCard>
-      <CardContent>
+      <CardContent >
         <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
           Model
         </Typography>

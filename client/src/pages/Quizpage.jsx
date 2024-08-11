@@ -489,7 +489,7 @@ const counts = calculateTagCounts(selectedOptions);
               
               <Accordion
   style={{
-    border:'none',
+   
     backgroundColor: 'transparent',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', // drop shadow
     borderRadius: '0.5rem', // optional: add border radius for a smoother look
