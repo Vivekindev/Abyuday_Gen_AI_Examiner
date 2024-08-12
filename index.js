@@ -32,10 +32,11 @@ res.status(500).send(err);
     })
 })
 
-
-
-
 app.use(express.json());
+
+
+
+
 
 
 app.listen(PORT,()=>{

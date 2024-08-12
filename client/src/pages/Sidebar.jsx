@@ -23,7 +23,7 @@ import Modal from './modal'
 const StyledCard = styled(Card)({
   width: 500,
   borderRadius: '16px',
-  backgroundColor: 'rgba(17, 24, 39, 0.6)',
+  backgroundColor: 'transparent',
   backdropFilter: 'blur(10px)',
   boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
   color: 'white',
@@ -33,7 +33,8 @@ const StyledCard = styled(Card)({
   transition: 'transform 0.3s ease-in-out',
   '&:hover': {
     transform: 'scale(1.05)',
-
+    backdropFilter: 'none',
+    backgroundColor:'transparent'
   },
 });
 
@@ -121,6 +122,20 @@ const SubMenu = ({ item, activeItem, handleClick }) => {
 };
 
 const Sidebar = () => {
+  
+  //------------------------------------SnackBar-------------------------------------//
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const handleOpenSnackbar = () => {
+    setSnackbarOpen(true);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+  //---------------------------------------------------------------------------------//
+
+
   const [activeItem, setActiveItem] = useState("");
 
   const handleClick = (item) => {

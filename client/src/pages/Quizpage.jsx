@@ -778,7 +778,7 @@ const counts = calculateTagCounts(selectedOptions);
           </Container>
 
 {(showScore?(<></>):(
-  <Container component={Paper} elevation={3} sx={{ p: 2, mt: 5, bgcolor: 'background.paper',marginTop: 'auto',marginBottom:'1.5rem',borderRadius:'8rem'}}>
+  <Container component={Paper} elevation={3} sx={{ p: 2, mt: 5, backdropFilter: 'blur(10px)',border:'1px solid #4B4E55', bgcolor: 'transparent',marginTop: 'auto',marginBottom:'1.5rem',borderRadius:'8rem'}}>
   <Box display="flex" justifyContent="space-between" sx={{ mt: 0 }}>
     <div>
 <Button

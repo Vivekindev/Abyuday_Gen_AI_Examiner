@@ -225,7 +225,7 @@ align-items: center;
   justify-content: center;
   padding-left: 1.5rem;
   letter-spacing: 0.05em; /* Slight letter spacing for better readability */
-  
+  cursor: pointer;
 }
 
 .specialBtn::after {
@@ -246,10 +246,10 @@ align-items: center;
 .specialBtn:hover {
   /* color: var(--btn-color); */
   background: linear-gradient(145deg, var(--gradient-end), var(--gradient-start));
-  box-shadow: 0 0 2em .45em var(--glow-color),
-              0 0 5em 2em var(--glow-spread-color),
-              inset 0 0 .75em .25em var(--glow-color),
-              0 0 2.5em .6em var(--shadow-color);
+  box-shadow: 0 0 1em .25em var(--glow-color),
+              0 0 2em 1em var(--glow-spread-color),
+              inset 0 0 .25em .05em var(--glow-color),
+              0 0 0.5em .2em var(--shadow-color);
 }
 
 .specialBtn:active {
@@ -260,8 +260,8 @@ align-items: center;
 }
 
 .specialBtn:hover::after {
-  opacity: 1;
-  transform: perspective(1.5em) rotateX(45deg) scale(1.1, .7);
+  opacity: 0.5;
+  transform: perspective(1.5em) rotateX(50deg) scale(1.1, .7);
 }
 
 /* Adding keyframe animations to make the content inside the button more dynamic */

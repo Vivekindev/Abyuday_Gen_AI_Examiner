@@ -5,6 +5,7 @@ import Modal from './pages/modal';
 import Table from './pages/Table';
 import Sidebar from './pages/Sidebar';
 import Confettii from './pages/confettii'
+import CustomSnackbar from './pages/CustomSnackbar';
 // import Register from './pages/Register';
 // import Login from './pages/Login';
 // import Homepage from './pages/Homepage';
@@ -19,6 +20,7 @@ const App = () => {
         <Route path='/table' element={<Table />} />
         <Route path='/sidebar' element={<Sidebar />} />
         <Route path='/confetti' element={<Confettii />} />
+        <Route path='/customsnackbar' element={<CustomSnackbar />} />
         {/* <Route path='/register' element={<Register />} />
         <Route path='/login' element={<Login />} />
         <Route path='/home' element={<Homepage />} />

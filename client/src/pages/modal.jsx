@@ -50,8 +50,9 @@ const ConfirmationModal = () => {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const handleConfirm = () => {
+  const handleConfirm = async() => {
     setOpen(false);
+    
     console.log('Final submit confirmed', { prompt, numQuestions, difficulty, selectedOption });
   };
 
