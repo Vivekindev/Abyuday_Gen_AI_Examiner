@@ -464,7 +464,7 @@ const counts = calculateTagCounts(selectedOptions);
 
         
         <div className="quizBox">
-          <Container component={Paper} elevation={3} sx={{ p: 4, mt: 5, background: 'transparent',boxShadow:'none'}}>
+          <Container component={Paper} elevation={3} sx={{ p: 4, mt: 4, background: 'transparent',boxShadow:'none'}}>
             <div style={{display:'flex',flexDirection:'row',justifyContent:'space-between',alignItems:'center'}}>
            
               {showScore? (
@@ -566,7 +566,7 @@ const counts = calculateTagCounts(selectedOptions);
       <GppGoodIcon sx={{marginRight:'0.5rem'}}/>  Test on Computer Fundamentals
       </button>
     </AccordionSummary>
-    <AccordionDetails style={{ padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', borderTop: '1px solid #4B4E55' }}>
+    <AccordionDetails style={{ paddingBottom: '1.9rem', borderTop: '1px solid #4B4E55' }}>
       <Container>
       <Paper
         style={{
@@ -828,7 +828,7 @@ const counts = calculateTagCounts(selectedOptions);
       Question Tags
     </button>
   </AccordionSummary>
-  <AccordionDetails>
+  <AccordionDetails style={{ paddingBottom: '1.9rem', borderTop: '1px solid #4B4E55' }}>
     <Typography variant="subtitle1" sx={{ mb: 2 }}>
       {/* Additional content can go here if needed */}
     </Typography>
@@ -920,7 +920,7 @@ const counts = calculateTagCounts(selectedOptions);
       Analysis
     </button>
   </AccordionSummary>
-  <AccordionDetails>
+  <AccordionDetails style={{ paddingBottom: '1.9rem', borderTop: '1px solid #4B4E55' }}>
     <Typography variant="subtitle1" sx={{ mb: 2 }}>
       {/* Additional content can go here if needed */}
     </Typography>
@@ -996,7 +996,7 @@ const counts = calculateTagCounts(selectedOptions);
       Solutions
     </button>
   </AccordionSummary>
-  <AccordionDetails>
+  <AccordionDetails style={{ paddingBottom: '1.9rem', borderTop: '1px solid #4B4E55' }}>
     {questions.map((q, index) => (
       <Accordion
         key={index}
@@ -1038,7 +1038,7 @@ const counts = calculateTagCounts(selectedOptions);
             {q.questionText}
           </Typography>
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails style={{ paddingBottom: '1.9rem', borderTop: '1px solid #4B4E55' }}>
           <Box>
             {q.options.map((option, idx) => (
               <Paper
