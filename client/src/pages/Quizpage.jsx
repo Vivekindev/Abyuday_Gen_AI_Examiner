@@ -9,7 +9,53 @@ import { styled } from '@mui/system';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DataGrid } from '@mui/x-data-grid';
 import Confetti from 'react-confetti'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CelebrationIcon from '@mui/icons-material/Celebration';
+import CheckIcon from '@mui/icons-material/Check';
+import ClearIcon from '@mui/icons-material/Clear';
+import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
+import InsightsIcon from '@mui/icons-material/Insights';
+import GppGoodIcon from '@mui/icons-material/GppGood';
 
+import { Card, CardContent, List, ListItem, SvgIcon } from '@mui/material';
+// ----------------------------resultCard-----------------------------------------------
+
+const StyledCard = styled(Card)({
+  width: '90%', // Adjust width to fit within the parent, capped at 500px
+  maxWidth: '500px', // Prevent card from exceeding a certain width
+  borderRadius: '12px', // Slightly reduce the border radius for a compact look
+  backgroundColor: 'rgba(255, 255, 255, 0.08)', // Slightly darker for better contrast
+  backdropFilter: 'blur(8px)', // Reduce blur to keep text readable
+  boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', // Lighter shadow for less visual weight
+  color: 'white',
+  padding: '16px', // Standard padding for good spacing without adding bulk
+  margin: '0px auto', // Reduced margin for more compact layout
+  border: '1px solid rgba(255, 255, 255, 0.1)', // Keep a soft border
+  transition: 'transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-4px)', // Subtle lift on hover for interaction feedback
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Slightly brighter on hover
+    boxShadow: '0 8px 24px 0 rgba(0, 0, 0, 0.3)', // Enhanced shadow on hover
+  },
+  
+});
+
+//---------------------------------------------------------------------------------
+
+const Tcolumns = [
+  { field: 'key', headerName: 'Details', width: 450 },
+  { field: 'value', headerName: 'Value', width: 400 },
+];
+
+const Trows = [
+  { id: 1, key: 'Test ID', value: '528231' },
+  { id: 2, key: 'Created by', value: 'Vivek M' },
+  { id: 3, key: 'No. of Students taken the test', value: '28' },
+  { id: 4, key: 'Highest Marks', value: '34' },
+  { id: 5, key: 'Lowest Marks', value: '10' },
+  { id: 6, key: 'Average Marks', value: '24' },
+];
 //---------------------------------modal------------------------------------------//
 const themeModal = createTheme({
   palette: {
@@ -467,24 +513,276 @@ const counts = calculateTagCounts(selectedOptions);
                
 
             </div>
-            {showScore ? (<Box sx={{ textAlign: 'center', mt: 0 }}>
-            <div style={{
-              fontFamily: "Emilys Candy",
-              fontWeight: 800,
-              fontSize:'2.5rem',
-              fontStyle: 'normal',
-              padding:'0.5rem',
-     
-             
-              }}>
-              
-                RESULTS
-              </div>
-              
-            
-            <Typography variant="h5" gutterBottom>
-              You scored <strong>{score}</strong> out of <strong>{questions.length}</strong>
-            </Typography>
+            {showScore ? (
+              <Box sx={{ mt: '0' }}>
+                
+                <div style={{ marginBottom: '1rem' }}>
+  <Accordion
+    style={{
+      backgroundColor: 'transparent',
+      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+      borderRadius: '0.5rem',
+      border: '1px solid #4B4E55',
+      overflow: 'hidden',
+    }}
+    sx={{
+      '&:before': {
+        display: 'none', // Remove the default border line
+      },
+    }}
+  >
+    <AccordionSummary
+      expandIcon={<ExpandMoreIcon style={{ color: '#5381ED' }} />} 
+      aria-controls="panel1a-content"
+      id="panel1a-header"
+      style={{
+        padding: '0 1rem',
+        minHeight: '3rem', 
+        alignItems: 'center',
+      }}
+    >
+      <button
+        style={{
+          minWidth: '8rem',
+          fontSize: '1rem', 
+          fontWeight: '500', 
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: '0.5rem',
+          padding: '0.5rem 1rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+          color: '#5381ED',
+          border: '1px solid #5381ED',
+          cursor: 'pointer',
+          transition: 'background-color 0.3s',
+          height: '2.5rem',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.3)'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+        onMouseDown={(e) => e.currentTarget.style.backgroundColor = 'rgba(180, 180, 180, 0.3)'}
+        onMouseUp={(e) => e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.3)'}
+      >
+      <GppGoodIcon sx={{marginRight:'0.5rem'}}/>  Test on Computer Fundamentals
+      </button>
+    </AccordionSummary>
+    <AccordionDetails style={{ padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.05)', borderTop: '1px solid #4B4E55' }}>
+      <Container>
+      <Paper
+        style={{
+          height: 380,
+          width: '100%',
+          marginTop: '1em',
+          backgroundColor: 'transparent', // transparent background
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', // drop shadow
+          
+        }}
+      >
+      <DataGrid
+       rows={Trows}
+          columns={Tcolumns}
+          pageSize={5}
+          disableSelectionOnClick
+          disableRowSelectionOnClick
+          hideFooter={true} // hide the footer row
+
+          sx={{
+            '& .MuiDataGrid-cell': {
+              borderBottom: '1px solid #333',
+              backgroundColor: 'transparent', // transparent background
+              color: '#ffffff',
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              borderBottom: '1px solid #333',
+              backgroundColor: 'transparent', // transparent background
+              color: '#ffffff',
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderTop: '1px solid #333',
+              backgroundColor: '#121212', // transparent background
+              color: '#ffffff',
+            },
+          }}
+      />
+   </Paper>
+      </Container>
+    </AccordionDetails>
+  </Accordion>
+</div>
+
+
+                <Box sx={{ mb: '0' ,justifyContent:'flex-start', alignItems:'flex-start',display:'flex',flexDirection:'row'}}>
+                <StyledCard sx={{width:'48.5%'}}>  
+      <CardContent >
+        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+          Results  <CelebrationIcon fontSize="large"/> 
+        </Typography>
+        <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', mt: 1 }}>
+         Score :  {((score/questions.length)*100).toFixed(2)}%
+        </Typography>
+        
+       
+      </CardContent>
+    </StyledCard>
+
+    <StyledCard sx={{width:'48.5%'}}>  
+      <CardContent >
+        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+          Comparative Analysis  <InsightsIcon fontSize="large" sx={{ml:'rem'}}/> 
+        </Typography>
+        <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', mt: 1 }}>
+         Rank : #1/28
+        </Typography>
+        
+       
+      </CardContent>
+    </StyledCard>
+    </Box>
+
+    <Box sx={{ mb: 3 ,justifyContent:'flex-start', alignItems:'flex-start',display:'flex',flexDirection:'row'}}>
+    <StyledCard
+  sx={{
+    width: '32%',
+    backgroundColor: 'rgba(0, 150, 0, 0.1)', // Light green tint for correct answer feedback
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    borderRadius: '12px',
+    margin: '16px auto',
+    marginBottom:'0px',
+    border: '1px solid rgba(0, 255, 0, 0.3)',
+    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
+      backgroundColor: 'rgba(0, 150, 0, 0.15)',
+    },
+  }}
+>
+  <CardContent
+    sx={{
+      padding: '16px',
+      textAlign: 'center',
+    }}
+  >
+    <Typography
+      variant="h5"
+      component="div"
+      sx={{
+        fontWeight: 'bold',
+        color: '#0f0', // Bright green color to emphasize the correctness
+      }}
+    >
+      Correct Answers <CheckIcon fontSize="medium" />
+    </Typography>
+    <Typography
+      variant="h3"
+      component="div"
+      sx={{
+        fontWeight: 'bold',
+        marginTop: '8px',
+        color: '#0f0', // Keeping the same color for consistency
+      }}
+    >
+      {correctCount}
+    </Typography>
+  </CardContent>
+</StyledCard>
+
+<StyledCard
+  sx={{
+    width: '32%',
+    boxShadow: 'none',
+    backgroundColor: 'rgba(255, 0, 0, 0.1)', // Light red tint for incorrect answer feedback
+    borderRadius: '12px',
+    margin: '16px auto',
+    marginBottom:'0px',
+    border: '1px solid rgba(255, 0, 0, 0.3)', // Red border to emphasize incorrectness
+    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+    '&:hover': {
+      transform: 'translateY(-4px)', // Slightly scales the card on hover
+      boxShadow: '0 8px 16px rgba(255, 0, 0, 0.2)', // Enhanced shadow with a red tint
+      backgroundColor: 'rgba(255, 0, 0, 0.15)'
+    },
+  }}
+>  
+  <CardContent
+    sx={{
+      padding: '16px',
+      textAlign: 'center',
+    }}
+  >
+    <Typography
+      variant="h5"
+      component="div"
+      sx={{
+        fontWeight: 'bold',
+        color: '#f00', // Bright red color to highlight incorrectness
+      }}
+    >
+      Incorrect Answers <ClearIcon fontSize="medium" />
+    </Typography>
+    <Typography
+      variant="h3"
+      component="div"
+      sx={{
+        fontWeight: 'bold',
+        marginTop: '8px',
+        color: '#f00', // Keeping the same color for consistency
+      }}
+    >
+      {incorrectCount}
+    </Typography>
+  </CardContent>
+</StyledCard>
+
+<StyledCard
+  sx={{
+    width: '32%',
+    backgroundColor: 'rgba(0, 120, 255, 0.1)', // Light blue tint for unanswered feedback
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    borderRadius: '12px',
+    margin: '16px auto',
+    marginBottom:'0px',
+    border: '1px solid rgba(0, 120, 255, 0.3)', // Blue border to emphasize unanswered
+    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+    '&:hover': {
+      transform: 'translateY(-4px)', // Lift the card on hover
+      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)', // Enhanced shadow on hover
+      backgroundColor: 'rgba(0, 120, 255, 0.15)', // Slightly darker blue on hover
+    },
+  }}
+>
+  <CardContent
+    sx={{
+      padding: '16px',
+      textAlign: 'center',
+    }}
+  >
+    <Typography
+      variant="h5"
+      component="div"
+      sx={{
+        fontWeight: 'bold',
+        color: '#007AFF', // Bright blue color to highlight the theme
+      }}
+    >
+      Unanswered <DoNotDisturbIcon fontSize="medium" />
+    </Typography>
+    <Typography
+      variant="h3"
+      component="div"
+      sx={{
+        fontWeight: 'bold',
+        marginTop: '8px',
+        color: '#007AFF', // Consistent bright blue for the score
+      }}
+    >
+      {unansweredCount}
+    </Typography>
+  </CardContent>
+</StyledCard>
+
+
+</Box>
             {showScore? (
               
               <Accordion
@@ -576,9 +874,59 @@ const counts = calculateTagCounts(selectedOptions);
               ):(
                 <></>
               )}
-            <Box sx={{ mt: 4 }}>
 
-             <div className="charts" style={{display:'flex',flexDirection:'row',justifyContent:'space-evenly',alignItems:'center'}}> 
+
+            <Box sx={{ mt: 1 }}>
+            <Accordion
+  style={{
+   
+    backgroundColor: 'transparent',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', // drop shadow
+    borderRadius: '0.5rem', // optional: add border radius for a smoother look
+    border:'1px solid #4B4E55',
+  }}
+  sx={{
+    '&:before': {
+      display: 'none', // remove the default border line
+    },
+  }}
+>
+  <AccordionSummary
+    expandIcon={<ExpandMoreIcon />}
+    aria-controls="panel1a-content"
+    id="panel1a-header"
+  >
+    <button
+      style={{
+        minWidth: '9rem',
+        fontSize: '1.1rem',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: '0.6rem',
+        padding: '0.2rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)', // light transparent white
+        color: 'white',
+        border: 'none',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s',
+        height: '3rem',
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.4)'} // hover color
+      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'} // default color
+      onMouseDown={(e) => e.currentTarget.style.backgroundColor = 'rgba(180, 180, 180, 0.4)'} // active color
+      onMouseUp={(e) => e.currentTarget.style.backgroundColor = 'rgba(200, 200, 200, 0.4)'} // hover color after click
+    >
+      Analysis
+    </button>
+  </AccordionSummary>
+  <AccordionDetails>
+    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+      {/* Additional content can go here if needed */}
+    </Typography>
+    <Container>
+      
+    <div className="charts" style={{display:'flex',flexDirection:'row',justifyContent:'space-evenly',alignItems:'center'}}> 
             <BarChart width={600} height={360} data={data}>
   <CartesianGrid strokeDasharray="3 3" />
   <XAxis dataKey="name" />
@@ -598,11 +946,13 @@ const counts = calculateTagCounts(selectedOptions);
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
                   </div>
-                  <br></br>
-                  <br></br>
-                  <div>
       
-
+    </Container>
+  </AccordionDetails>
+</Accordion>
+</Box>
+<Box sx={{ mt: 1 }}>
+                  <div>
                   <Accordion
   sx={{
     boxShadow: theme.shadows[3],
