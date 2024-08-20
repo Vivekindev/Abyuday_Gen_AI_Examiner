@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 import { Box, Button, Typography, Modal, Backdrop, Fade, TextField, Slider, Select, MenuItem } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Toaster, toast } from 'sonner'; // Updated import
 import './modal.css';
 import './Sidebar.css';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -44,16 +47,42 @@ const modalStyle = {
 const ConfirmationModal = () => {
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [testName, setTestName] = useState('');
   const [numQuestions, setNumQuestions] = useState(12);
   const [difficulty, setDifficulty] = useState(5);
-  const [selectedOption, setSelectedOption] = useState('Gemini 1.5 Flash');
+  const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash');
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const handleConfirm = async() => {
+
+  const handleConfirm = async () => {
     setOpen(false);
-    
-    console.log('Final submit confirmed', { prompt, numQuestions, difficulty, selectedOption });
+    const testId = uuidv4().slice(0, 6);
+
+    const url = 'http://localhost:4040/api/test/create';
+    const data = {
+      testId,
+      testName,
+      prompt,
+      numQuestions,
+      difficulty,
+      selectedModel
+    };
+
+    const createTestPromise = () =>
+      axios.post(url, data, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+    toast.promise(createTestPromise(), {
+      loading: 'Creating...',
+      success: (response) => {
+        return `Test ${testName} created successfully!`;
+      },
+      error: 'Failed to create the test.',
+    });
   };
 
   const getSliderColor = (value) => {
@@ -94,6 +123,18 @@ const ConfirmationModal = () => {
               <TextField
                 fullWidth
                 margin="normal"
+                label="Test Name"
+                placeholder="Enter the name of the test"
+                variant="outlined"
+                value={testName}
+                onChange={(e) => setTestName(e.target.value)}
+                InputLabelProps={{ style: { color: '#ffffff' } }}
+                InputProps={{ style: { color: '#ffffff' } }}
+                inputProps={{ autocomplete: 'off' }}
+              />
+              <TextField
+                fullWidth
+                margin="normal"
                 label="Prompt"
                 placeholder="Enter the prompt for question generation"
                 variant="outlined"
@@ -101,13 +142,14 @@ const ConfirmationModal = () => {
                 onChange={(e) => setPrompt(e.target.value)}
                 InputLabelProps={{ style: { color: '#ffffff' } }}
                 InputProps={{ style: { color: '#ffffff' } }}
+                inputProps={{ autocomplete: 'off' }}
               />
               <TextField
                 fullWidth
                 margin="normal"
                 label="Number of Questions"
                 type="number"
-                inputProps={{ min: 1 }}
+                inputProps={{ min: 1, autocomplete: 'off' }}
                 variant="outlined"
                 value={numQuestions}
                 onChange={(e) => setNumQuestions(e.target.value)}
@@ -135,8 +177,8 @@ const ConfirmationModal = () => {
               </Typography>
               <Select
                 fullWidth
-                value={selectedOption}
-                onChange={(e) => setSelectedOption(e.target.value)}
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
                 variant="outlined"
                 sx={{
                   color: '#ffffff',
@@ -188,6 +230,7 @@ const ConfirmationModal = () => {
             </Box>
           </Fade>
         </Modal>
+        <Toaster richColors /> {/* Updated to use Toaster for Sonner toasts */}
       </div>
     </ThemeProvider>
   );

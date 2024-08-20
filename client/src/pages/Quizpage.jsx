@@ -394,9 +394,8 @@ const counts = calculateTagCounts(selectedOptions);
       
          </div>
 
-
-         <div className="leftMid">
-         <Box display="flex" justifyContent="center" sx={{ mt: 0 }}>
+        <div className="leftMid">
+         <Box display="flex" justifyContent="center" sx={{ mt: 0 ,mr: 2.3, ml: 2.3}}>
             <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap', maxWidth: '100%' }}>
               <Grid container spacing={2} justifyContent="center" sx={{ transform: `translateX(-${scrollPos}px)`, transition: 'transform 0.3s' }}>
                 {questions.map((_, index) => (

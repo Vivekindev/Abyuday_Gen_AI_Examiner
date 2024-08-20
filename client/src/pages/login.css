@@ -1,0 +1,9 @@
+.authBg{
+    background-size: cover; /* or 'contain' based on your needs */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+    background-image: url('../assets/loginPageBg.jpg');
+}
