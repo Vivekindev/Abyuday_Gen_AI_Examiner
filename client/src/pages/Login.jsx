@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Paper, Divider, Box, Grid, Link, Avatar, InputAdornment, IconButton } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import GoogleIcon from '@mui/icons-material/Google';
@@ -6,6 +7,8 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import brandIcon from '../../public/robotics.svg';
 import './login.css'
+import { Toaster, toast } from 'sonner';
+import axios from 'axios';
 
 const darkTheme = createTheme({
   palette: {
@@ -99,12 +102,55 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleEmailChange = (e) => setEmail(e.target.value);
   const handlePasswordChange = (e) => setPassword(e.target.value);
-  
-  const handleLogin = () => {
-    // Handle login logic here
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      toast.error('Email and password are required!');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast.error('Invalid email format!');
+      return;
+    }
+
+    const url = "http://localhost:4040/api/login";
+    const data = { email, password };
+
+    try {
+      toast.promise(
+        axios.post(url, data, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }),
+        {
+          loading: 'Authenticating...',
+          success: () => {
+               'Login Successful!';
+                navigate('/dashboard');         
+          },
+          error: (error) => {
+            if (error.response && error.response.status === 401) {
+              return 'Unauthorized!';
+            }
+            return 'Login Failed!';
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Login failed!');
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -208,12 +254,12 @@ const LoginPage = () => {
                   Register Here
                 </Link>
                 </Typography>
-                
               </Box>
             </Paper>
           </Container>
         </Grid>
       </div>
+      <Toaster richColors /> 
     </ThemeProvider>
   );
 };

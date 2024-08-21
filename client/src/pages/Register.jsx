@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Paper, Divider, Box, Grid, Link, Avatar, InputAdornment, IconButton, LinearProgress } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import brandIcon from '../../public/robotics.svg';
+import { Toaster, toast } from 'sonner';
+import axios from 'axios';
 
 const darkTheme = createTheme({
   palette: {
@@ -101,7 +104,8 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [errors, setErrors] = useState({});
-
+  const navigate = useNavigate();
+  
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -130,12 +134,35 @@ const RegisterPage = () => {
 
   const handleRegister = () => {
     if (validateForm()) {
-      console.log({
-        username,
-        email,
-        password,
-        confirmPassword,
-      });
+        const data = { username, email, password };
+        const url = 'http://localhost:4040/api/register'; // Replace with your actual API endpoint
+  
+        try {
+          toast.promise(
+            axios.post(url, data, {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }),
+            {
+              loading: 'Registering...',
+              success: () => {
+              'Registration Successful!';
+              navigate('/dashboard'); // Redirect to the dashboard or another page after successful registration
+              },
+              error: (error) => {
+                if (error.response && error.response.status === 401) {
+                  return 'Unauthorized!';
+                }
+                return 'Registration Failed!';
+              },
+            }
+          );
+        } catch (error) {
+          console.error('Registration error:', error);
+          toast.error('Registration failed!');
+        }
+      
     }
   };
 
@@ -251,7 +278,7 @@ const RegisterPage = () => {
                 fullWidth
                 variant="contained"
                 color="primary"
-                sx={{ mt: 2, mb: 2, height: '50px', borderRadius: '8px' }}
+                sx={{ mt: 2, mb: 2, height: '50px', borderRadius: '8px' , fontSize:'1rem'}}
                 onClick={handleRegister}
               >
                 Sign Up
@@ -267,6 +294,7 @@ const RegisterPage = () => {
           </Container>
         </Grid>
       </div>
+      <Toaster richColors /> 
     </ThemeProvider>
   );
 };

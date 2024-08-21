@@ -1,23 +1,40 @@
 import jwt from 'jsonwebtoken';
 
-export const authenticateToken = (req, res, next)=>{
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401);
-  
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      if (err) return res.sendStatus(403);
-      req.user = user;
-      next();
-    });
-  }
+// Middleware to authenticate token and refresh if expired
+export const authenticateToken = (req, res, next) => {
+  const accessToken = req.cookies['accessToken'];
 
-  export const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-  };
-  
-  export const generateRefreshToken = (user) => {
-    return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-  };
-  
- 
+  if (!accessToken) return res.sendStatus(401); 
+
+  jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    if (err) {
+      const refreshToken = req.cookies['refreshToken'];
+      if (err.name === 'TokenExpiredError' && refreshToken) {
+        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (refreshErr, refreshUser) => {
+
+          if (refreshErr) return res.sendStatus(403); 
+          const email = refreshUser.email;
+          const newAccessToken = generateAccessToken({email});
+          res.cookie('accessToken', newAccessToken, { httpOnly: true, sameSite: 'Strict',});
+          req.email = refreshUser;
+          next();
+        });
+      } else {
+        return res.sendStatus(403);
+      }
+    } else {
+      req.email = user;
+      next();
+    }
+  });
+};
+
+// Function to generate access token
+export const generateAccessToken = (email) => {
+  return jwt.sign( email , process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+};
+
+// Function to generate refresh token
+export const generateRefreshToken = (email) => {
+  return jwt.sign( email , process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+};

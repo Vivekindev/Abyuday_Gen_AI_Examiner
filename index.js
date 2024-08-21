@@ -1,17 +1,26 @@
 import express from "express";
 import cors from "cors";
 import path from 'path';
+import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+
 import connectDB from './db/db.js';
 import pendingTaskRoute from './routes/pendingTaskRoute.js';
-import authRoute from './routes/authRoute.js';
+import GoogleOauthRoute from './routes/GoogleOauthRoute.js';
 import passport from './config/passportConfig.js'; // Import the Passport configuration
+import loginAuthRoute from './routes/loginAuthRoute.js'
+import registerAuthRoute from './routes/registerAuthRoute.js';
+import authorizationRoute from './routes/authorizationRoute.js'
 
 const app = express();
 const PORT = process.env.PORT || 4040; 
+dotenv.config();
 
 app.use(cors());
 app.use(express.json());
 app.use(passport.initialize());
+app.use(cookieParser());
+
 
 // Middleware to set cache control headers for static assets
 app.use((req, res, next) => { 
@@ -21,7 +30,10 @@ app.use((req, res, next) => {
 
 // Define your API and auth routes first
 app.use(`/api`, pendingTaskRoute);
-app.use('/', authRoute);
+app.use(`/api`, loginAuthRoute);
+app.use(`/api`, registerAuthRoute);
+app.use(`/api`, authorizationRoute);
+app.use('/', GoogleOauthRoute);
 
 // To serve react static files (Frontend)
 const __dirname = path.resolve();

@@ -1,25 +1,34 @@
-import React, { useState } from 'react';
-import Confetti from 'react-confetti';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios'; // Ensure axios is installed for making HTTP requests
 
 const Confettii = () => {
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleQuizSubmission = () => {
-    // Handle the quiz submission logic here
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('/api/check',{ withCredentials: true });
+        setData(response.data);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Show confetti after submission
-    setShowConfetti(true);
+    fetchData();
+  }, []); // Empty dependency array means this runs once on component mount
 
-    // Hide confetti after 3 seconds
-    setTimeout(() => {
-      setShowConfetti(false);
-    }, 3000);
-  };
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div>
-      <button onClick={handleQuizSubmission}>Submit Answer</button>
-      {showConfetti && <Confetti />}
+      Confettii
+      {/* Render the data if needed */}
+      {data && <div>Data: {JSON.stringify(data)}</div>}
     </div>
   );
 };
