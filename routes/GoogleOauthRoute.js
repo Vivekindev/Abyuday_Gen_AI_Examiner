@@ -16,7 +16,7 @@ router.get('/auth/google/callback',
     const refreshToken = generateRefreshToken({ email: req.user.email });
     res.cookie('accessToken', accessToken);
     res.cookie('refreshToken', refreshToken);
-    res.redirect(`/auth/token`);
+    res.redirect(`/dashboard`);
   }
 );
 
