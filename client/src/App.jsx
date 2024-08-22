@@ -7,7 +7,7 @@ import Register from './pages/Register';
 import ProtectedRoute from './auth/ProtectedRoute';
 import Sidebar from './pages/Sidebar';
 import NotFound from './pages/NotFount';
-
+import './App.css'
 const App = () => {
   return (
     <Router>

@@ -161,6 +161,7 @@ const LoginPage = () => {
 
   return (
     <ThemeProvider theme={darkTheme}>
+        
       <div className='authBg'>
         <Grid
           container
