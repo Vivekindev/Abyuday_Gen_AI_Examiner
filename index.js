@@ -11,6 +11,7 @@ import passport from './config/passportConfig.js'; // Import the Passport config
 import loginAuthRoute from './routes/loginAuthRoute.js'
 import registerAuthRoute from './routes/registerAuthRoute.js';
 import authorizationRoute from './routes/authorizationRoute.js'
+import logoutRoute from './routes/logoutRoute.js'
 
 const app = express();
 const PORT = process.env.PORT || 4040; 
@@ -33,6 +34,7 @@ app.use(`/api`, pendingTaskRoute);
 app.use(`/api`, loginAuthRoute);
 app.use(`/api`, registerAuthRoute);
 app.use(`/api`, authorizationRoute);
+app.use('/api', logoutRoute);
 app.use('/', GoogleOauthRoute);
 
 // To serve react static files (Frontend)

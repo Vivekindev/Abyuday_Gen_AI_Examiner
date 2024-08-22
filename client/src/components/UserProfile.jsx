@@ -1,7 +1,7 @@
 // src/components/UserProfile.js
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUsername } from '../features/user/userSlice'; // Updated path
+import { setUsername } from '../features/user/userSlice'; 
 
 const UserProfile = () => {
   const dispatch = useDispatch();

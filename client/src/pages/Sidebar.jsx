@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import "./Sidebar.css";
-import MenuIcon from "@mui/icons-material/Menu";
+import { useNavigate } from 'react-router-dom';
 import HomeIcon from "@mui/icons-material/Home";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AddBoxIcon from "@mui/icons-material/AddBox";
@@ -19,6 +19,8 @@ import { Card, CardContent, Typography, List, ListItem, Button, SvgIcon } from '
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import Modal from './modal'
+
+import axios from "axios";
 
 const StyledCard = styled(Card)({
   width: 500,
@@ -39,16 +41,19 @@ const StyledCard = styled(Card)({
 });
 
 
-const LogoutButton = styled(Button)(({ theme }) => ({
-  
+const MainMenuButton = styled(Button)({
   backgroundColor: '#1B222C',
-  color: '#FFFFFF',
-  transition: 'background-color 0.3s ease, color 0.3s ease',
+  color: 'white',
+  fontWeight: 'bold',
+  width:'100%',
+  height:'100%',
   '&:hover': {
-    backgroundColor: '#FFFFFF',
-    color: '#000000',
+    backgroundColor: 'white',
+    color: '#1B222C',
+    transition: 'all 0.3s ease-in-out', // Optional: add transition for smooth effect
   },
-}));
+});
+
 
 const menuItems = [
   { name: "Home", icon: <HomeIcon /> },
@@ -98,6 +103,8 @@ const SubMenu = ({ item, activeItem, handleClick }) => {
   const isSubNavOpen = (item, items) =>
     items.some((i) => i === activeItem) || item === activeItem;
 
+  
+
   return (
     <div
       className={`sub-nav ${isSubNavOpen(item.name, item.items) ? "open" : ""}`}
@@ -122,18 +129,14 @@ const SubMenu = ({ item, activeItem, handleClick }) => {
 };
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = async()=>{
+    await axios.post('/api/logout')
+    navigate('/login')
+  }
   
-  //------------------------------------SnackBar-------------------------------------//
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  const handleOpenSnackbar = () => {
-    setSnackbarOpen(true);
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-  //---------------------------------------------------------------------------------//
 
 
   const [activeItem, setActiveItem] = useState("");
@@ -177,15 +180,11 @@ const Sidebar = () => {
       ))}
 </div>
       <div className="leftBottom" style={{margin:'0px',padding:'0px',marginBottom:'1rem'}}>
-      <NavButton
-           
-            name={"Logout"}
-            icon={<LogoutIcon />}
-            handleClick={handleClick}
-            isActive={0}
-            
-            
-          />
+  
+
+     <MainMenuButton variant="contained" startIcon={<LogoutIcon />} onClick={handleLogout}>
+        Logout
+      </MainMenuButton>
       
       </div>
     </aside>
