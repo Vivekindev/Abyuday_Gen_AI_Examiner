@@ -9,6 +9,9 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FavoriteIcon from '@mui/icons-material/Bookmarks';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { Typography ,Box} from '@mui/material';
+
 import CheckCircleSharpIcon from '@mui/icons-material/CheckCircleSharp';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { styled } from '@mui/material/styles';
@@ -24,9 +27,9 @@ const UserBox = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   padding: theme.spacing(1),
-  marginBottom: theme.spacing(1.5),
+ 
   backgroundColor: 'rgba(0, 0, 0, 1)', // Neutral transparent background
-  borderRadius: '1rem', // More curved corners
+  borderRadius: '1.6rem', // More curved corners
   border:'1px solid rgba(255, 255, 255, 0.3)',
   boxShadow: theme.shadows[2],
   color: theme.palette.common.white,
@@ -38,7 +41,7 @@ const UserBox = styled('div')(({ theme }) => ({
 
 const UsernameText = styled('div')(({ theme }) => ({
   marginLeft: theme.spacing(1),
-  fontSize: '1rem', // Smaller text
+  fontSize: '1.2rem', // Smaller text
   fontWeight: theme.typography.fontWeightMedium,
 }));
 
@@ -47,7 +50,7 @@ const menuItems = [
   {
     name: "Create Test",
     icon: <AutoAwesomeIcon />,
-    items: ["GenAI Generate"],
+   
   },
   { name: "Tests Created", icon: <CheckCircleSharpIcon /> },
   {
@@ -191,39 +194,58 @@ const Sidebar = () => {
                 </div>
               ))}
             </div>
-            <div className="leftBottom" style={{ margin: '0px', padding: '0px', marginBottom: '1rem', height:'30%'}}>
+            <div className="leftBottom" style={{ margin: '0px', padding: '0px', marginBottom: '1rem', }}>
                
 {/* Username box with logo */}
-<UserBox>
-        <AccountCircleIcon fontSize="medium" sx={{ color: 'white' }} /> {/* Smaller icon */}
-        <UsernameText>{username || 'User'}</UsernameText>
-      </UserBox>
+<UserBox
+  onClick={handleLogout}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.color = 'black';
+    e.currentTarget.children[0].style.display = 'none'; // Hide the account icon
+    e.currentTarget.children[1].style.display = 'none'; // Hide the username text
+    e.currentTarget.children[2].style.display = 'flex'; // Show the logout icon and text
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.color = 'white';
+    e.currentTarget.children[0].style.display = 'block'; // Show the account icon
+    e.currentTarget.children[1].style.display = 'block'; // Show the username text
+    e.currentTarget.children[2].style.display = 'none'; // Hide the logout icon and text
+  }}
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    
+    padding: '8px 16px',
+    transition: 'all 0.3s ease',
+    color: 'white',
+  }}
+>
+  <AccountCircleIcon fontSize="large" sx={{ color: 'white', fontSize: '28px' }} />
+  <UsernameText>{username || 'User'}</UsernameText>
+  <Box sx={{ display: 'none', alignItems: 'center' }}> {/* Hidden initially */}
+    <LogoutIcon sx={{ fontSize: '28px', marginRight: '8px' }} />
+    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+      Logout
+    </Typography>
+  </Box>
+</UserBox>
 
-      <Button
-        fullWidth
-        variant="contained"
-        color="primary"
-        onClick={handleLogout}
-        sx={{
-          fontSize: '0.875rem', // Smaller font size
-          height: '2.5rem', // Slightly smaller button height
-          backgroundColor: 'rgba(0, 123, 255, 0.1)', // Neutral transparent background
-          borderRadius: '1rem', // More curved corners
-          boxShadow: 2,
-          '&:hover': {
-            backgroundColor: 'rgba(0, 123, 255, 0.2)', // Slightly darker on hover
-          },
-        }}
-      >
-        Logout
-      </Button>
+
             </div>
           </aside>
         </div>
 
+
+
+
         <div className="rightDash">
-          {activeItem === "GenAI Generate" && <GenerateTest />}
+          {activeItem === "Create Test" && <GenerateTest />}
         </div>
+
       </div>
       <Toaster richColors />
     </>
