@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import "./Sidebar.css";
 import { useNavigate } from 'react-router-dom';
 import HomeIcon from "@mui/icons-material/Home";
@@ -6,82 +6,60 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import LockIcon from "@mui/icons-material/Lock";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
-//import FavoriteIcon from "@mui/icons-material/Favorite";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FavoriteIcon from '@mui/icons-material/Bookmarks';
-
-import LogoutIcon from '@mui/icons-material/Logout';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CheckCircleSharpIcon from '@mui/icons-material/CheckCircleSharp';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { styled } from '@mui/material/styles';
+import Cookies from 'js-cookie';
 import { Toaster, toast } from 'sonner'; // Updated import
-
-import { Card, CardContent, Typography, List, ListItem, Button, SvgIcon } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-
-import Modal from './modal'
-
+import { Button } from '@mui/material';
+import GenerateTest from "../components/GenerateTest";
 import axios from "axios";
 
-const StyledCard = styled(Card)({
-  width: 500,
-  borderRadius: '16px',
-  backgroundColor: 'transparent',
-  backdropFilter: 'blur(10px)',
-  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-  color: 'white',
-  padding: '16px',
-  margin: '0 auto',
-  border:'1px solid #4B4E55',
-  transition: 'transform 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'scale(1.05)',
-    backdropFilter: 'none',
-    backgroundColor:'transparent'
-  },
-});
+// Custom Styled Components
+const UserBox = styled('div')(({ theme }) => ({
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(1),
+  marginBottom: theme.spacing(1.5),
+  backgroundColor: 'rgba(255, 255, 255, 0.1)', // Neutral transparent background
+  borderRadius: '1rem', // More curved corners
+  boxShadow: theme.shadows[2],
+  color: theme.palette.common.white,
+}));
 
-
-const MainMenuButton = styled(Button)({
-  backgroundColor: '#1B222C',
-  color: 'white',
-  fontWeight: 'bold',
-  width:'100%',
-  height:'100%',
-  '&:hover': {
-    backgroundColor: 'white',
-    color: '#1B222C',
-    transition: 'all 0.3s ease-in-out', // Optional: add transition for smooth effect
-  },
-});
-
+const UsernameText = styled('div')(({ theme }) => ({
+  marginLeft: theme.spacing(1),
+  fontSize: '1rem', // Smaller text
+  fontWeight: theme.typography.fontWeightMedium,
+}));
 
 const menuItems = [
   { name: "Home", icon: <HomeIcon /> },
-  
   {
-    name: "Create",
-    icon: <AddBoxIcon />,
-    items: ["Article", "Document", "Report"],
+    name: "Create Test",
+    icon: <AutoAwesomeIcon />,
+    items: ["GenAI Generate"],
   },
-  { name: "Products", icon: <Inventory2Icon /> },
+  { name: "Tests Created", icon: <CheckCircleSharpIcon /> },
   {
     name: "Account",
     icon: <LockIcon />,
-    items: ["Dashboard", "Logout"],
+    items: ["Profile"],
   },
-  
   {
     name: "Settings",
     icon: <SettingsIcon />,
-    items: ["Display", "Editor", "Theme", "Interface"],
+    items: ["Under Development"],
   },
   { name: "Saved", icon: <FavoriteIcon /> },
 ];
 
 const NavHeader = () => (
-  <header className="sidebar-header">
-    
-  </header>
+  <header className="sidebar-header"></header>
 );
 
 const NavButton = ({ onClick, name, icon, isActive, hasSubNav }) => (
@@ -89,7 +67,6 @@ const NavButton = ({ onClick, name, icon, isActive, hasSubNav }) => (
     type="button"
     onClick={() => onClick(name)}
     className={isActive ? "button active " : "button"}
-
   >
     {icon}
     <span>{name}</span>
@@ -102,8 +79,6 @@ const SubMenu = ({ item, activeItem, handleClick }) => {
 
   const isSubNavOpen = (item, items) =>
     items.some((i) => i === activeItem) || item === activeItem;
-
-  
 
   return (
     <div
@@ -128,8 +103,17 @@ const SubMenu = ({ item, activeItem, handleClick }) => {
   );
 };
 
+
+
 const Sidebar = () => {
   const navigate = useNavigate();
+  const [activeItem, setActiveItem] = useState("Home");
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    const usernameFromCookie = Cookies.get('username');
+    setUsername(usernameFromCookie);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -147,139 +131,98 @@ const Sidebar = () => {
       console.error('Logout failed:', error);
     }
   };
-  
-  
-
-
-
-  const [activeItem, setActiveItem] = useState("");
 
   const handleClick = (item) => {
     setActiveItem(item !== activeItem ? item : "");
   };
 
-  return (<>
-  <div className="mainBox " >
-    <div className="leftBox" style={{
-             
-               zIndex:'100'
+  return (
+    <>
+      <div className="mainBox">
+        <div className="leftBox" style={{ zIndex: '100' }}>
+          <aside className="sidebar">
+            <div className="leftTop">
+              <div className="jaro" style={{ color: 'white' }}>ABYUDAY</div>
+              <center>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingTop: '0.05rem',
+                    fontSize: '0.5rem',
+                    width: 'fit-content',
+                    background: 'white',
+                    color: 'black',
+                    paddingRight: '0.5rem',
+                    paddingLeft: '0.5rem',
+                    borderRadius: '0.4rem',
+                  }}
+                >
+                  A Generative-AI Examiner Platform
+                </div>
+              </center>
+            </div>
+
+           
+            <NavHeader />
+            <div className="leftMid">
+              {menuItems.map((item) => (
+                <div key={item.name}>
+                  <NavButton
+                    onClick={handleClick}
+                    name={item.name}
+                    icon={item.icon}
+                    isActive={activeItem === item.name}
+                    hasSubNav={!!item.items}
+                  />
+                  {item.items && (
+                    <SubMenu
+                      activeItem={activeItem}
+                      handleClick={handleClick}
+                      item={item}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="leftBottom" style={{ margin: '0px', padding: '0px', marginBottom: '1rem', height:'30%'}}>
                
-            }}>
-    <aside className="sidebar">
-       <div className="leftTop">
-         <div class='jaro' style={{color:'white'}}>ABYUDAY</div>
-         
-         <center><div style={{display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',width:'fit-content',background:'white',color:'black',paddingRight:'0.5rem',paddingLeft:'0.5rem',borderRadius:'0.4rem'}}>A Generative-AI Examiner Platform</div> </center>
-         </div>
-      <NavHeader />
-      <div className="leftMid">
-      {menuItems.map((item) => (
-        <div key={item.name}>
-          <NavButton
-            onClick={handleClick}
-            name={item.name}
-            icon={item.icon}
-            isActive={activeItem === item.name}
-            hasSubNav={!!item.items}
-          />
-          {item.items && (
-            <SubMenu
-              activeItem={activeItem}
-              handleClick={handleClick}
-              item={item}
-            />
-          )}
-        </div>
-      ))}
-</div>
-      <div className="leftBottom" style={{margin:'0px',padding:'0px',marginBottom:'1rem'}}>
-  
+{/* Username box with logo */}
+<UserBox>
+        <AccountCircleIcon fontSize="medium" sx={{ color: 'white' }} /> {/* Smaller icon */}
+        <UsernameText>{username || 'User'}</UsernameText>
+      </UserBox>
 
-     <MainMenuButton variant="contained" startIcon={<LogoutIcon />} onClick={handleLogout}>
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        onClick={handleLogout}
+        sx={{
+          fontSize: '0.875rem', // Smaller font size
+          height: '2.5rem', // Slightly smaller button height
+          backgroundColor: 'rgba(0, 123, 255, 0.1)', // Neutral transparent background
+          borderRadius: '1rem', // More curved corners
+          boxShadow: 2,
+          '&:hover': {
+            backgroundColor: 'rgba(0, 123, 255, 0.2)', // Slightly darker on hover
+          },
+        }}
+      >
         Logout
-      </MainMenuButton>
-      
+      </Button>
+            </div>
+          </aside>
+        </div>
+
+        <div className="rightDash">
+          {activeItem === "GenAI Generate" && <GenerateTest />}
+        </div>
       </div>
-    </aside>
-
-    </div>
-
-    <div className="rightDash">
-
-    <div className="rightDashBottom">
-        <Modal/>
-      </div>
-
-      <div className="rightDashTop">
-      <StyledCard>
-      <CardContent >
-        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-          Model
-        </Typography>
-        <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', mt: 1 }}>
- Gemini 1.5 Flash        <AutoAwesomeIcon fontSize="large"/>
-        </Typography>
-        <Typography sx={{ mt: 2, mb: 1, color: 'rgba(156, 163, 175, 1)', minHeight:'9.4rem'}}>
-        This LLM is a streamlined AI model prioritizing speed and efficiency. Built for high-volume tasks, it delivers accurate outputs rapidly. Ideal for time-sensitive applications, Flash offers a cost-effective solution without compromising on quality.
-        </Typography>
-        <List sx={{ mb: 3 }}>
-          <ListItem sx={{ display: 'flex', alignItems: 'center' }}>
-            <SvgIcon component={CheckCircleIcon} sx={{ color: '#8FBFFF', mr: 1 }} />
-            <Typography>Can generate upto 50 Questions per request</Typography>
-          </ListItem>
-          <ListItem sx={{ display: 'flex', alignItems: 'center' }}>
-            <SvgIcon component={CheckCircleIcon} sx={{ color: '#8FBFFF', mr: 1 }} />
-            <Typography>Generation speed in fast</Typography>
-          </ListItem>
-          <ListItem sx={{ display: 'flex', alignItems: 'center' }}>
-            <SvgIcon component={CheckCircleIcon} sx={{ color: '#8FBFFF', mr: 1 }} />
-            <Typography>Question quality is good</Typography>
-          </ListItem>
-        </List>
-      </CardContent>
-    </StyledCard>
-
-    <StyledCard>
-      <CardContent>
-        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-        Model
-        </Typography>
-        <Typography variant="h3" component="div" sx={{ fontWeight: 'bold', mt: 1 }}>
-         Gemini 1.5 Pro  <AutoAwesomeIcon fontSize="large"/>
-        </Typography>
-        <Typography sx={{ mt: 2, mb: 1, color: 'rgba(156, 163, 175, 1)', minHeight:'9.4rem'}}>
-        This LLM is a powerful AI model excelling in accuracy and complexity. Built on advanced architecture, it delivers precise, nuanced outputs. Ideal for demanding tasks, it leverages vast datasets and advanced techniques for superior performance.
-        </Typography>
-
-        <List sx={{ mb: 3 }}>
-          <ListItem sx={{ display: 'flex', alignItems: 'center' }}>
-            <SvgIcon component={CheckCircleIcon} sx={{ color: '#8FBFFF', mr: 1 }} />
-            <Typography>Can generate upto 30 Questions per request</Typography>
-          </ListItem>
-          <ListItem sx={{ display: 'flex', alignItems: 'center' }}>
-            <SvgIcon component={CheckCircleIcon} sx={{ color: '#8FBFFF', mr: 1 }} />
-            <Typography>Generation speed in moderate</Typography>
-          </ListItem>
-          <ListItem sx={{ display: 'flex', alignItems: 'center' }}>
-            <SvgIcon component={CheckCircleIcon} sx={{ color: '#8FBFFF', mr: 1 }} />
-            <Typography>Question quality is best</Typography>
-          </ListItem>
-        </List>
-       
-      </CardContent>
-    </StyledCard>
-      </div>
-
-     
-        
-    </div>
-
-
-</div>
-<Toaster richColors />
+      <Toaster richColors />
     </>
   );
 };
 
 export default Sidebar;
-

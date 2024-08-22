@@ -13,6 +13,7 @@ router.post('/login', async(req,res)=>{
       if (user) {
         const accessToken = generateAccessToken({ email: user.email });
         const refreshToken = generateRefreshToken({ email: user.email });
+        res.cookie('username',user.userName);
         res.cookie('accessToken', accessToken, { httpOnly: true, sameSite: 'Strict'});
         res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'Strict'});
         res.sendStatus(200);

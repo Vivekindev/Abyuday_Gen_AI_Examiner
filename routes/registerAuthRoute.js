@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import {generateAccessToken, generateRefreshToken, authenticateToken} from '../functions/authFunctions.js';
+import {generateAccessToken, generateRefreshToken} from '../functions/authFunctions.js';
 import registerUser from '../functions/registerUser.js';
 
 const router = Router();
@@ -11,6 +11,7 @@ router.post('/register',async(req,res)=>{
       await registerUser(email, password , username);
       const accessToken = generateAccessToken( {email} );
       const refreshToken = generateRefreshToken({email} );
+      res.cookie('username',username);
       res.cookie('accessToken', accessToken, { httpOnly: true, sameSite: 'Strict'});
       res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'Strict'});
       res.sendStatus(200);
