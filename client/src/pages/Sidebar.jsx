@@ -25,10 +25,15 @@ const UserBox = styled('div')(({ theme }) => ({
   alignItems: 'center',
   padding: theme.spacing(1),
   marginBottom: theme.spacing(1.5),
-  backgroundColor: 'rgba(255, 255, 255, 0.1)', // Neutral transparent background
+  backgroundColor: 'rgba(0, 0, 0, 1)', // Neutral transparent background
   borderRadius: '1rem', // More curved corners
+  border:'1px solid rgba(255, 255, 255, 0.3)',
   boxShadow: theme.shadows[2],
   color: theme.palette.common.white,
+  cursor: 'pointer',
+  '&:hover': {
+            backgroundColor: 'rgba(0, 123, 255, 0.1)', // Slightly darker on hover
+          },
 }));
 
 const UsernameText = styled('div')(({ theme }) => ({
