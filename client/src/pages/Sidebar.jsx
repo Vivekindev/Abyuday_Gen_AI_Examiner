@@ -13,7 +13,7 @@ import FavoriteIcon from '@mui/icons-material/Bookmarks';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { styled } from '@mui/material/styles';
-
+import { Toaster, toast } from 'sonner'; // Updated import
 
 import { Card, CardContent, Typography, List, ListItem, Button, SvgIcon } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -131,10 +131,23 @@ const SubMenu = ({ item, activeItem, handleClick }) => {
 const Sidebar = () => {
   const navigate = useNavigate();
 
-  const handleLogout = async()=>{
-    await axios.post('/api/logout')
-    navigate('/login')
-  }
+  const handleLogout = async () => {
+    try {
+      const createTestPromise = async () => await axios.post('/api/logout');
+      
+      await toast.promise(createTestPromise(), {
+        loading: 'Logging out...',
+        success: (response) => {
+          return `Logout Successful`;
+        },
+        error: 'Failed to Logout',
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+  
   
 
 
@@ -263,6 +276,7 @@ const Sidebar = () => {
 
 
 </div>
+<Toaster richColors />
     </>
   );
 };

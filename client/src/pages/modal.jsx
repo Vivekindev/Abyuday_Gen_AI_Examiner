@@ -69,8 +69,8 @@ const ConfirmationModal = () => {
       selectedModel
     };
 
-    const createTestPromise = () =>
-      axios.post(url, data, {
+    const createTestPromise = async() =>
+     await axios.post(url, data, {
         headers: {
           'Content-Type': 'application/json'
         }
