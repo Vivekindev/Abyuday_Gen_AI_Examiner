@@ -16,14 +16,14 @@ export const authenticateToken = (req, res, next) => {
           const email = refreshUser.email;
           const newAccessToken = generateAccessToken({email});
           res.cookie('accessToken', newAccessToken, { httpOnly: true, sameSite: 'Strict',});
-          req.email = refreshUser;
+          req.user = refreshUser;
           next();
         });
       } else {
         return res.sendStatus(403);
       }
     } else {
-      req.email = user;
+      req.user = user;
       next();
     }
   });

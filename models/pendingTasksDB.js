@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
 
 const taskSchema = new mongoose.Schema({
-  testID: 
-  {
+  testID: {
     type: String,
     required: true
   },
@@ -27,9 +26,14 @@ const taskSchema = new mongoose.Schema({
     required: true
   },
   status: {
-    type: Boolean,
-    default : false
+    type: String,
+    default: "Queued"
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'usersData',
+    required: true
+  }
 });
 
 const pendingTasksDB = mongoose.model('pendingTasks', taskSchema);

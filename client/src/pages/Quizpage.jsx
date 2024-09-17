@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 import {  Modal, Backdrop, Fade, CssBaseline, Container, Typography, Button, Radio, FormControlLabel, Paper, Box, Grid, IconButton, Chip, useTheme, Accordion, AccordionSummary, AccordionDetails, Table, TableBody, TableCell, TableContainer, TableHead, TableRow  } from '@mui/material';
 import { Timer } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import './Quizpage.css';
+
+import 'ldrs/waveform'
+
+
 import HomeIcon from '@mui/icons-material/Home';
 import { styled } from '@mui/system';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -17,8 +23,37 @@ import ClearIcon from '@mui/icons-material/Clear';
 import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
 import InsightsIcon from '@mui/icons-material/Insights';
 import GppGoodIcon from '@mui/icons-material/GppGood';
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 import { Card, CardContent, List, ListItem, SvgIcon } from '@mui/material';
+//-----------------------------infoUser btn ------------------------------------------
+// Custom Styled Components
+const UserBox = styled('div')(({ theme }) => ({
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(1),
+ 
+  backgroundColor: 'rgba(0, 0, 0, 1)', // Neutral transparent background
+  borderRadius: '1.6rem', // More curved corners
+  border:'1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: theme.shadows[2],
+  color: theme.palette.common.white,
+  cursor: 'pointer',
+  '&:hover': {
+            backgroundColor: 'rgba(0, 123, 255, 0.1)', // Slightly darker on hover
+          },
+}));
+
+const UsernameText = styled('div')(({ theme }) => ({
+  marginLeft: theme.spacing(1),
+  fontSize: '1.1rem', // Smaller text
+  fontWeight: theme.typography.fontWeightMedium,
+}));
+//-------------------------------------------------------------------------------------
+
+
 // ----------------------------resultCard-----------------------------------------------
 
 const StyledCard = styled(Card)({
@@ -117,14 +152,25 @@ const Quizpage = (props) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState(Array(questions.length).fill(''));
   const [score, setScore] = useState(0);
-  const [showScore, setShowScore] = useState(false);
+  const [showScore, setShowScore] = useState(null);
   const [timeLeft, setTimeLeft] = useState(questions.length * 60);
   const [scrollPos, setScrollPos] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(Array(questions.length).fill(false));
   const [incorrectAnswers, setIncorrectAnswers] = useState(Array(questions.length).fill(false));
 
+  const [username, setUsername] = useState('');
+  useEffect(() => {
+    const usernameFromCookie = Cookies.get('username');
+    setUsername(usernameFromCookie);
+    setShowScore(props.showResults);
+  }, []);
 
-  const initialSelectedOptions = Array(questions.length).fill('');
+  useEffect(() => {
+    setSelectedOptions(props.selectedOptions || Array(questions.length).fill(''));
+  }, [props.selectedOptions, questions.length]);
+  useEffect(() => {
+  calculateScore();
+}, [selectedOptions]);
 
   // Count the number of questions for each tag
   const tagCount = {};
@@ -373,18 +419,18 @@ const counts = calculateTagCounts(selectedOptions);
         }, 3000);
       }
     }, [showScore]);
+
+    
+
+    const navigate = useNavigate();
+
+
   return (
     <>
     <ThemeProvider theme={theme}>
-      <div className="overLayInputt">
-
-
-
-      </div>
-
 
       <CssBaseline />
-      <div className="mainBox">
+      <div className="mainBox" >
         <div className="leftBox">
 
         <div className="leftTop">
@@ -454,22 +500,64 @@ const counts = calculateTagCounts(selectedOptions);
           </div>
 
 <div className="leftBottom">
-<MainMenuButton variant="contained" startIcon={<HomeIcon />}>
-        Main Menu
-      </MainMenuButton>
+<UserBox
+  onClick={()=>{navigate('/dashboard');}}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.color = 'black';
+    e.currentTarget.children[0].style.display = 'none'; // Hide the account icon
+    e.currentTarget.children[1].style.display = 'none'; // Hide the username text
+    e.currentTarget.children[2].style.display = 'flex'; // Show the logout icon and text
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.color = 'white';
+    e.currentTarget.children[0].style.display = 'block'; // Show the account icon
+    e.currentTarget.children[1].style.display = 'block'; // Show the username text
+    e.currentTarget.children[2].style.display = 'none'; // Hide the logout icon and text
+  }}
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    
+    padding: '8px 16px',
+    transition: 'all 0.3s ease',
+    color: 'white',
+  }}
+>
+  <AccountCircleIcon fontSize="large" sx={{ color: 'white', fontSize: '28px' }} />
+  <UsernameText>{username || 'User'}</UsernameText>
+  <Box sx={{ display: 'none', alignItems: 'center' }}> {/* Hidden initially */}
+    <SpaceDashboardIcon sx={{ fontSize: '28px', marginRight: '8px' }} />
+    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+      Dashboard
+    </Typography>
+  </Box>
+</UserBox>
 </div>
 
         </div>
 
         
         <div className="quizBox">
+  {(showScore==null)?(<div style={{width:'100%',height:'100vh',display:'flex',justifyContent:'center',alignItems:'center'}}>
+    <l-waveform
+  size="60"
+  stroke="5.5"
+  speed="1"
+  color="white" 
+></l-waveform>
+  </div>):('')} 
+
           <Container component={Paper} elevation={3} sx={{ p: 4, mt: 4, background: 'transparent',boxShadow:'none'}}>
             <div style={{display:'flex',flexDirection:'row',justifyContent:'space-between',alignItems:'center'}}>
            
-              {showScore? (
+              {(showScore==true)? (
             <></>
 
-              ):(
+              ):(showScore==false)?(
                 <div>           
   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
   
@@ -479,8 +567,8 @@ const counts = calculateTagCounts(selectedOptions);
     ))}
   </Box>
 </div>
-              )}
-               {showScore? (<></>):(
+              ):('')}
+               {(showScore==true)? (<></>):(showScore==false)?(
                 <Box
       display="flex"
       justifyContent="flex-end"
@@ -508,11 +596,11 @@ const counts = calculateTagCounts(selectedOptions);
         {formatTime(timeLeft)}
       </Typography>
     </Box>
-               )}
+               ):('')}
                
 
             </div>
-            {showScore ? (
+            {(showScore==true) ? (
               <Box sx={{ mt: '0' }}>
                 
                 <div style={{ marginBottom: '1rem' }}>
@@ -670,7 +758,7 @@ const counts = calculateTagCounts(selectedOptions);
         color: '#0f0', // Bright green color to emphasize the correctness
       }}
     >
-      Correct Answers <CheckIcon fontSize="medium" />
+      Correct <CheckIcon fontSize="medium" />
     </Typography>
     <Typography
       variant="h3"
@@ -717,7 +805,7 @@ const counts = calculateTagCounts(selectedOptions);
         color: '#f00', // Bright red color to highlight incorrectness
       }}
     >
-      Incorrect Answers <ClearIcon fontSize="medium" />
+      Incorrect  <ClearIcon fontSize="medium" />
     </Typography>
     <Typography
       variant="h3"
@@ -1086,8 +1174,9 @@ const counts = calculateTagCounts(selectedOptions);
     </div>
             </Box>
           </Box>
-            ) : (
+            ) : (showScore==false)?(
               <>
+              <div style={{ userSelect: 'none' }}>
   <Typography variant="h6" component="h2" sx={{ mt: 4 }}>
     {currentQuestion + 1}) {questions[currentQuestion].questionText}
   </Typography>
@@ -1120,13 +1209,13 @@ const counts = calculateTagCounts(selectedOptions);
     ))}
   </Grid>
   
-  
+  </div>
 </>
 
-            )}
+            ):('')}
           </Container>
 
-{(showScore?(<></>):(
+{((showScore==true)?(<></>):(showScore==false)?(
   <Container component={Paper} elevation={3} sx={{ p: 2, mt: 5, backdropFilter: 'blur(10px)',border:'1px solid #4B4E55', bgcolor: 'transparent',marginTop: 'auto',marginBottom:'1.5rem',borderRadius:'8rem'}}>
   <Box display="flex" justifyContent="space-between" sx={{ mt: 0 }}>
     <div>
@@ -1200,7 +1289,7 @@ Submit
 </Box>
 </Container>
 
-)) }
+):('')) }
           
         </div>
       </div>

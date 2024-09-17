@@ -59,7 +59,7 @@ const ConfirmationModal = () => {
     setOpen(false);
     const testId = uuidv4().slice(0, 6);
 
-    const url = 'http://localhost:4040/api/test/create';
+    const url = '/api/test/create';
     const data = {
       testId,
       testName,
@@ -74,7 +74,7 @@ const ConfirmationModal = () => {
         headers: {
           'Content-Type': 'application/json'
         }
-      });
+      },{ withCredentials: true });
 
     toast.promise(createTestPromise(), {
       loading: 'Creating...',

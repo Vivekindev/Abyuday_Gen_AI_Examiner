@@ -12,6 +12,11 @@ import loginAuthRoute from './routes/loginAuthRoute.js'
 import registerAuthRoute from './routes/registerAuthRoute.js';
 import authorizationRoute from './routes/authorizationRoute.js'
 import logoutRoute from './routes/logoutRoute.js'
+import GeminiPromptRoute from './routes/GeminiPromptRoute.js';
+import QuestionDataRoute from './routes/QuestionDataRoute.js';
+import testProcessRoute from './routes/testProcessRoute.js';
+
+import watchPendingTasks from './functions/watchPendingTasks.js'
 
 const app = express();
 const PORT = process.env.PORT || 4040; 
@@ -29,13 +34,18 @@ app.use((req, res, next) => {
   next(); 
 });
 
-// Define your API and auth routes first
+// API and auth routes 
 app.use(`/api`, pendingTaskRoute);
 app.use(`/api`, loginAuthRoute);
 app.use(`/api`, registerAuthRoute);
 app.use(`/api`, authorizationRoute);
 app.use('/api', logoutRoute);
+app.use('/api', GeminiPromptRoute);
+app.use('/api', QuestionDataRoute);
+app.use('/api', testProcessRoute);
+
 app.use('/', GoogleOauthRoute);
+
 
 // To serve react static files (Frontend)
 const __dirname = path.resolve();
@@ -54,8 +64,7 @@ app.get('*', function (_, res) {
 // Connect to the database and start the server
 connectDB()
   .then(() => {
-    app.listen(PORT, () =>
-      console.log(`Server is up and running on port ${PORT}`)
-    );
+    app.listen(PORT, () => console.log(`Server is up and running on port ${PORT}` ));
+    watchPendingTasks();
   })
   .catch((err) => console.log(err));

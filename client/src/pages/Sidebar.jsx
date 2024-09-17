@@ -1,12 +1,15 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./Sidebar.css";
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+
 import HomeIcon from "@mui/icons-material/Home";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import LockIcon from "@mui/icons-material/Lock";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AutoModeIcon from '@mui/icons-material/AutoMode';
 import FavoriteIcon from '@mui/icons-material/Bookmarks';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -18,7 +21,10 @@ import { styled } from '@mui/material/styles';
 import Cookies from 'js-cookie';
 import { Toaster, toast } from 'sonner'; // Updated import
 import { Button } from '@mui/material';
+
 import GenerateTest from "../components/GenerateTest";
+import AttemptTest from "../components/AttemptTest";
+
 import axios from "axios";
 
 // Custom Styled Components
@@ -41,7 +47,7 @@ const UserBox = styled('div')(({ theme }) => ({
 
 const UsernameText = styled('div')(({ theme }) => ({
   marginLeft: theme.spacing(1),
-  fontSize: '1.2rem', // Smaller text
+  fontSize: '1.1rem', // Smaller text
   fontWeight: theme.typography.fontWeightMedium,
 }));
 
@@ -50,6 +56,11 @@ const menuItems = [
   {
     name: "Create Test",
     icon: <AutoAwesomeIcon />,
+   
+  },
+  {
+    name: "Attend Test",
+    icon: <AutoModeIcon />,
    
   },
   { name: "Tests Created", icon: <CheckCircleSharpIcon /> },
@@ -114,11 +125,23 @@ const SubMenu = ({ item, activeItem, handleClick }) => {
 
 
 const Sidebar = () => {
+    // useLocation gives you access to the current URL's location object
+    const location = useLocation();
+
+    // URLSearchParams to extract the query parameters
+    const queryParams = new URLSearchParams(location.search);
+    
+    // Get the 'name' query parameter
+    const TestID = queryParams.get('TestID');
+
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState("Home");
   const [username, setUsername] = useState('');
 
   useEffect(() => {
+    if(TestID)
+    setActiveItem("Attend Test");
+
     const usernameFromCookie = Cookies.get('username');
     setUsername(usernameFromCookie);
   }, []);
@@ -244,6 +267,8 @@ const Sidebar = () => {
 
         <div className="rightDash">
           {activeItem === "Create Test" && <GenerateTest />}
+          {activeItem === "Attend Test" && <AttemptTest />}
+          
         </div>
 
       </div>
