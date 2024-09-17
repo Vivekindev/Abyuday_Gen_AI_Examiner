@@ -67,7 +67,7 @@ const AttemptTest = () => {
     const handleSearch = async (ID) => {
         try { 
           setTestLoading("loading");
-            const response = await axios.post("http://localhost:4040/api/test/getinfo", { testID: ID }, {
+            const response = await axios.post("/api/test/getinfo", { testID: ID }, {
                 headers: {
                     'Content-Type': 'application/json',
                     withCredentials: true
