@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef} from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -6,8 +6,9 @@ import {  Modal, Backdrop, Fade, CssBaseline, Container, Typography, Button, Rad
 import { Timer } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import './Quizpage.css';
-
-import 'ldrs/waveform'
+import axios from 'axios';
+import { lineSpinner } from 'ldrs'
+lineSpinner.register()
 
 
 import HomeIcon from '@mui/icons-material/Home';
@@ -123,12 +124,12 @@ const style = {
   transform: 'translate(-50%, -50%)',
   width: 400,
   bgcolor: '#000000',
-  borderRadius: 8,
+  borderRadius: 4,
   boxShadow: 24,
   p: 4,
   outline: 'none',
   backdropFilter: 'blur(10px)', // Blurred background
-  background: 'rgba(0, 0, 0, 0.7)', // White overlay at 10% opacity
+  background: 'rgba(0, 0, 0, 1)', // White overlay at 10% opacity
 };
  //----------------------------------------------------------------------//
 
@@ -149,11 +150,14 @@ const MainMenuButton = styled(Button)({
 
 const Quizpage = (props) => {
   const questions = props.questions;
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedOptions, setSelectedOptions] = useState(Array(questions.length).fill(''));
+  const ID = props.testID;
+  const [remTime, setRemTime] = useState(props.remTime);
+  const [currentQuestion, setCurrentQuestion] = useState(parseInt(localStorage.getItem('currentQuestion')) || 0);
+  const [selectedOptions, setSelectedOptions] = useState(props.selectedOptions);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(questions.length * 60);
+  const [confettiNeeded, setConfettiNeeded] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(remTime);
   const [scrollPos, setScrollPos] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(Array(questions.length).fill(false));
   const [incorrectAnswers, setIncorrectAnswers] = useState(Array(questions.length).fill(false));
@@ -163,7 +167,65 @@ const Quizpage = (props) => {
     const usernameFromCookie = Cookies.get('username');
     setUsername(usernameFromCookie);
     setShowScore(props.showResults);
+    setConfettiNeeded(props.showResults);
   }, []);
+
+
+  //SSE client Side
+  useEffect(() => {
+    const eventSource = new EventSource(`/api/test/remtime?testID=${props.testID}`);
+    // Handle incoming messages
+    eventSource.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      setTimeLeft(data.remTime);
+      console.log(data.remTime);
+      if (data.isEnded) {
+        eventSource.close();
+      }
+    };
+
+    eventSource.onerror = function(err) {
+      console.error('EventSource failed:', err);
+      window.location.reload();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [props.testID]);
+
+
+
+//update selected option on server side
+useEffect(()=>{
+
+const saveOptionsOnServer = async()=>{
+try{
+  const url = '/api/test/saveoptions';
+  const data = { testID: ID , selectedOptions: selectedOptions};
+  const response = await axios.post(url, data, {
+    headers: { 'Content-Type': 'application/json' },
+     withCredentials: true, 
+  });
+}
+catch(err){
+  console.log(err);
+}
+
+}
+
+  saveOptionsOnServer();
+},
+[selectedOptions])
+
+
+//Storing Current question in Local storage
+useEffect(()=>{
+  localStorage.setItem('currentQuestion', currentQuestion);
+}
+,[currentQuestion]);
+
+
 
   useEffect(() => {
     setSelectedOptions(props.selectedOptions || Array(questions.length).fill(''));
@@ -292,6 +354,7 @@ const counts = calculateTagCounts(selectedOptions);
   const handleNextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
+      
     } else {
       setShowScore(true);
       calculateScore();
@@ -301,6 +364,7 @@ const counts = calculateTagCounts(selectedOptions);
   const handlePreviousQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
+      
     }
   };
 
@@ -321,6 +385,22 @@ const counts = calculateTagCounts(selectedOptions);
     setIncorrectAnswers(newIncorrectAnswers);
   };
 
+
+//submitAndEnd Server Side
+const submitAndEnd = async()=>{
+  try {
+    const url = '/api/test/submit';
+    const data = { testID: ID };
+    const response = await axios.post(url, data, {
+      headers: { 'Content-Type': 'application/json' },
+       withCredentials: true, 
+    });
+  } catch(err){
+    console.error(err);
+  }
+}
+
+
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
@@ -330,6 +410,7 @@ const counts = calculateTagCounts(selectedOptions);
 
   const handleQuestionClick = (index) => {
     setCurrentQuestion(index);
+    
   };
 
 
@@ -412,7 +493,7 @@ const counts = calculateTagCounts(selectedOptions);
 
     const [confettiPieces, setConfettiPieces] = useState(0);
     useEffect(() => {
-      if (showScore) {
+      if (showScore != confettiNeeded) {
         setConfettiPieces(200); // Start with 200 pieces
         setTimeout(() => {
           setConfettiPieces(0); // Stop generating new confetti pieces after 3 seconds
@@ -434,14 +515,14 @@ const counts = calculateTagCounts(selectedOptions);
         <div className="leftBox">
 
         <div className="leftTop">
-         <div class='jaro'>ABYUDAY</div>
-       <center>  <div style={{borderRadius:'0.4rem',display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',width:'fit-content',background:'white',color:'black',paddingRight:'0.5rem',paddingLeft:'0.5rem'}}>A Generative-AI Examiner Platform</div> 
+         <div class='jaro' style={{color:'#bfbfbf'}}>ABYUDAY</div>
+       <center>  <div style={{borderRadius:'0.4rem',display:'flex',justifyContent:'center',alignItems:'center',paddingTop:'0.05rem',fontSize:'0.5rem',width:'fit-content',background:'#bfbfbf',color:'black',paddingRight:'0.5rem',paddingLeft:'0.5rem'}}>A Generative-AI Examiner Platform</div> 
        </center>
       
          </div>
 
         <div className="leftMid">
-         <Box display="flex" justifyContent="center" sx={{ mt: 0 ,mr: 2.3, ml: 2.3}}>
+         <Box display="flex" justifyContent="center" sx={{ mt: 0 ,mr: 2.3, ml: 2.23}}>
             <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap', maxWidth: '100%' }}>
               <Grid container spacing={2} justifyContent="center" sx={{ transform: `translateX(-${scrollPos}px)`, transition: 'transform 0.3s' }}>
                 {questions.map((_, index) => (
@@ -503,7 +584,7 @@ const counts = calculateTagCounts(selectedOptions);
 <UserBox
   onClick={()=>{navigate('/dashboard');}}
   onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.backgroundColor = '#bfbfbf';
     e.currentTarget.style.color = 'black';
     e.currentTarget.children[0].style.display = 'none'; // Hide the account icon
     e.currentTarget.children[1].style.display = 'none'; // Hide the username text
@@ -511,7 +592,7 @@ const counts = calculateTagCounts(selectedOptions);
   }}
   onMouseLeave={(e) => {
     e.currentTarget.style.backgroundColor = 'transparent';
-    e.currentTarget.style.color = 'white';
+    e.currentTarget.style.color = '#bfbfbf';
     e.currentTarget.children[0].style.display = 'block'; // Show the account icon
     e.currentTarget.children[1].style.display = 'block'; // Show the username text
     e.currentTarget.children[2].style.display = 'none'; // Hide the logout icon and text
@@ -524,7 +605,7 @@ const counts = calculateTagCounts(selectedOptions);
     
     padding: '8px 16px',
     transition: 'all 0.3s ease',
-    color: 'white',
+    color: '#bfbfbf',
   }}
 >
   <AccountCircleIcon fontSize="large" sx={{ color: 'white', fontSize: '28px' }} />
@@ -542,13 +623,13 @@ const counts = calculateTagCounts(selectedOptions);
 
         
         <div className="quizBox">
-  {(showScore==null)?(<div style={{width:'100%',height:'100vh',display:'flex',justifyContent:'center',alignItems:'center'}}>
-    <l-waveform
-  size="60"
-  stroke="5.5"
+  {(showScore==null)?(<div style={{width:'100%',height:'100vh',display:'flex',justifyContent:'center',alignItems:'center'}}> 
+<l-line-spinner
+  size="50"
+  stroke="3"
   speed="1"
   color="white" 
-></l-waveform>
+></l-line-spinner>
   </div>):('')} 
 
           <Container component={Paper} elevation={3} sx={{ p: 4, mt: 4, background: 'transparent',boxShadow:'none'}}>
@@ -561,7 +642,7 @@ const counts = calculateTagCounts(selectedOptions);
                 <div>           
   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
   
-  <button style={{ minWidth: '5rem', marginRight: '0.2rem', marginLeft: '0.3rem', borderRadius:'3rem',paddingLeft:'0.8rem',paddingRight:'0.8rem' }}>Question Tags</button>
+  <button style={{ minWidth: '5rem', marginRight: '0.2rem', marginLeft: '0.3rem', borderRadius:'3rem',paddingLeft:'0.8rem',paddingRight:'0.8rem' ,backgroundColor:'white', color:'black'}}>Question Tags</button>
     {currentQuestionTags.map((tag, index) => (
       <Chip key={index} label={tag} sx={{ minWidth: '5rem', marginRight: '0.2rem', marginLeft: '0.3rem',marginTop:'0.2rem',}} />
     ))}
@@ -1339,10 +1420,11 @@ Submit
                 variant="contained" 
                 color="primary" 
                 onClick={()=>{
+                  localStorage.removeItem('currentQuestion');
                   handleConfirm();
                   setShowScore(true);
                   calculateScore();
-                  
+                  submitAndEnd();
                 }}
                 sx={{
                   fontWeight:'600',

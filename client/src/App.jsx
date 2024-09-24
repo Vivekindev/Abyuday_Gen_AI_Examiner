@@ -20,9 +20,9 @@ const App = () => {
 
 
       <Route element={<ProtectedRoute/>}>
-            
-      <Route path='/dashboard' element={<Sidebar />} />
+            <Route path='/dashboard' element={<Sidebar />} />
             <Route path='/test' element={<Dashboard />}/>
+      
             <Route path='/modal' element={<Modal />} />
          
       </Route>

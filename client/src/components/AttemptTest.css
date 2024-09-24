@@ -12,6 +12,10 @@
 .searchBoxMid{
    height: 70%;
    padding: 3rem;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   transform: translate(0,-2rem);
 }
 .searchBoxBottom{
     height: 10%;

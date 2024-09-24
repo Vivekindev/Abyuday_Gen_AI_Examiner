@@ -12,4 +12,12 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4040', // The backend server URL
+        changeOrigin: true,
+      },
+    },
+  },
 });

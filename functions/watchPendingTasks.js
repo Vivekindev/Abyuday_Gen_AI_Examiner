@@ -11,26 +11,47 @@ const processTask = async (task) => {
   console.log(`Processing Pending Task ${testID}`);
   const pendingTask = await pendingTasksDB.findOne({ testID });
   pendingTask.status = "Processing";
-  pendingTask.save();
+  await pendingTask.save();
 
   try {
     let combinedResponse = [];
     let totalQuestionsCollected = 0;
+    const maxRetries = 3;
 
     while (totalQuestionsCollected < questionCount) {
       const currentBatchCount = Math.min(15, questionCount - totalQuestionsCollected);
       console.log(`Processing with up to ${currentBatchCount} questions remaining.`);
 
-      const response = await geminiQueryRun(testPrompt, currentBatchCount, testDifficulty, testModel);
+      let response;
+      let parsedResponse;
+      let retryCount = 0;
 
-      if (typeof response === 'string' && (response === '403' || response === '404')) {
-        console.error(`Task ${testID} failed: Received error code ${response}`);
-        pendingTask.status = "Error";
-        pendingTask.save();
-        return false;
+      while (retryCount < maxRetries) {
+        try {
+          response = await geminiQueryRun(testPrompt, currentBatchCount, testDifficulty, testModel);
+
+          if (typeof response === 'string' && (response === '403' || response === '404')) {
+            console.error(`Task ${testID} failed: Received error code ${response}`);
+            pendingTask.status = "Error";
+            await pendingTask.save();
+            return false;
+          }
+
+          parsedResponse = JSON.parse(response);
+          break; // exit the retry loop if parsing is successful
+
+        } catch (jsonError) {
+          retryCount++;
+          console.warn(`Retrying due to JSON parse error (attempt ${retryCount}/${maxRetries}). Error:`, jsonError);
+          if (retryCount >= maxRetries) {
+            console.error(`Task ${testID} failed: Maximum retries reached for JSON parsing`);
+            pendingTask.status = "Error";
+            await pendingTask.save();
+            return false;
+          }
+        }
       }
 
-      const parsedResponse = JSON.parse(response);
       combinedResponse = [...combinedResponse, ...parsedResponse];
       totalQuestionsCollected += parsedResponse.length;
 
@@ -50,7 +71,7 @@ const processTask = async (task) => {
 
     console.log(`Done Processing Task ${testID}`);
     pendingTask.status = "Done";
-    pendingTask.save();
+    await pendingTask.save();
     return true;
   } catch (error) {
     console.error(`Error processing task ${testID}:`, error);

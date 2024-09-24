@@ -62,7 +62,7 @@
 }
 
 .sidebar button:is(.active, :hover) {
-  background: #ffffff;
+  background: #bfbfbf;
   color: #000000;
 }
 

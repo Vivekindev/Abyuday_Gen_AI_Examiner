@@ -164,8 +164,11 @@ const Sidebar = () => {
   };
 
   const handleClick = (item) => {
-    setActiveItem(item !== activeItem ? item : "");
+    if (item !== activeItem) {
+      setActiveItem(item);
+    }
   };
+  
 
   return (
     <>
@@ -173,7 +176,7 @@ const Sidebar = () => {
         <div className="leftBox" style={{ zIndex: '100' }}>
           <aside className="sidebar">
             <div className="leftTop">
-              <div className="jaro" style={{ color: 'white' }}>ABYUDAY</div>
+              <div className="jaro" style={{ color: '#bfbfbf' }}>ABYUDAY</div>
               <center>
                 <div
                   style={{
@@ -183,7 +186,7 @@ const Sidebar = () => {
                     paddingTop: '0.05rem',
                     fontSize: '0.5rem',
                     width: 'fit-content',
-                    background: 'white',
+                    background: '#bfbfbf',
                     color: 'black',
                     paddingRight: '0.5rem',
                     paddingLeft: '0.5rem',
@@ -223,7 +226,7 @@ const Sidebar = () => {
 <UserBox
   onClick={handleLogout}
   onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.backgroundColor = '#bfbfbf';
     e.currentTarget.style.color = 'black';
     e.currentTarget.children[0].style.display = 'none'; // Hide the account icon
     e.currentTarget.children[1].style.display = 'none'; // Hide the username text
@@ -231,7 +234,7 @@ const Sidebar = () => {
   }}
   onMouseLeave={(e) => {
     e.currentTarget.style.backgroundColor = 'transparent';
-    e.currentTarget.style.color = 'white';
+    e.currentTarget.style.color = '#bfbfbf';
     e.currentTarget.children[0].style.display = 'block'; // Show the account icon
     e.currentTarget.children[1].style.display = 'block'; // Show the username text
     e.currentTarget.children[2].style.display = 'none'; // Hide the logout icon and text
@@ -244,7 +247,7 @@ const Sidebar = () => {
     
     padding: '8px 16px',
     transition: 'all 0.3s ease',
-    color: 'white',
+    color: '#bfbfbf',
   }}
 >
   <AccountCircleIcon fontSize="large" sx={{ color: 'white', fontSize: '28px' }} />

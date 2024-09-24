@@ -123,7 +123,7 @@ const LoginPage = () => {
       return;
     }
 
-    const url = "http://localhost:4040/api/login";
+    const url = "/api/login";
     const data = { email, password };
 
     try {

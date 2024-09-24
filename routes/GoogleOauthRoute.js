@@ -18,7 +18,7 @@ router.get('/auth/google/callback',
 
     res.cookie('username', username);  
     res.cookie('accessToken', accessToken);
-    res.cookie('refreshToken', refreshToken);
+    res.cookie('refreshToken', refreshToken);88
     
     res.redirect(`/dashboard`);
   }

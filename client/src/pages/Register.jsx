@@ -135,7 +135,7 @@ const RegisterPage = () => {
   const handleRegister = () => {
     if (validateForm()) {
         const data = { username, email, password };
-        const url = 'http://localhost:4040/api/register'; // Replace with your actual API endpoint
+        const url = '/api/register'; // Replace with your actual API endpoint
   
         try {
           toast.promise(

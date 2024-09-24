@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from 'react-router-dom';
 import styled from "styled-components";
-import 'ldrs/waveform'
+
+import { lineSpinner } from 'ldrs'
+lineSpinner.register()
+
 import { SearchOff, ErrorOutline } from '@mui/icons-material';
 import TestModal from '../components/TestInstructionModal';
 import { Box, Card, CardContent, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper } from '@mui/material';
@@ -9,7 +12,7 @@ import './AttemptTest.css';
 import axios from "axios";
 import testImg from "../assets/testImg.png";
 const StyledCard = styled(Card)({
-    width: 700,
+    width: '70vw',
     height: '100%',
     borderRadius: '16px',
     backgroundColor: 'transparent',
@@ -23,6 +26,7 @@ const StyledCard = styled(Card)({
 });
 
 const StyledTableContainer = styled(TableContainer)({
+  width:'40vw',
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // Transparent background with light tint
     color: '#FFFFFF', // Light text
     borderRadius: '8px',
@@ -31,7 +35,7 @@ const StyledTableContainer = styled(TableContainer)({
 
 const StyledTableCell = styled(TableCell)({
     color: '#FFFFFF',
-    border: '1px solid #4B4E55',
+    borderBottom: '1px solid #4B4E55',
  
 });
 
@@ -95,7 +99,7 @@ const AttemptTest = () => {
                                     <div className="darkBorderBg" />
                                     <div className="darkBorderBg" />
                                     <div className="white" />
-                                    <div className="border" />
+                                    
                                     <div id="main">
                                         <input
                                             placeholder="Enter Test ID"
@@ -106,6 +110,7 @@ const AttemptTest = () => {
                                             onChange={(e) => setTestID(e.target.value)}
                                             autoComplete="off"
                                             maxLength={6}
+                                            style={{}}
                                         />
                                         <div id="pink-mask" />
                                         <div className="filterBorder" />
@@ -170,7 +175,7 @@ const AttemptTest = () => {
     <img 
   src={testImg} 
   style={{ 
-    width: '30%', 
+    width: '10vw', 
     opacity: 0.5, 
     position: 'absolute', 
     transform: 'translate(0, -3rem)' 
@@ -184,7 +189,12 @@ const AttemptTest = () => {
  {(testLoading === "loading") && (<> 
   <>
     <div className="searchBoxMid" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <l-waveform size="35" stroke="3.5" speed="1" color="white"></l-waveform>
+    <l-line-spinner
+  size="50"
+  stroke="3"
+  speed="1"
+  color="white" 
+></l-line-spinner>
     </div>
     <div className="searchBoxBottom"></div>
   </>
@@ -305,9 +315,9 @@ const StyledWrapper = styled.div`
   height: 100%;
   background-image: linear-gradient(
     120deg,
-    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 1) 30%,
     rgba(255, 255, 255, 0.8),
-    rgba(255, 255, 255, 0) 70%
+    rgba(255, 255, 255, 1) 70%
   );
   top: 0;
   left: -100px;
@@ -329,8 +339,8 @@ const StyledWrapper = styled.div`
 }
 
   .grid {
-  height: 800px;
-  width: 800px;
+  height: 1px;
+  width: 1px;
   background-image: linear-gradient(to right, #0f0f10 1px, transparent 1px),
     linear-gradient(to bottom, #0f0f10 1px, transparent 1px);
   background-size: 1rem 1rem;

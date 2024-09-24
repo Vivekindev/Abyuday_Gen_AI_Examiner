@@ -10,7 +10,7 @@ const testSchema = new mongoose.Schema({
     required: true,
     default: false
   },
-  isended: {
+  isEnded: {
     type: Boolean,  
     required: true,
     default: false
@@ -23,9 +23,19 @@ const testSchema = new mongoose.Schema({
     type: Date,     
     required: true
   },
+  expiryTime: {
+    type: Date,     
+    required: true
+  },
   timeAlloted:{
     type: Number,
     required: true
+  },
+  results:{
+    type: Object
+  },
+  selectedOptions:{
+    type: Object
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,

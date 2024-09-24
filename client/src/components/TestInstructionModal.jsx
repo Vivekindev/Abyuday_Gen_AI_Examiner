@@ -41,7 +41,7 @@ const modalStyle = {
   transform: 'translate(-50%, -50%)',
   width: 500, // Increased width for better layout
   bgcolor: 'background.paper',
-  borderRadius: 6, // Smoother rounded corners
+  borderRadius: 4, // Smoother rounded corners
   boxShadow: 24,
   p: 4,
   outline: 'none',
@@ -55,7 +55,7 @@ const TestInstructionModal = (props) => {
   const handleClose = () => setOpen(false);
   const handleBeginTest = () => {
     handleClose();  // Close the current modal or perform the necessary action
-    const testUrl = `http://localhost:5173/test?testID=${testID}`;  // Replace with your desired URL
+    const testUrl = `/test?testID=${testID}`;  // Replace with your desired URL
     window.open(testUrl, '_blank');  // Opens the URL in a new tab
   };
 
@@ -160,7 +160,7 @@ const TestInstructionModal = (props) => {
                 variant="contained"
                 onClick={handleBeginTest}
                 fullWidth
-                sx={{ mt: 3, bgcolor: 'white', borderRadius: '0.6rem', height: '3rem' }}
+                sx={{ mt: 3, bgcolor: 'white', borderRadius: '0.3rem', height: '3rem' }}
               >
                 <b>Begin Test  </b> <ContentPasteGoIcon sx={{ml:'0.7rem'}}/>
               </Button>
