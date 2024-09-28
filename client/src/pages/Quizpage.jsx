@@ -171,29 +171,39 @@ const Quizpage = (props) => {
   }, []);
 
 
-  //SSE client Side
+
+//Short Polling for Fetching Rem Time of Test
   useEffect(() => {
-    const eventSource = new EventSource(`/api/test/remtime?testID=${props.testID}`);
-    // Handle incoming messages
-    eventSource.onmessage = function(event) {
-      const data = JSON.parse(event.data);
-      setTimeLeft(data.remTime);
-      console.log(data.remTime);
-      if (data.isEnded) {
-        eventSource.close();
+    let intervalId;
+
+    const fetchRemainingTime = async () => {
+      try {
+        const response = await axios.post('/api/test/remtime', {
+          testID: props.testID,
+        });
+
+        const data = response.data;
+        setTimeLeft(data.remTime);
+        console.log(data.remTime);
+
+        if (data.isEnded) {
+          clearInterval(intervalId);
+        }
+      } catch (err) {
+        console.error('Polling failed:', err);
+        clearInterval(intervalId);
+        window.location.reload();
       }
     };
 
-    eventSource.onerror = function(err) {
-      console.error('EventSource failed:', err);
-      window.location.reload();
-    };
+ 
+    fetchRemainingTime();
+    intervalId = setInterval(fetchRemainingTime, 5000);
 
     return () => {
-      eventSource.close();
+      clearInterval(intervalId);
     };
   }, [props.testID]);
-
 
 
 //update selected option on server side
@@ -522,62 +532,74 @@ const submitAndEnd = async()=>{
          </div>
 
         <div className="leftMid">
-         <Box display="flex" justifyContent="center" sx={{ mt: 0 ,mr: 2.3, ml: 2.23}}>
-            <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-              <Grid container spacing={2} justifyContent="center" sx={{ transform: `translateX(-${scrollPos}px)`, transition: 'transform 0.3s' }}>
-                {questions.map((_, index) => (
-                  <Grid item key={index}>
-                    <Button
-                      variant="contained"
-                      color={showScore ? (correctAnswers[index] ? 'success' : incorrectAnswers[index] ? 'error' : 'primary') : (currentQuestion === index ? 'secondary' : 'primary')}
-                      onClick={() => handleQuestionClick(index)}
-                      sx={{
-                        minWidth: '3rem',
-                        minHeight: '3rem',
-                        backgroundColor: showScore
-                          ? correctAnswers[index]
-                            ? theme.palette.success.main
-                            : incorrectAnswers[index]
-                            ? theme.palette.error.main
-                            : '#1B222C'
-                          : currentQuestion === index
-                          ? '#ffffff'
-                          : '#1B222C',
-                        color: showScore
-                          ? '#ffffff'
-                          : currentQuestion === index
-                          ? '#000000'
-                          : '#ffffff',
-                        border: selectedOptions[index]
-                          ? '1px solid #7a7a7a'
-                          : showScore
-                          ? correctAnswers[index]
-                            ? `2px solid ${theme.palette.success.main}`
-                            : incorrectAnswers[index]
-                            ? `2px solid ${theme.palette.error.main}`
-                            : 'none'
-                          : 'none',
-                        '&:hover': {
-                          backgroundColor: showScore
-                            ? correctAnswers[index]
-                              ? theme.palette.success.main
-                              : incorrectAnswers[index]
-                              ? theme.palette.error.main
-                              : '#2A3B5A'
-                            : currentQuestion === index
-                            ? '#ffffff'
-                            : '#2A3B5A',
-                          color: showScore ? '#ffffff' : currentQuestion === index ? '#000000' : '#ffffff',
-                        },
-                      }}
-                    >
-                      {index + 1}
-                    </Button>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </Box>
+        <Box display="flex" justifyContent="center" sx={{ mt: 0, mr: 2.3, ml: 2.3 }}>
+  <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+    <Grid
+      container
+      spacing={2}
+      justifyContent="center"
+      sx={{ 
+        transform: `translateX(-${scrollPos}px)`, 
+        transition: 'transform 0.3s',
+        // Ensures that the container width is set to accommodate exactly 4 boxes
+        maxWidth: `calc(4 * 10rem + 6rem)`,  // 4 * boxWidth + 3 * spacing
+      }}
+    >
+      {questions.map((_, index) => (
+        <Grid item key={index} xs={3} sm={3} md={3} lg={3}>
+          <Button
+            variant="contained"
+            color={showScore ? (correctAnswers[index] ? 'success' : incorrectAnswers[index] ? 'error' : 'primary') : (currentQuestion === index ? 'secondary' : 'primary')}
+            onClick={() => handleQuestionClick(index)}
+            sx={{
+              minWidth: currentQuestion === index ? '3rem' : '3rem', // Increase width slightly for the selected box
+              minHeight: '3rem',
+              width: currentQuestion === index ? 'calc(100%)' : '100%', // Make the selected box slightly larger
+              backgroundColor: showScore
+                ? correctAnswers[index]
+                  ? theme.palette.success.main
+                  : incorrectAnswers[index]
+                  ? theme.palette.error.main
+                  : '#1B222C'
+                : currentQuestion === index
+                ? '#ffffff'
+                : '#1B222C',
+              color: showScore
+                ? '#ffffff'
+                : currentQuestion === index
+                ? '#000000'
+                : '#ffffff',
+              border: selectedOptions[index]
+                ? '1px solid #7a7a7a'
+                : showScore
+                ? correctAnswers[index]
+                  ? `2px solid ${theme.palette.success.main}`
+                  : incorrectAnswers[index]
+                  ? `2px solid ${theme.palette.error.main}`
+                  : 'none'
+                : 'none',
+              '&:hover': {
+                backgroundColor: showScore
+                  ? correctAnswers[index]
+                    ? theme.palette.success.main
+                    : incorrectAnswers[index]
+                    ? theme.palette.error.main
+                    : '#2A3B5A'
+                  : currentQuestion === index
+                  ? '#ffffff'
+                  : '#2A3B5A',
+                color: showScore ? '#ffffff' : currentQuestion === index ? '#000000' : '#ffffff',
+              },
+            }}
+          >
+            {index + 1}
+          </Button>
+        </Grid>
+      ))}
+    </Grid>
+  </Box>
+</Box>
+
           </div>
 
 <div className="leftBottom">

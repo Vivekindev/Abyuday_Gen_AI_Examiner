@@ -93,10 +93,10 @@ router.post('/test/begin', authenticateToken, async (req, res) => {
 });
 
 
-// SSE connection to get remaining time
-router.get('/test/remtime', authenticateToken, async (req, res) => {
+// Short polling to get remaining time using POST
+router.post('/test/remtime', authenticateToken, async (req, res) => {
     try {
-        const { testID } = req.query;
+        const { testID } = req.body;
         const user = await findUser(req.user.email);
         const userTest = await testWindow.findOne({ testID, user: user._id });
 
@@ -104,32 +104,16 @@ router.get('/test/remtime', authenticateToken, async (req, res) => {
             return res.status(404).send('Test not found for user');
         }
 
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
-        res.flushHeaders();
+        const remTime = calculateRemainingTime(userTest.expiryTime);
 
-        const sendRemainingTime = async () => {
-            const remTime = calculateRemainingTime(userTest.expiryTime);
+        if (remTime <= 0) { 
+            userTest.isEnded = true;
+            userTest.isOngoing = false;
+            await userTest.save();
+            return res.json({ remTime: 0, isEnded: true });
+        }
 
-            if (remTime <= 0) { 
-                userTest.isEnded = true;
-                userTest.isOngoing = false;
-                await userTest.save(); 
-                res.write(`data: ${JSON.stringify({ remTime: 0, isEnded: true })}\n\n`);
-                clearInterval(interval); 
-                res.end(); 
-            } else {
-                res.write(`data: ${JSON.stringify({ remTime })}\n\n`);
-            }
-        };
-
-        const interval = setInterval(sendRemainingTime, 1000);
-
-        req.on('close', () => {
-            clearInterval(interval);
-            res.end();
-        });
+        res.json({ remTime, isEnded: false });
     } catch (err) {
         console.error(err);
         res.sendStatus(500);
