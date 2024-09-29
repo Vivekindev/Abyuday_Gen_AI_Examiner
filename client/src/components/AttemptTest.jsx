@@ -15,9 +15,9 @@ const StyledCard = styled(Card)({
     width: '70vw',
     height: '100%',
     borderRadius: '16px',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     backdropFilter: 'blur(10px)',
-    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+    
     color: 'white',
     padding: '16px',
     margin: '0 auto',
@@ -87,6 +87,7 @@ const AttemptTest = () => {
 
     return (
         <StyledWrapper>
+          
             <>
                 <div className="searchBox">
                     <StyledCard>

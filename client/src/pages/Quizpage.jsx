@@ -180,6 +180,10 @@ const Quizpage = (props) => {
       try {
         const response = await axios.post('/api/test/remtime', {
           testID: props.testID,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+           withCredentials: true, 
         });
 
         const data = response.data;

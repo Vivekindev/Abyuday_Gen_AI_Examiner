@@ -15,6 +15,7 @@ import logoutRoute from './routes/logoutRoute.js'
 import GeminiPromptRoute from './routes/GeminiPromptRoute.js';
 import QuestionDataRoute from './routes/QuestionDataRoute.js';
 import testProcessRoute from './routes/testProcessRoute.js';
+import fetchCreatedTestRoute from './routes/fetchCreatedTestsRoute.js'
 
 import watchPendingTasks from './functions/watchPendingTasks.js'
 
@@ -43,6 +44,7 @@ app.use('/api', logoutRoute);
 app.use('/api', GeminiPromptRoute);
 app.use('/api', QuestionDataRoute);
 app.use('/api', testProcessRoute);
+app.use('/api', fetchCreatedTestRoute);
 
 app.use('/', GoogleOauthRoute);
 

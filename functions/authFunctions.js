@@ -29,6 +29,24 @@ export const authenticateToken = (req, res, next) => {
   });
 };
 
+// MiddleWare for the TestToken
+export const authenticateTestToken = (req, res, next) => {
+  const testToken = req.cookies['testToken'];
+
+  if (!testToken) return res.sendStatus(401); // Unauthorized if no token is found
+
+  jwt.verify(testToken, process.env.TEST_TOKEN_SECRET, (err, user) => {
+    if (err) {
+      return res.sendStatus(403); // Forbidden if token is invalid
+    } else {
+      req.user = user; // Attach the user information to the request
+      next(); // Proceed to the next middleware or route handler
+    }
+  });
+};
+
+
+
 // Function to generate access token
 export const generateAccessToken = (email) => {
   return jwt.sign( email , process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
