@@ -5,6 +5,7 @@ import pendingTasksDB from '../models/pendingTasksDB.js';
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL;
 const QUEUE_NAME = 'taskQueue';
+const POLL_INTERVAL = 10000; // Poll every 10 seconds
 
 const processTask = async (task) => {
   const { testID, testName, testPrompt, questionCount, testDifficulty, testModel, user } = task;
@@ -79,9 +80,8 @@ const processTask = async (task) => {
   }
 };
 
-
-// Function to start consuming messages from RabbitMQ
-const watchPendingTasks = async () => {
+// Function to poll RabbitMQ periodically for new tasks
+const pollPendingTasks = async () => {
   try {
     // Connect to RabbitMQ
     const connection = await amqp.connect(RABBITMQ_URL);
@@ -90,30 +90,39 @@ const watchPendingTasks = async () => {
     // Assert the queue exists
     await channel.assertQueue(QUEUE_NAME);
 
-    console.log('Waiting for Pending Tasks in the queue...');
+    console.log('Polling for Pending Tasks...');
 
-    // Consume messages from the queue
-    channel.consume(QUEUE_NAME, async (msg) => {
-      if (msg !== null) {
-        // Parse the task from the message
-        const task = JSON.parse(msg.content.toString());
+    // Poll the queue
+    const msg = await channel.get(QUEUE_NAME, { noAck: false });
 
-        // Process the task and check if it was successful
-        const success = await processTask(task);
+    if (msg) {
+      // Parse the task from the message
+      const task = JSON.parse(msg.content.toString());
 
-        if (success) {
-          // Acknowledge the message only if the task was successfully processed
-          channel.ack(msg);
-        } else {
-          // Do not acknowledge the message, so it remains in the queue for re-delivery
-          console.log(`Task ${task.testID} will be retried.`);
-        }
+      // Process the task and check if it was successful
+      const success = await processTask(task);
+
+      if (success) {
+        // Acknowledge the message only if the task was successfully processed
+        channel.ack(msg);
+      } else {
+        // Do not acknowledge the message, so it remains in the queue for re-delivery
+        console.log(`Task ${task.testID} will be retried.`);
       }
-    });
+    } else {
+      console.log('No messages in the queue at this time.');
+    }
+
+    // Close the connection after processing
+    await channel.close();
+    await connection.close();
   } catch (error) {
-    console.error('Error consuming tasks from RabbitMQ:', error);
+    console.error('Error polling tasks from RabbitMQ:', error);
   }
 };
 
-// Start consuming tasks from the queue
-export default watchPendingTasks;
+// Set up polling at regular intervals
+setInterval(pollPendingTasks, POLL_INTERVAL);
+
+// Start polling tasks from the queue
+export default pollPendingTasks;

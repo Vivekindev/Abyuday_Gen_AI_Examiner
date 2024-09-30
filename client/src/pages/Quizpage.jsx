@@ -178,6 +178,7 @@ const Quizpage = (props) => {
 
     const fetchRemainingTime = async () => {
       try {
+        if(!showScore){
         const response = await axios.post('/api/test/remtime', {
           testID: props.testID,
         },
@@ -185,7 +186,7 @@ const Quizpage = (props) => {
           headers: { 'Content-Type': 'application/json' },
            withCredentials: true, 
         });
-
+      
         const data = response.data;
         setTimeLeft(data.remTime);
         console.log(data.remTime);
@@ -193,6 +194,7 @@ const Quizpage = (props) => {
         if (data.isEnded) {
           clearInterval(intervalId);
         }
+      }
       } catch (err) {
         console.error('Polling failed:', err);
         clearInterval(intervalId);
