@@ -94,7 +94,7 @@ router.post('/test/begin', authenticateToken, async (req, res) => {
 
 
 // Short polling to get remaining time using POST
-router.post('/test/remtime', authenticateToken, authenticateTestToken, async (req, res) => {
+router.post('/test/remtime', authenticateToken, async (req, res) => {
     try {
         const { testID } = req.body;
         const user = await findUser(req.user.email);
@@ -122,7 +122,7 @@ router.post('/test/remtime', authenticateToken, authenticateTestToken, async (re
 
 
 
-router.post('/test/saveoptions', authenticateToken, authenticateTestToken, async (req, res) => {
+router.post('/test/saveoptions', authenticateToken, async (req, res) => {
     try {
         const { testID, selectedOptions } = req.body;
         const user = await findUser(req.user.email);       
@@ -141,7 +141,7 @@ router.post('/test/saveoptions', authenticateToken, authenticateTestToken, async
 
 
 
-router.post('/test/submit', authenticateToken, authenticateTestToken, async(req,res)=>{
+router.post('/test/submit', authenticateToken, async(req,res)=>{
     
     try {
         const { testID } = req.body;
