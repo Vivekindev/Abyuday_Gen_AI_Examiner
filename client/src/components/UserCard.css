@@ -1,0 +1,106 @@
+
+  .user-notification {
+    padding-top: 0.8rem;
+    padding-left: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+    position: relative;
+    width: 20rem;
+    height: 10rem;
+    background: #29292c;
+    border-radius: 1rem;
+    overflow: hidden;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 16px;
+    --user-gradient: linear-gradient(to bottom, #2eadff, #3d83ff, #7e61ff);
+    --user-color: #32a6ff;
+  }
+
+  .user-notification:before {
+    position: absolute;
+    content: "";
+    inset: 0.0625rem;
+    border-radius: 0.9375rem;
+    background: #18181b;
+    z-index: 2;
+  }
+
+  .user-notification:after {
+    position: absolute;
+    content: "";
+    width: 0.25rem;
+    inset: 0.65rem auto 0.65rem 0.5rem;
+    border-radius: 0.125rem;
+    background: var(--user-gradient);
+    transition: transform 300ms ease;
+    z-index: 4;
+  }
+
+  .user-notification:hover:after {
+    transform: translateX(0.15rem);
+  }
+
+  .user-notititle {
+    color: var(--user-color);
+    padding: 0.65rem 0.25rem 0.4rem 1.25rem;
+    font-weight: 500;
+    font-size: 1.4rem;
+    transition: transform 300ms ease;
+    z-index: 5;
+  }
+
+  .user-notification:hover .user-notititle {
+    transform: translateX(0.15rem);
+  }
+
+  .user-notibody {
+    font-size: 2.2rem;
+    color: #99999d;
+    padding: 0 1.25rem;
+    transition: transform 300ms ease;
+    z-index: 5;
+  }
+
+  .user-notification:hover .user-notibody {
+    transform: translateX(0.25rem);
+  }
+
+  .user-notiglow,
+  .user-notiborderglow {
+    position: absolute;
+    width: 20rem;
+    height: 20rem;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle closest-side at center, white, transparent);
+    opacity: 0;
+    transition: opacity 300ms ease;
+  }
+
+  .user-notiglow {
+    z-index: 3;
+  }
+
+  .user-notiborderglow {
+    z-index: 1;
+  }
+
+  .user-notification:hover .user-notiglow {
+    opacity: 0.1;
+  }
+
+  .user-notification:hover .user-notiborderglow {
+    opacity: 0.1;
+  }
+
+  .user-note {
+    color: var(--user-color);
+    position: fixed;
+    top: 80%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-size: 0.9rem;
+    width: 75%;
+  }
+

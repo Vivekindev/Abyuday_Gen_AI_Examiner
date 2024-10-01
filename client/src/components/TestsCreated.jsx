@@ -64,7 +64,7 @@ const TestsCreated = () => {
   };
 
   const columns = [
-    { field: 'id', headerName: 'Sl.no', flex: 0.8 },
+    { field: 'id', headerName: 'Sl. No.', flex: 0.8 },
     { field: 'testID', headerName: 'Test ID', flex: 1 },
     { field: 'testName', headerName: 'Test Name', flex: 1.8 },
     { field: 'questionCount', headerName: 'No. of Questions', flex: 1 },

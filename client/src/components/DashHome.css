@@ -1,0 +1,40 @@
+.DashHome{
+
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    flex-direction: column;
+}
+.DashHomeTop{
+    margin-top: 1rem;
+    padding: 2rem;
+  
+    display: flex;
+    width: 100%;
+    height: 26%;
+    flex-direction: row;
+    justify-content: space-between;
+    
+}
+.DashHomeBottom{
+    display: flex;
+    width: 100%;
+    height: 70%;
+    flex-direction: row;
+}
+.DashHomeBottomLeft{
+    display: flex;
+    height: 100%;
+    width: 70%;
+    padding-bottom: 4rem;
+}
+.DashHomeBottomRight{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 30%;
+    margin-right: 1.6rem;
+    margin-top: 1.2rem;
+    justify-content: space-between;
+    padding-bottom: 4rem;
+}

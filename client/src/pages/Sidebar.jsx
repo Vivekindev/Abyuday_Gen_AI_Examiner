@@ -25,6 +25,7 @@ import { Button } from '@mui/material';
 import GenerateTest from "../components/GenerateTest";
 import AttemptTest from "../components/AttemptTest";
 import TestsCreated from "../components/TestsCreated";
+import DashHome from "../components/DashHome";
 
 import axios from "axios";
 
@@ -270,10 +271,11 @@ const Sidebar = () => {
 
 
         <div className="rightDash">
+          {activeItem === "Home" && <DashHome />}
           {activeItem === "Create Test" && <GenerateTest />}
           {activeItem === "Attend Test" && <AttemptTest />}
           {activeItem === "Tests Created" && <TestsCreated/>}
-          
+
         </div>
 
       </div>

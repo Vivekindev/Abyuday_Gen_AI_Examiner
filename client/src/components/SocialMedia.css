@@ -1,0 +1,122 @@
+
+  .card {
+  --dark: #212121;
+  --darker: #111111;
+  --semidark: #2c2c2c;
+  --lightgray: #e8e8e8;
+  --unit: 10px;
+
+  background-color: var(--darker);
+  box-shadow: 0 0 var(--unit) var(--darker);
+  border: calc(var(--unit) / 2) solid var(--darker);
+  border-radius: var(--unit);
+  position: relative;
+  padding: var(--unit);
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  width: 120%;
+  height: 20%;
+  top: 40%;
+  left: -10%;
+  background: linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb);
+  animation: keyframes-floating-light 2.5s infinite ease-in-out;
+  filter: blur(20px);
+}
+
+@keyframes keyframes-floating-light {
+  0% {
+    transform: rotate(-5deg) translateY(-5%);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: rotate(5deg) translateY(5%);
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotate(-5deg) translateY(-5%);
+    opacity: 0.5;
+  }
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0%;
+  left: 0%;
+  background: linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb);
+  filter: blur(20px);
+  pointer-events: none;
+  animation: keyframes-intro 1s ease-in forwards;
+}
+
+@keyframes keyframes-intro {
+  100% {
+    ransform: translate(-100%);
+    opacity: 0;
+  }
+}
+
+.card .image {
+  width: 200px;
+  animation: keyframes-floating-img 10s ease-in-out infinite;
+}
+
+@keyframes keyframes-floating-img {
+  0% {
+    transform: translate(-2%, 2%) scaleY(0.95) rotate(-5deg);
+  }
+
+  50% {
+    transform: translate(2%, -2%) scaleY(1) rotate(5deg);
+  }
+
+  100% {
+    transform: translate(-2%, 2%) scaleY(0.95) rotate(-5deg);
+  }
+}
+
+.card .heading {
+  font-weight: 600;
+  font-size: small;
+  text-align: center;
+  margin-top: calc(var(--unit) * -2);
+  padding-block: var(--unit);
+  color: var(--lightgray);
+  animation: keyframes-flash-text 0.5s infinite;
+}
+
+@keyframes keyframes-flash-text {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.card .icons {
+  display: flex;
+  gap: var(--unit);
+}
+
+.card .icons a {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--dark);
+  color: var(--lightgray);
+  padding: calc(var(--unit) / 2);
+  border-radius: calc(var(--unit) / 2);
+}
+
+.card .icons a:hover {
+  transition: 0.2s;
+  background-color: var(--semidark);
+}
+
