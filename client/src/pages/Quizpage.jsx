@@ -566,17 +566,17 @@ const submitAndEnd = async()=>{
                   ? theme.palette.success.main
                   : incorrectAnswers[index]
                   ? theme.palette.error.main
-                  : '#1B222C'
+                  : '#121212'
                 : currentQuestion === index
                 ? '#ffffff'
-                : '#1B222C',
+                : '#121212',
               color: showScore
                 ? '#ffffff'
                 : currentQuestion === index
                 ? '#000000'
                 : '#ffffff',
               border: selectedOptions[index]
-                ? '1px solid #7a7a7a'
+                ? '1px solid #575757'
                 : showScore
                 ? correctAnswers[index]
                   ? `2px solid ${theme.palette.success.main}`
@@ -590,10 +590,10 @@ const submitAndEnd = async()=>{
                     ? theme.palette.success.main
                     : incorrectAnswers[index]
                     ? theme.palette.error.main
-                    : '#2A3B5A'
+                    : '##1c1c1c'
                   : currentQuestion === index
                   ? '#ffffff'
-                  : '#2A3B5A',
+                  : '##1c1c1c',
                 color: showScore ? '#ffffff' : currentQuestion === index ? '#000000' : '#ffffff',
               },
             }}
