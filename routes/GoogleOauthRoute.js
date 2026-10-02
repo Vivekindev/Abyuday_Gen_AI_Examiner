@@ -4,6 +4,7 @@ import { generateAccessToken, generateRefreshToken } from '../functions/authFunc
 import { setAuthCookies } from '../functions/authCookies.js';
 import crypto from 'node:crypto';
 import { recordActivity } from '../functions/telemetry.js';
+import connectDB from '../db/db.js';
 
 const router = Router();
 const validReturnTo = (value) => typeof value === 'string' && value.length <= 2048 && /^\/(dashboard(?:[/?]|$)|test\?|join\?)/.test(value);
@@ -38,8 +39,18 @@ const verifyOauthState = (req, res, next) => {
   return next();
 };
 
+const connectDatabase = async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 router.get('/auth/google/callback',
   verifyOauthState,
+  connectDatabase,
   passport.authenticate('google', { session: false, failureRedirect: '/' }),
   (req, res) => {
     const identity = { email: req.user.email, version: req.user.tokenVersion || 0 };
