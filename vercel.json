@@ -1,0 +1,3 @@
+{
+  "installCommand": "npm ci && npm ci --prefix client"
+}
