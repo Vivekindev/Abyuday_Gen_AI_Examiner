@@ -4,7 +4,8 @@ const testSchema = new mongoose.Schema({
   testID: 
   {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   response: {
     type: Object,
@@ -14,6 +15,11 @@ const testSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'usersData',
     required: true
+  },
+  team: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
+    default: null
   }
 });
 

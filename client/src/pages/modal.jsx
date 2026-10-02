@@ -36,7 +36,9 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
+  width: 'min(480px, calc(100vw - 32px))',
+  maxHeight: 'calc(100vh - 32px)',
+  overflowY: 'auto',
   bgcolor: 'background.paper',
   borderRadius: 8,
   boxShadow: 24,
@@ -50,13 +52,16 @@ const ConfirmationModal = () => {
   const [testName, setTestName] = useState('');
   const [numQuestions, setNumQuestions] = useState(12);
   const [difficulty, setDifficulty] = useState(5);
-  const [selectedModel, setSelectedModel] = useState('Gemini 1.5 Flash');
+  const [selectedModel, setSelectedModel] = useState('gemini-3.5-flash-lite');
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
   const handleConfirm = async () => {
-    setOpen(false);
+    if (!testName.trim() || !prompt.trim() || !Number.isInteger(Number(numQuestions)) || Number(numQuestions) < 1 || Number(numQuestions) > 50) {
+      toast.error('Enter a test name, prompt, and 1 to 50 questions.');
+      return;
+    }
     const testId = uuidv4().slice(0, 6);
 
     const url = '/api/test/create';
@@ -64,7 +69,7 @@ const ConfirmationModal = () => {
       testId,
       testName,
       prompt,
-      numQuestions,
+      numQuestions: Number(numQuestions),
       difficulty,
       selectedModel
     };
@@ -73,15 +78,17 @@ const ConfirmationModal = () => {
      await axios.post(url, data, {
         headers: {
           'Content-Type': 'application/json'
-        }
-      },{ withCredentials: true });
+        },
+        withCredentials: true,
+      });
 
     toast.promise(createTestPromise(), {
       loading: 'Creating...',
-      success: (response) => {
-        return `Test ${testName} created successfully!`;
+      success: () => {
+        setOpen(false);
+        return `Test ${testName} queued. Check Tests Created for its status.`;
       },
-      error: 'Failed to create the test.',
+      error: (error) => error.response?.data?.message || 'Failed to create the test.',
     });
   };
 
@@ -130,7 +137,7 @@ const ConfirmationModal = () => {
                 onChange={(e) => setTestName(e.target.value)}
                 InputLabelProps={{ style: { color: '#ffffff' } }}
                 InputProps={{ style: { color: '#ffffff' } }}
-                inputProps={{ autocomplete: 'off' }}
+                inputProps={{ autoComplete: 'off' }}
               />
               <TextField
                 fullWidth
@@ -142,14 +149,14 @@ const ConfirmationModal = () => {
                 onChange={(e) => setPrompt(e.target.value)}
                 InputLabelProps={{ style: { color: '#ffffff' } }}
                 InputProps={{ style: { color: '#ffffff' } }}
-                inputProps={{ autocomplete: 'off' }}
+                inputProps={{ autoComplete: 'off' }}
               />
               <TextField
                 fullWidth
                 margin="normal"
                 label="Number of Questions"
                 type="number"
-                inputProps={{ min: 1, autocomplete: 'off' }}
+                inputProps={{ min: 1, max: 50, autoComplete: 'off' }}
                 variant="outlined"
                 value={numQuestions}
                 onChange={(e) => setNumQuestions(e.target.value)}
@@ -193,8 +200,8 @@ const ConfirmationModal = () => {
                   },
                 }}
               >
-                <MenuItem value="Gemini 1.5 Flash">Gemini 1.5 Flash</MenuItem>
-                <MenuItem value="Gemini 1.5 Pro">Gemini 1.5 Pro</MenuItem>
+                <MenuItem value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite · faster</MenuItem>
+                <MenuItem value="gemini-3.8-flash">Gemini 3.8 Flash · more capable</MenuItem>
               </Select>
               <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
                 <Button

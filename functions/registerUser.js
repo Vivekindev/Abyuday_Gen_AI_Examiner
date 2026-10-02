@@ -1,10 +1,11 @@
 import usersData from '../models/usersData.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const registerUser = async (email, password, username) => {
     try {
         // Check if the email already exists
-        const existingUser = await usersData.findOne({ email });
+        const normalizedEmail = email.trim().toLowerCase();
+        const existingUser = await usersData.findOne({ email: normalizedEmail });
   
         if (existingUser) {
             throw new Error('Email already registered');
@@ -15,13 +16,14 @@ const registerUser = async (email, password, username) => {
   
         // Create an instance of users with the extracted data
         const newUser = new usersData({
-            email,
+            email: normalizedEmail,
             password: hashedPassword,
-            userName: username
+            userName: username.trim()
         });
   
         // Save the data to the database
         await newUser.save();
+        return newUser;
     } catch (error) {
         console.error('Error saving data:', error);
         throw error; // Re-throw the error to be handled by the calling function

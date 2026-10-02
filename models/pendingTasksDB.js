@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 const taskSchema = new mongoose.Schema({
   testID: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   testName: {
     type: String,
@@ -29,10 +30,19 @@ const taskSchema = new mongoose.Schema({
     type: String,
     default: "Queued"
   },
+  retryCount: {
+    type: Number,
+    default: 0
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'usersData',
     required: true
+  },
+  team: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
+    default: null
   }
 });
 

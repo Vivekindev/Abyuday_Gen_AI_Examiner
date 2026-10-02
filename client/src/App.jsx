@@ -1,37 +1,69 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Quizpage from './pages/Quizpage';
-import Dashboard from './pages/Dashboard';
-import Modal from './pages/modal';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ProtectedRoute from './auth/ProtectedRoute';
-import Sidebar from './pages/Sidebar';
-import NotFound from './pages/NotFount';
-import HomePage from './pages/HomePage';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Toaster } from "sonner";
+import ProtectedRoute from "./auth/ProtectedRoute";
+import { PageLoader } from "./components/ui";
+import AppErrorBoundary from "./components/ui/AppErrorBoundary";
+import { useTheme } from "./theme/context";
+import "./App.css";
 
-import './App.css'
-const App = () => {
+const Workspace = lazy(() => import("./pages/Workspace"));
+const Overview = lazy(() => import("./pages/workspace/Overview"));
+const AssessmentLibrary = lazy(
+  () => import("./pages/workspace/AssessmentLibrary"),
+);
+const CreateAssessment = lazy(
+  () => import("./pages/workspace/CreateAssessment"),
+);
+const TakeAssessment = lazy(() => import("./pages/workspace/TakeAssessment"));
+const Results = lazy(() => import("./pages/workspace/Results"));
+const Admin = lazy(() => import("./pages/workspace/Admin"));
+const Settings = lazy(() => import("./pages/workspace/Settings"));
+const Help = lazy(() => import("./pages/workspace/Help"));
+const TeamsManager = lazy(() => import("./pages/TeamsManager"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const JoinTeam = lazy(() => import("./pages/JoinTeam"));
+const NotFound = lazy(() => import("./pages/NotFount"));
+const HomePage = lazy(() => import("./pages/HomePage"));
+
+export default function App() {
+  const { resolvedTheme } = useTheme();
   return (
-    <Router>
-      <Routes>
-      <Route path='/register' element={<Register />} />
-      <Route path='/login' element={<Login />} />
-      <Route path='/' element={<HomePage />} />
-
-
-      <Route element={<ProtectedRoute/>}>
-            <Route path='/dashboard' element={<Sidebar />} />
-            <Route path='/test' element={<Dashboard />}/>
-      
-            <Route path='/modal' element={<Modal />} />
-         
-      </Route>
-     
-       
-      <Route path='*' element={<NotFound />} />
-      </Routes>
-    </Router>
+    <BrowserRouter>
+      <AppErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Workspace />}>
+                <Route index element={<Overview />} />
+                <Route path="tests" element={<AssessmentLibrary />} />
+                <Route path="create" element={<CreateAssessment />} />
+                <Route path="take" element={<TakeAssessment />} />
+                <Route path="results" element={<Results />} />
+                <Route path="admin" element={<Admin />} />
+                <Route path="teams" element={<TeamsManager />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="help" element={<Help />} />
+              </Route>
+              <Route path="/test" element={<Dashboard />} />
+              <Route path="/join" element={<JoinTeam />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+        <Toaster
+          theme={resolvedTheme}
+          position="bottom-right"
+          richColors
+          closeButton
+          toastOptions={{ style: { fontFamily: "inherit" } }}
+        />
+      </AppErrorBoundary>
+    </BrowserRouter>
   );
 }
-
-export default App; 

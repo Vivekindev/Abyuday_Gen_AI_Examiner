@@ -26,6 +26,7 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import GppGoodIcon from '@mui/icons-material/GppGood';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { Card, CardContent, List, ListItem, SvgIcon } from '@mui/material';
 //-----------------------------infoUser btn ------------------------------------------
@@ -163,6 +164,8 @@ const Quizpage = (props) => {
   const [incorrectAnswers, setIncorrectAnswers] = useState(Array(questions.length).fill(false));
 
   const [username, setUsername] = useState('');
+  const [explanations, setExplanations] = useState({});
+  const [loadingExplanation, setLoadingExplanation] = useState({});
   useEffect(() => {
     const usernameFromCookie = Cookies.get('username');
     setUsername(usernameFromCookie);
@@ -1153,7 +1156,7 @@ const submitAndEnd = async()=>{
   sx={{
     boxShadow: theme.shadows[3],
     borderRadius: '8px !important',
-    border:'1px solid #4B4E55',
+    border:'1px solid #4E55',
     overflow: 'hidden',
     marginBottom: '1rem',
     backgroundColor: 'transparent', // transparent background
@@ -1273,6 +1276,65 @@ const submitAndEnd = async()=>{
                 />
               </Paper>
             ))}
+            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Button
+        variant="contained"
+        size="medium"
+        disabled={loadingExplanation[index]}
+        sx={{
+          borderRadius: '2rem',
+          fontWeight: 600,
+          fontSize: '1rem',
+          padding: '0.4rem 1.5rem',
+          background: 'linear-gradient(90deg, #5381ED 0%, #1B222C 100%)',
+          color: '#fff',
+          boxShadow: '0 2px 8px rgba(83,129,237,0.10)',
+          border: 'none',
+          textTransform: 'none',
+          letterSpacing: '0.03em',
+          transition: 'background 0.3s, color 0.3s',
+          '&:hover': {
+            background: 'linear-gradient(90deg, #1B222C 0%, #5381ED 100%)',
+            color: '#fff',
+            boxShadow: '0 4px 16px rgba(83,129,237,0.18)',
+          },
+          '&:active': {
+            background: 'linear-gradient(90deg, #3a5ca8 0%, #121212 100%)',
+            color: '#fff',
+          },
+          minWidth: '10rem',
+          height: '2.5rem',
+          mt: 1,
+        }}
+        onClick={async () => {
+          setLoadingExplanation(prev => ({ ...prev, [index]: true }));
+          try {
+            const response = await fetch('/api/generate-summary', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                questionText: q.questionText,
+                correctAnswer: q.answer,
+              }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to fetch explanation');
+            setExplanations(prev => ({ ...prev, [index]: data.summary }));
+          } catch (error) {
+            setExplanations(prev => ({ ...prev, [index]: 'Failed to fetch explanation.' }));
+          } finally {
+            setLoadingExplanation(prev => ({ ...prev, [index]: false }));
+          }
+        }}
+      >
+        {loadingExplanation[index] ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Get Explanation'}
+      </Button>
+      {explanations[index] && (
+        <Typography variant="body2" sx={{ ml: 2, color: '#90caf9', maxWidth: 600 }}>
+          {explanations[index]}
+        </Typography>
+      )}
+    </Box>
           </Box>
         </AccordionDetails>
       </Accordion>

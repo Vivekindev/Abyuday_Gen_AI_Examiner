@@ -1,16 +1,16 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import { initializeMonitoring } from '../functions/telemetry.js';
 
-dotenv.config();
+let connectionPromise;
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB connected');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    process.exit(1);
+export default async function connectDB() {
+  if (mongoose.connection.readyState === 1) { await initializeMonitoring(); return mongoose.connection; }
+  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not configured');
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(process.env.MONGODB_URI)
+      .catch((error) => { connectionPromise = undefined; throw error; });
   }
-};
-
-export default connectDB;
+  await connectionPromise;
+  await initializeMonitoring();
+  return mongoose.connection;
+}

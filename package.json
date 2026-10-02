@@ -1,32 +1,35 @@
 {
-  "name": "react",
+  "name": "abyuday-exam-workspace",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
+  "engines": { "node": ">=22.12.0" },
   "scripts": {
+    "start": "node index.js",
     "startdev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "worker": "node worker.js",
+    "build": "npm run build --prefix client",
+    "test": "node --test tests/*.test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.17.0",
+    "@google/genai": "^2.25.0",
     "amqplib": "^0.10.4",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "js-cookie": "^3.0.5",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.3",
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
-    "passport-google-oauth20": "^2.0.0",
-    "path": "^0.12.7"
+    "passport-google-oauth20": "^2.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

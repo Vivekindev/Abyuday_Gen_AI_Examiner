@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, Container, Paper, TextField, Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate from React Router
 import SearchIcon from '@mui/icons-material/Search';
 import { InputAdornment } from '@mui/material';
 
@@ -22,30 +21,38 @@ const TestsCreated = () => {
   const [testData, setTestData] = useState(null);
   const [filteredData, setFilteredData] = useState(testData);
   const [isLoading, setIsLoading] = useState(true);
-
-  const navigate = useNavigate(); // Initialize useNavigate hook
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const fetchTestData = async () => {
       try {
         const response = await axios.post("/api/fetchcreatedtests", {}, {
           headers: {
             'Content-Type': 'application/json',
-            withCredentials: true
-          }
+          },
+          withCredentials: true
         });
-        if (response) {
+        if (response && active) {
           setTestData(response.data);
-          setFilteredData(response.data);
+          setFilteredData(response.data.filter((test) =>
+            [test.testID, test.testName, test.questionCount, test.status, test.difficulty, test.testModel]
+              .some((field) => String(field || '').toLowerCase().includes(searchText.toLowerCase()))));
           setIsLoading(false);
         }
       } catch (err) {
-        console.log(err);
+        console.error(err);
+        if (active) {
+          setLoadError(true);
+          setIsLoading(false);
+        }
       }
     };
 
     fetchTestData();
-  }, []);
+    const interval = setInterval(fetchTestData, 10000);
+    return () => { active = false; clearInterval(interval); };
+  }, [searchText]);
 
   // Handle the search/filtering
   const handleSearch = (e) => {
@@ -56,9 +63,10 @@ const TestsCreated = () => {
       (test) =>
         test.testID.toLowerCase().includes(value) ||
         test.testName.toLowerCase().includes(value) ||
-        test.questionCount.toLowerCase().includes(value) ||
+        String(test.questionCount).toLowerCase().includes(value) ||
         test.status.toLowerCase().includes(value) ||
-        test.difficulty.toLowerCase().includes(value) // Include difficulty in search
+        (test.difficulty || '').toLowerCase().includes(value) ||
+        (test.testModel || '').toLowerCase().includes(value)
     );
     setFilteredData(filtered);
   };
@@ -70,6 +78,7 @@ const TestsCreated = () => {
     { field: 'questionCount', headerName: 'No. of Questions', flex: 1 },
     { field: 'status', headerName: 'Generation', flex: 1 },
     { field: 'difficulty', headerName: 'Difficulty', flex: 1 },
+    { field: 'testModel', headerName: 'Model', flex: 1.5 },
     {
       field: 'action',
       headerName: 'Action',
@@ -99,9 +108,10 @@ const TestsCreated = () => {
               e.target.style.backgroundColor = 'rgba(0, 123, 255, 0.2)';
               e.target.style.transform = 'scale(1)';
             }}
+            disabled={params.row.status !== 'Done'}
             onClick={() => {
               // Append the testID to the URL and refresh the page
-              window.location.href = `/dashboard?TestID=${params.row.testID}`;
+              window.location.href = `/dashboard?TestID=${encodeURIComponent(params.row.testID)}`;
             }}
           >
             View
@@ -119,6 +129,8 @@ const TestsCreated = () => {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
           <l-line-spinner size="50" stroke="3" speed="1" color="white"></l-line-spinner>
         </div>
+      ) : loadError ? (
+        <Box sx={{ p: 3, color: 'text.secondary' }}>Could not load your tests. Refresh to try again.</Box>
       ) : (
         <Container style={{ height: '100%', width: '100%', marginTop: '1.5rem', marginBottom: '0.8rem' }}>
           <Box sx={{ marginBottom: '1rem' }}>
@@ -160,9 +172,9 @@ const TestsCreated = () => {
             <DataGrid
               rows={filteredData}
               columns={columns}
-              pageSize={5}
-              rowsPerPageOptions={[5]}
-              disableSelectionOnClick
+              initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+              pageSizeOptions={[10, 25]}
+              disableRowSelectionOnClick
               sx={{
                 '& .MuiDataGrid-cell': { borderBottom: '1px solid #333', backgroundColor: 'transparent', color: '#ffffff' },
                 '& .MuiDataGrid-columnHeaders': { borderBottom: '1px solid #333', backgroundColor: 'transparent', color: '#ffffff' },

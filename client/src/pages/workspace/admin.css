@@ -1,0 +1,126 @@
+.admin-metrics {
+  margin: 0;
+  padding: 8px 24px;
+}
+.admin-metrics > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.admin-metrics > div:last-child {
+  border: 0;
+}
+.admin-metrics dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.admin-access {
+  display: grid;
+  gap: 24px;
+}
+.admin-access h2,
+.admin-page .panel-padding h2 {
+  font-size: 17px;
+  margin-bottom: 12px;
+}
+.admin-page .panel-padding > .btn {
+  margin-top: 24px;
+}
+.admin-add {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  max-width: 620px;
+  margin: 24px 0;
+}
+.admin-add .field {
+  flex: 1;
+  min-width: 0;
+}
+.admin-members,
+.admin-audit {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.admin-members li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.admin-members li > div {
+  flex: 1;
+  min-width: 0;
+}
+.admin-members strong,
+.admin-members small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.admin-members strong {
+  font-size: 14px;
+  font-weight: 550;
+}
+.admin-members small {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.admin-audit li {
+  padding: 18px 24px;
+  border-top: 1px solid var(--line);
+}
+.admin-audit li:first-child {
+  border: 0;
+}
+.admin-audit p {
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.admin-audit small {
+  display: block;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.admin-details {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0 0;
+}
+.admin-details dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+.admin-details dd {
+  margin: 0 0 14px;
+  font-size: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pagination .btn {
+  width: auto;
+  padding: 8px 12px;
+}
+.admin-page .data-table td {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .admin-add {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-members li {
+    flex-wrap: wrap;
+  }
+  .admin-members li > div {
+    min-width: 60%;
+  }
+  .admin-audit li {
+    padding: 18px 20px;
+  }
+}

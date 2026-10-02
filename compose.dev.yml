@@ -1,0 +1,33 @@
+services:
+  mongo:
+    image: mongo:8
+    volumes:
+      - mongo_data:/data/db
+  rabbit:
+    image: rabbitmq:4-management
+  web:
+    build: .
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongo:27017/abyuday
+      RABBITMQ_URL: amqp://guest:guest@rabbit:5672
+      RUN_WORKER: "false"
+    ports:
+      - "4040:4040"
+    depends_on:
+      - mongo
+      - rabbit
+  worker:
+    build: .
+    command: ["node", "worker.js"]
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongo:27017/abyuday
+      RABBITMQ_URL: amqp://guest:guest@rabbit:5672
+    depends_on:
+      - mongo
+      - rabbit
+volumes:
+  mongo_data:

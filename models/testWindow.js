@@ -27,6 +27,7 @@ const testSchema = new mongoose.Schema({
     type: Date,     
     required: true
   },
+  endedAt: { type: Date },
   timeAlloted:{
     type: Number,
     required: true
@@ -43,6 +44,8 @@ const testSchema = new mongoose.Schema({
     required: true
   }
 });
+
+testSchema.index({ testID: 1, user: 1 }, { unique: true });
 
 const testWindowSchema = mongoose.model('TestWindow', testSchema);
 
