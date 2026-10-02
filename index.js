@@ -92,7 +92,7 @@ app.use((error, _req, res, next) => {
 });
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const dist = path.join(root, 'client', 'dist');
+const dist = path.join(root, 'public');
 app.use(express.static(dist, {
   index: false,
   setHeaders: (res, filePath) => {

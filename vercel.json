@@ -1,3 +1,5 @@
 {
-  "installCommand": "npm ci && npm ci --prefix client"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm ci && npm ci --prefix client",
+  "outputDirectory": "public"
 }

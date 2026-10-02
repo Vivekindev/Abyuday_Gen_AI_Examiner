@@ -17,7 +17,7 @@ COPY --from=build /app/db ./db
 COPY --from=build /app/functions ./functions
 COPY --from=build /app/models ./models
 COPY --from=build /app/routes ./routes
-COPY --from=build /app/client/dist ./client/dist
+COPY --from=build /app/public ./public
 COPY --from=build /app/index.js /app/worker.js ./
 EXPOSE 4040
 CMD ["node", "index.js"]
