@@ -5,32 +5,30 @@ import testWindow from '../models/testWindow.js';
 import generatedTests from '../models/generatedTests.js';
 import Team from '../models/team.js';
 import { recordActivity } from '../functions/telemetry.js';
+import { publicQuestion, validAnswer, scoreAnswers, assessmentMinutes } from '../functions/assessment/engines.js';
 
 const router = Router();
 router.use('/test', authenticateToken);
 
 const remainingSeconds = (session) => Math.max(0, Math.ceil((session.expiryTime.getTime() - Date.now()) / 1000));
-const publicQuestions = (questions) => questions.map(({ questionText, options, tag }) => ({ questionText, options, tag }));
+const publicQuestions = (questions) => questions.map(publicQuestion);
 
 const validateOptions = (selected, questions) =>
   Array.isArray(selected) && selected.length === questions.length &&
-  selected.every((answer, index) => answer === '' || questions[index].options.includes(answer));
+  selected.every((answer, index) => validAnswer(questions[index], answer));
 
 const finish = async (session, questions, team) => {
   if (session.isEnded) return session;
   const source = remainingSeconds(session) === 0 ? 'system' : 'user';
   const selected = Array.isArray(session.selectedOptions) ? session.selectedOptions : [];
-  const correct = questions.reduce((count, question, index) => count + (selected[index] === question.answer ? 1 : 0), 0);
-  const answered = selected.filter(Boolean).length;
-  session.results = {
-    score: correct, total: questions.length, incorrect: answered - correct,
-    unanswered: questions.length - answered,
-    percentage: Math.round((correct / questions.length) * 100),
-  };
-  session.isOngoing = false;
-  session.isEnded = true;
-  session.endedAt = new Date();
-  await session.save();
+  // Only the first finisher may publish a score; concurrent submits return that result.
+  const finished = await testWindow.findOneAndUpdate(
+    { _id: session._id, isEnded: false },
+    { $set: { results: scoreAnswers(questions, selected), selectedOptions: selected, isOngoing: false, isEnded: true, endedAt: new Date() } },
+    { new: true },
+  );
+  const final = finished || await testWindow.findById(session._id);
+  session.set(final.toObject());
   await recordActivity({ user: session.user, team: team || null, action: 'attempt.completed', source, testID: session.testID, eventKey: `attempt.completed:${session.id}` });
   return session;
 };
@@ -74,8 +72,8 @@ router.post('/test/begin', async (req, res, next) => {
       { testID, user: user._id },
       { $setOnInsert: {
         isOngoing: true, isEnded: false, startTime: now,
-        expiryTime: new Date(now.getTime() + questions.length * 60_000),
-        timeAlloted: questions.length, selectedOptions: Array(questions.length).fill(''),
+        expiryTime: new Date(now.getTime() + assessmentMinutes(questions) * 60_000),
+        timeAlloted: assessmentMinutes(questions), selectedOptions: Array(questions.length).fill(''),
       } },
       { upsert: true, new: true, setDefaultsOnInsert: true, includeResultMetadata: true },
     );
@@ -84,6 +82,30 @@ router.post('/test/begin', async (req, res, next) => {
     if (req.activity.action === 'attempt.started') req.activity.eventKey = `attempt.started:${session.id}`;
     if (!session.isEnded && remainingSeconds(session) === 0) await finish(session, questions, test.team);
     respondSession(res, session, questions);
+  } catch (error) { next(error); }
+});
+
+router.post('/test/again', async (req, res, next) => {
+  try {
+    const context = await getContext(req, res);
+    if (!context) return;
+    const session = await testWindow.findOne({ testID: context.testID, user: context.user._id });
+    if (!session || !session.isEnded) return res.status(409).json({ error: 'Complete this attempt before starting again.' });
+    const now = new Date();
+    const reset = await testWindow.findOneAndUpdate(
+      { _id: session._id, isEnded: true },
+      { $set: {
+        isOngoing: true, isEnded: false, startTime: now,
+        expiryTime: new Date(now.getTime() + assessmentMinutes(context.questions) * 60_000),
+        timeAlloted: assessmentMinutes(context.questions),
+        selectedOptions: Array(context.questions.length).fill(''),
+        results: null, endedAt: null, flagCount: 0,
+      } },
+      { new: true },
+    );
+    if (!reset) return res.status(409).json({ error: 'This attempt has already been restarted.' });
+    req.activity = { action: 'attempt.restarted', testID: context.testID, eventKey: `attempt.restarted:${reset.id}:${now.getTime()}` };
+    respondSession(res, reset, context.questions);
   } catch (error) { next(error); }
 });
 
@@ -111,8 +133,12 @@ router.post('/test/saveoptions', async (req, res, next) => {
       await finish(session, context.questions, context.test.team);
       return res.status(409).json({ error: 'This attempt has ended.' });
     }
-    session.selectedOptions = req.body.selectedOptions;
-    await session.save();
+    const saved = await testWindow.findOneAndUpdate(
+      { _id: session._id, isEnded: false, expiryTime: { $gt: new Date() } },
+      { $set: { selectedOptions: req.body.selectedOptions } },
+      { new: true },
+    );
+    if (!saved) return res.status(409).json({ error: 'This attempt has ended.' });
     req.activity = { action: 'answers.saved', testID: context.testID };
     res.json({ saved: true });
   } catch (error) { next(error); }

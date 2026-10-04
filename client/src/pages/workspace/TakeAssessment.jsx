@@ -15,6 +15,8 @@ import {
   Status,
 } from "../../components/ui";
 import { api, errorMessage } from "../../lib/api";
+import { interactionNames } from '../../components/assessment/interactionMeta';
+import RetryAssessmentButton from '../../components/RetryAssessmentButton';
 
 export default function TakeAssessment() {
   const [params, setParams] = useSearchParams();
@@ -121,6 +123,7 @@ export default function TakeAssessment() {
               </div>
               <h2>{details.name}</h2>
               <p>Created by {details.createdBy}</p>
+              {details.questionKinds?.length > 0 && <p>{details.questionKinds.map((kind) => interactionNames[kind] || kind).join(' · ')}</p>}
               <div className="preview-meta">
                 <div>
                   <FiBookOpen />
@@ -161,11 +164,15 @@ export default function TakeAssessment() {
                   <FiClock />
                   <span>
                     {details.status === "Error"
-                      ? "Question generation failed. Please ask the creator to generate a new assessment."
-                      : "Your questions are being prepared. This page checks for updates automatically."}
+                      ? details.canRetry
+                        ? "Question generation failed. Retry to run generation again with the same assessment ID. Another attempt uses AI quota and may still fail."
+                        : "Question generation failed. Ask the creator or a team admin to retry this assessment."
+                      : `Your questions are being prepared${details.generationStage && details.generationStage !== 'queued' ? ` (${details.generationStage.replaceAll('-', ' ')})` : ''}. This page checks for updates automatically.`}
                   </span>
                 </div>
               )}
+              {details.status === 'Error' && details.canRetry && <RetryAssessmentButton testID={details.id} name={details.name} onRetried={() => setRevision((value) => value + 1)} />}
+              {details.status === 'Error' && details.generationError && <p role="status"><strong>{details.generationError.stage?.replaceAll('-', ' ')}:</strong> {details.generationError.message}</p>}
             </section>
           )}
         </div>

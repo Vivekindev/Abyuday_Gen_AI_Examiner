@@ -13,17 +13,20 @@ import {
   FiPlus,
   FiRefreshCw,
   FiSearch,
+  FiTrash2,
 } from "react-icons/fi";
 import {
   Button,
   EmptyState,
   ErrorNotice,
   LoadingState,
+  Modal,
   PageHeading,
   Status,
 } from "../../components/ui";
 import useResource from "../../hooks/useResource";
-import { copyText, formatDate } from "../../lib/api";
+import RetryAssessmentButton from '../../components/RetryAssessmentButton';
+import { api, copyText, errorMessage, formatDate } from "../../lib/api";
 
 const matchesStatus = (test, status) =>
   status === "all" ||
@@ -38,6 +41,9 @@ export default function AssessmentLibrary() {
   });
   const [params, setParams] = useSearchParams();
   const [page, setPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const query = params.get("q") || "";
   const status = params.get("status") || "all";
   const audience = params.get("audience") || "";
@@ -73,6 +79,7 @@ export default function AssessmentLibrary() {
   };
   const actions = (test) => (
     <div className="table-actions">
+      {test.status === 'Error' && test.canRetry && <RetryAssessmentButton testID={test.testID} name={test.testName} onRetried={resource.reload} />}
       <button
         className="icon-button"
         onClick={() => copy(test)}
@@ -89,6 +96,7 @@ export default function AssessmentLibrary() {
       >
         <FiArrowUpRight />
       </Link>
+      {test.canManage && <button className="icon-button text-danger" onClick={() => { setDeleteError(""); setDeleteTarget(test); }} aria-label={`Delete ${test.testName}`} title="Delete assessment"><FiTrash2 /></button>}
     </div>
   );
   return (
@@ -98,6 +106,7 @@ export default function AssessmentLibrary() {
           Create assessment
         </Button>
       </PageHeading>
+      <p className="section-description library-management-note">Manage assessments you created and assessments shared with teams you administer. Deleting removes their attempts and results.</p>
       {params.get("created") && (
         <div className="notice notice-success" role="status">
           <FiCheckQueued />
@@ -246,6 +255,7 @@ export default function AssessmentLibrary() {
                       <td data-label="Difficulty">{test.difficulty}</td>
                       <td data-label="Status">
                         <Status value={test.status} />
+                        {test.assessmentMode === 'interactive' && <span className="table-subtitle">{test.status === 'Processing' ? (test.generationStage || 'Preparing tasks').replaceAll('-', ' ') : 'Interactive'}</span>}
                       </td>
                       <td data-label="Actions">{actions(test)}</td>
                     </tr>
@@ -317,6 +327,11 @@ export default function AssessmentLibrary() {
           </div>
         </div>
       </section>
+      <Modal open={!!deleteTarget} onClose={() => { if (!deleting) setDeleteTarget(null); }} title="Delete assessment?">
+        <p className="section-description">{deleteTarget?.testName} and all saved attempts and results will be permanently deleted.</p>
+        <ErrorNotice message={deleteError} />
+        <div className="form-actions"><Button variant="secondary" disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</Button><Button className="btn-danger" disabled={deleting} onClick={async () => { setDeleting(true); setDeleteError(""); try { await api.delete(`/test/${encodeURIComponent(deleteTarget.testID)}`); toast.success("Assessment deleted"); setDeleteTarget(null); resource.reload(); } catch (error) { setDeleteError(errorMessage(error)); } finally { setDeleting(false); } }}>{deleting ? "Deleting…" : "Delete assessment"}</Button></div>
+      </Modal>
     </div>
   );
 }

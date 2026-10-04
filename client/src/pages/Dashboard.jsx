@@ -15,6 +15,9 @@ import {
 import { Button, ErrorNotice, Modal, PageLoader } from "../components/ui";
 import { api, errorMessage } from "../lib/api";
 import ThemeToggle from "../theme/ThemeToggle";
+import InteractiveQuestion from '../components/assessment/InteractiveQuestion';
+import { responsePresent } from '../components/assessment/interactionMeta';
+import RichContent from '../components/content/RichContent';
 import "./exam.css";
 
 const formatTime = (seconds) =>
@@ -37,8 +40,33 @@ export default function Dashboard() {
   const [dialog, setDialog] = useState(null);
   const deadline = useRef(0);
   const savingRef = useRef(false);
+  const answersRef = useRef([]);
+  const pendingSave = useRef(null);
+  const [unsaved, setUnsaved] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const ready = !!session;
   const ended = session?.isEnded;
+  const startAgain = async () => {
+    if (restarting) return;
+    setRestarting(true);
+    try {
+      const { data } = await api.post("/test/again", { testID });
+      setSession(data);
+      setAnswers(data.selectedOptions || []);
+      answersRef.current = data.selectedOptions || [];
+      setUnsaved(false);
+      setRemaining(data.remTime);
+      deadline.current = Date.now() + data.remTime * 1000;
+      setActive(0);
+      setFlagged(new Set());
+      setExplanations({});
+      setDialog(null);
+    } catch (requestError) {
+      setError(errorMessage(requestError, "Could not start another attempt."));
+    } finally {
+      setRestarting(false);
+    }
+  };
 
   useEffect(() => {
     if (!testID) {
@@ -59,6 +87,8 @@ export default function Dashboard() {
         if (controller.signal.aborted) return;
         setSession(data);
         setAnswers(data.selectedOptions || []);
+        answersRef.current = data.selectedOptions || [];
+        setUnsaved(false);
         setRemaining(data.remTime);
         deadline.current = Date.now() + data.remTime * 1000;
       })
@@ -110,6 +140,8 @@ export default function Dashboard() {
           );
           setSession(result.data);
           setAnswers(result.data.selectedOptions);
+          answersRef.current = result.data.selectedOptions;
+          setUnsaved(false);
           setDialog(null);
         }
       } catch {
@@ -135,6 +167,8 @@ export default function Dashboard() {
         if (!controller.signal.aborted) {
           setSession(data);
           setAnswers(data.selectedOptions);
+          answersRef.current = data.selectedOptions;
+          setUnsaved(false);
           setDialog(null);
           setError("");
         }
@@ -147,32 +181,40 @@ export default function Dashboard() {
   }, [ready, ended, remaining, testID]);
 
   useEffect(() => {
-    if (!saving) return;
+    if (!saving && !unsaved) return;
     const warn = (event) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [saving]);
+  }, [saving, unsaved]);
 
   const chooseAnswer = async (option) => {
-    if (savingRef.current || submitting || ended || remaining === 0) return;
-    const previous = answers;
-    const next = [...answers];
+    if (submitting || ended || remaining === 0) return;
+    const next = [...answersRef.current];
     next[active] = option;
-    savingRef.current = true;
+    answersRef.current = next;
     setAnswers(next);
+    setUnsaved(true);
+    pendingSave.current = next;
+    // Coalesce fast slider/drag changes and serialize writes so old responses cannot win.
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     try {
-      await api.post("/test/saveoptions", { testID, selectedOptions: next });
+      while (pendingSave.current) {
+        const snapshot = pendingSave.current;
+        pendingSave.current = null;
+        await api.post("/test/saveoptions", { testID, selectedOptions: snapshot });
+      }
+      setUnsaved(false);
       setError("");
     } catch (requestError) {
-      setAnswers(previous);
       setError(
         errorMessage(
           requestError,
-          "That answer was not saved. Please select it again.",
+          "Your latest changes could not be saved. Retry saving before leaving this page.",
         ),
       );
     } finally {
@@ -190,6 +232,8 @@ export default function Dashboard() {
       });
       setSession(data);
       setAnswers(data.selectedOptions);
+      answersRef.current = data.selectedOptions;
+      setUnsaved(false);
       setRemaining(0);
       setError("");
       setDialog(null);
@@ -259,8 +303,9 @@ export default function Dashboard() {
     );
   const questions = session.testQuestions;
   const question = questions[active];
-  const answered = answers.filter(Boolean).length;
-  const correct = answers[active] === question.answer;
+  const answered = questions.filter((q, i) => responsePresent(q, answers[i])).length;
+  const correct = session.results?.outcomes?.[active]?.correct ?? (answers[active] === question.answer);
+  const interactive = question.kind && question.kind !== 'mcq';
   return (
     <div className="assessment-experience">
       <header className="assessment-topbar">
@@ -284,7 +329,7 @@ export default function Dashboard() {
           <div>
             <h1>{title}</h1>
             <p>
-              {questions.length} questions <span>·</span> Multiple choice{" "}
+              {questions.length} questions <span>·</span> {questions.some((q) => q.kind && q.kind !== 'mcq') ? 'Interactive assessment' : 'Multiple choice'}{" "}
               <span>·</span> {ended ? "Completed" : "In progress"}
             </p>
           </div>
@@ -310,6 +355,7 @@ export default function Dashboard() {
               : undefined
           }
         />
+        {unsaved && !saving && !ended && <Button variant="secondary" onClick={() => chooseAnswer(answers[active])}>Retry saving responses</Button>}
         {ended && (
           <section className="score-summary">
             <div
@@ -329,6 +375,7 @@ export default function Dashboard() {
               <p>
                 Review your answers and explore the reasoning behind each one.
               </p>
+              <Button variant="secondary" className="btn-sm" onClick={() => setDialog("again")}>Attempt again</Button>
             </div>
             <div className="score-breakdown">
               <div>
@@ -380,20 +427,20 @@ export default function Dashboard() {
                   {correct ? <FiCheckCircle /> : <FiX />}
                   {correct
                     ? "Correct answer"
-                    : answers[active]
+                    : responsePresent(question, answers[active])
                       ? "Incorrect answer"
                       : "Not answered"}
                 </span>
               )}
             </div>
             <div className="question-body">
-              <h2>{question.questionText}</h2>
+              <RichContent text={question.questionText} className="assessment-question-content" />
               <p className="question-instruction">
                 {ended
                   ? "Your response and the correct answer are shown below."
-                  : "Select the best answer."}
+                  : interactive ? "Explore the task below. Your changes are saved automatically." : "Select the best answer."}
               </p>
-              <fieldset
+              {interactive ? <InteractiveQuestion key={active} question={question} value={answers[active]} onChange={chooseAnswer} disabled={ended || submitting || remaining === 0} review={ended} /> : <fieldset
                 disabled={ended || saving || submitting || remaining === 0}
                 className="question-options"
               >
@@ -413,7 +460,7 @@ export default function Dashboard() {
                     <span className="option-letter">
                       {String.fromCharCode(65 + index)}
                     </span>
-                    <span className="option-text">{option}</span>
+                    <RichContent text={option} inline className="option-text" />
                     <span className="option-indicator">
                       {ended && question.answer === option ? (
                         <FiCheck />
@@ -425,7 +472,7 @@ export default function Dashboard() {
                     </span>
                   </label>
                 ))}
-              </fieldset>
+              </fieldset>}
               {!ended && answers[active] && (
                 <button
                   className="clear-answer"
@@ -435,9 +482,9 @@ export default function Dashboard() {
                   Clear my selection
                 </button>
               )}
-              {ended && (
+              {ended && !interactive && (
                 <div className="explanation-block">
-                  <div>
+                  <div className="explanation-heading">
                     <span>
                       <FiZap /> Answer explanation
                     </span>
@@ -455,7 +502,7 @@ export default function Dashboard() {
                     </Button>
                   </div>
                   {explanations[active]?.text && (
-                    <p>{explanations[active].text}</p>
+                    <RichContent text={explanations[active].text} />
                   )}
                   {explanations[active]?.error && (
                     <p role="alert">{explanations[active].error}</p>
@@ -534,7 +581,7 @@ export default function Dashboard() {
                     onClick={() => setActive(index)}
                     aria-label={`Question ${index + 1}${answers[index] ? ", answered" : ", unanswered"}${flagged.has(index) ? ", flagged" : ""}`}
                     aria-current={active === index ? "step" : undefined}
-                    className={`${active === index ? "current" : ""} ${answers[index] ? "answered" : ""} ${!ended && flagged.has(index) ? "flagged" : ""} ${ended && answers[index] ? (answers[index] === item.answer ? "correct" : "incorrect") : ""}`}
+                    className={`${active === index ? "current" : ""} ${responsePresent(item, answers[index]) ? "answered" : ""} ${!ended && flagged.has(index) ? "flagged" : ""} ${ended && responsePresent(item, answers[index]) ? ((session.results?.outcomes?.[index]?.correct ?? (answers[index] === item.answer)) ? "correct" : "incorrect") : ""}`}
                   >
                     {index + 1}
                     {!ended && flagged.has(index) && <i />}
@@ -576,13 +623,13 @@ export default function Dashboard() {
           if (!submitting) setDialog(null);
         }}
         title={
-          dialog === "leave"
+          dialog === "again" ? "Start another attempt?" : dialog === "leave"
             ? "Leave this assessment for now?"
             : "Ready to finish?"
         }
         description={
-          dialog === "leave"
-            ? "Your saved answers will be here when you return. The timer will keep running."
+          dialog === "again" ? "Starting again will replace your current saved result for this assessment." : dialog === "leave"
+            ? unsaved ? "Some changes are not saved yet. Stay on this page and retry saving before leaving. The timer will keep running." : "Your saved answers will be here when you return. The timer will keep running."
             : "Take a moment to check your progress. You cannot change answers after submitting."
         }
       >
@@ -608,15 +655,13 @@ export default function Dashboard() {
             disabled={submitting}
             onClick={() => setDialog(null)}
           >
-            {dialog === "leave" ? "Keep going" : "Continue reviewing"}
+            {dialog === "again" ? "Keep result" : dialog === "leave" ? "Keep going" : "Continue reviewing"}
           </Button>
           <Button
-            disabled={saving || submitting}
-            onClick={
-              dialog === "leave" ? () => navigate("/dashboard/results") : submit
-            }
+            disabled={saving || submitting || (dialog === 'leave' && unsaved)}
+            onClick={dialog === "again" ? startAgain : dialog === "leave" ? () => navigate("/dashboard/results") : submit}
           >
-            {dialog === "leave"
+            {dialog === "again" ? restarting ? "Starting…" : "Start again" : dialog === "leave"
               ? "Leave assessment"
               : submitting
                 ? "Submitting…"

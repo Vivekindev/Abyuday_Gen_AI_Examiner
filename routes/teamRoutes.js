@@ -8,6 +8,7 @@ import Team from '../models/team.js';
 import TeamInvite from '../models/teamInvite.js';
 import pendingTasksDB from '../models/pendingTasksDB.js';
 import testWindow from '../models/testWindow.js';
+import TeamAssessmentRequest from '../models/teamAssessmentRequest.js';
 
 const router = Router();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -110,6 +111,66 @@ router.get('/teams/:teamId/results', async (req, res, next) => {
       memberId: attempt.user?.id || null,
       finishedAt: attempt.endedAt || attempt.expiryTime,
     })));
+  } catch (error) { next(error); }
+});
+
+router.get('/teams/:teamId/assessment-requests', async (req, res, next) => {
+  try {
+    const membership = await getTeamMembership(req.params.teamId, req.currentUser._id);
+    if (!membership) return res.sendStatus(404);
+    req.monitoringTeam = membership.team._id;
+    const requests = await TeamAssessmentRequest.find({ team: membership.team._id })
+      .populate('requestedBy', 'userName email').populate('handledBy', 'userName email')
+      .sort({ createdAt: -1 }).limit(100).lean();
+    res.json(requests.map((item) => ({
+      id: String(item._id), title: item.title, topic: item.topic,
+      questionCount: item.questionCount, difficulty: item.difficulty, status: item.status,
+      requestedBy: { id: String(item.requestedBy?._id || ''), name: item.requestedBy?.userName || 'Member', email: item.requestedBy?.email || '' },
+      handledBy: item.handledBy ? { name: item.handledBy.userName || 'Admin', email: item.handledBy.email } : null,
+      createdAt: item.createdAt, updatedAt: item.updatedAt,
+    })));
+  } catch (error) { next(error); }
+});
+
+router.post('/teams/:teamId/assessment-requests', async (req, res, next) => {
+  try {
+    const membership = await getTeamMembership(req.params.teamId, req.currentUser._id);
+    if (!membership) return res.sendStatus(404);
+    req.monitoringTeam = membership.team._id;
+    const title = typeof req.body?.title === 'string' ? req.body.title.trim() : '';
+    const topic = typeof req.body?.topic === 'string' ? req.body.topic.trim() : '';
+    const questionCount = Number(req.body?.questionCount);
+    const difficulty = Number(req.body?.difficulty);
+    if (title.length < 2 || title.length > 80 || topic.length < 8 || topic.length > 2000 ||
+      !Number.isInteger(questionCount) || questionCount < 1 || questionCount > 50 ||
+      !Number.isInteger(difficulty) || difficulty < 1 || difficulty > 10) {
+      return res.status(400).json({ error: 'Enter a title, topic, 1–50 questions, and a valid difficulty.' });
+    }
+    if (await TeamAssessmentRequest.countDocuments({ team: membership.team._id, requestedBy: req.currentUser._id, status: { $in: ['open', 'in_progress'] } }) >= 5) {
+      return res.status(409).json({ error: 'You already have five active requests for this team.' });
+    }
+    const request = await TeamAssessmentRequest.create({ team: membership.team._id, requestedBy: req.currentUser._id, title, topic, questionCount, difficulty });
+    req.activity = { action: 'assessment.requested' };
+    res.status(201).json({ id: String(request._id), status: request.status });
+  } catch (error) { next(error); }
+});
+
+router.patch('/teams/:teamId/assessment-requests/:requestId', async (req, res, next) => {
+  try {
+    const membership = await getTeamMembership(req.params.teamId, req.currentUser._id);
+    if (!membership) return res.sendStatus(404);
+    req.monitoringTeam = membership.team._id;
+    if (!canManageTeam(membership.role)) return res.sendStatus(403);
+    if (!mongoose.isValidObjectId(req.params.requestId)) return res.sendStatus(404);
+    const status = req.body?.status;
+    if (!['in_progress', 'fulfilled', 'declined'].includes(status)) return res.status(400).json({ error: 'Choose a valid request status.' });
+    const request = await TeamAssessmentRequest.findOneAndUpdate(
+      { _id: req.params.requestId, team: membership.team._id, status: { $in: ['open', 'in_progress'] } },
+      { $set: { status, handledBy: req.currentUser._id } }, { new: true },
+    );
+    if (!request) return res.status(404).json({ error: 'This request is no longer open.' });
+    req.activity = { action: 'assessment.request_updated', status };
+    res.json({ id: String(request._id), status: request.status });
   } catch (error) { next(error); }
 });
 

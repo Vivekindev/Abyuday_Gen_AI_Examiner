@@ -7,12 +7,21 @@ A MERN exam platform with Gemini question generation, timed attempts, teams, inv
 - Register, sign in, or use Google OAuth. Authentication uses HTTP-only access and refresh cookies.
 - Create personal tests or tests restricted to a team. Jobs are stored in MongoDB and processed by a RabbitMQ worker.
 - Track queued, processing, ready, and failed tests. The dashboard refreshes status automatically.
+- Retry failed assessments from the library or details page while keeping their ID and registered engines. Available to personal creators and team owners/admins.
 - Take timed tests with server-side answer storage and scoring. Correct answers are returned only after an attempt ends.
 - Create up to 10 teams, invite members or admins with a seven-day email-bound link, revoke invitations, change roles, transfer ownership, and review team results.
 - View personal scoreboards, team rankings per assessment, score trends, answer breakdowns, and CSV exports.
 - Use Light, Dark, or System appearance with desktop, tablet, and phone navigation.
 - Review platform users, teams, assessments, and completed results in a protected central Admin area.
 - Monitor overall and per-user Gemini usage, model and feature consumption, request performance, and team activity from the new monitoring tabs.
+
+## Interactive assessments
+
+Choose **Interactive** when creating an assessment to let a planner route questions to specialist authors and registered interaction engines. Students can change resistor circuits, adjust linear graphs, order steps, and sort items into categories alongside MCQs. When another interaction is needed, the builder automatically creates and registers a reusable workbench with controls and calculated readouts. Open **Engine library** to preview custom engines and inspect each question's engine requirements and build status. Responses save during the attempt and are graded on the server. Open **Interaction playground** to try built-in examples without AI calls.
+
+See [architecture, supported engine limits, extension guide and next interaction ideas](docs/interactive-assessments.md). Interactive assessments support 1–20 questions with 1–10 minutes allocated per question type; existing multiple-choice tests keep their original behavior.
+
+Assessment content supports LaTeX equations, syntax-highlighted code, Markdown tables/lists and semantic styling, with an editable formatting preview in **Interaction playground**. Rendering preserves original answer values for scoring.
 
 ## Requirements
 

@@ -444,24 +444,23 @@
   border-radius: 8px;
   margin-top: 24px;
 }
-.explanation-block > div {
+.explanation-block > .explanation-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
 }
-.explanation-block > div > span {
+.explanation-block > .explanation-heading > span {
   display: flex;
   gap: 8px;
   align-items: center;
   font-size: 13px;
   font-weight: 500;
 }
-.explanation-block > p {
+.explanation-block > p, .explanation-block > .rich-content {
   font-size: 14px;
   line-height: 1.8;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
   margin-top: 16px;
 }

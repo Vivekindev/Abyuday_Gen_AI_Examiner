@@ -805,6 +805,104 @@
 .route-transition {
   min-width: 0;
 }
+.library-management-note {
+  margin: -12px 0 18px;
+}
+.assessment-card-footer {
+  align-items: flex-end;
+}
+.assessment-card-footer .soft-tag {
+  max-width: 46%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.assessment-card-footer .table-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.team-requests {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+}
+.team-request-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--subtle);
+}
+.team-request-form h3,
+.team-request-card h3 {
+  font-size: 16px;
+  margin: 0;
+}
+.team-request-form .section-description {
+  margin: 6px 0 0;
+}
+.team-request-list {
+  display: grid;
+  gap: 12px;
+}
+.team-request-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+.team-request-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.team-request-heading p,
+.team-request-card > p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+}
+.team-request-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+.team-request-meta span {
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: var(--subtle);
+}
+.request-status {
+  flex: none;
+  text-transform: capitalize;
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: var(--link);
+  background: var(--accent-soft);
+}
+.request-fulfilled {
+  color: var(--positive);
+  background: var(--positive-bg);
+}
+.request-declined {
+  color: var(--negative);
+  background: var(--negative-bg);
+}
+.team-request-card .form-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.icon-button.text-danger {
+  color: var(--negative);
+}
 @media (min-width: 768px) and (max-width: 1199px) {
   .workspace-shell {
     grid-template-columns: 72px minmax(0, 1fr);
@@ -1019,12 +1117,48 @@
     max-width: none;
     min-width: 0;
   }
+  .library-controls > .icon-button {
+    width: 44px;
+    height: 44px;
+    flex: none;
+  }
   .view-toggle {
     display: none;
   }
   .card-grid {
     grid-template-columns: 1fr;
     padding: 16px;
+  }
+  .assessment-card {
+    padding: 17px;
+    gap: 13px;
+  }
+  .assessment-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .assessment-card-footer .soft-tag {
+    max-width: 100%;
+  }
+  .assessment-card-footer .table-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .team-requests {
+    padding: 14px;
+  }
+  .team-request-form,
+  .team-request-card {
+    padding: 16px;
+  }
+  .team-request-heading {
+    flex-direction: column;
+  }
+  .team-request-card .form-actions .btn {
+    flex: 1 1 auto;
+  }
+  .library-management-note {
+    margin: -8px 0 16px;
   }
   .pagination button {
     width: 44px;

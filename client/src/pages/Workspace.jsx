@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from "react";
+import PropTypes from 'prop-types';
 import {
   Link,
   NavLink,
@@ -49,6 +50,8 @@ const primary = [
   { label: "Teams", to: "/dashboard/teams", icon: FiUsers },
 ];
 const secondary = [
+  { label: 'Engine library', to: '/dashboard/engines', icon: FiGrid },
+  { label: 'Interaction playground', to: '/dashboard/labs', icon: FiGrid },
   { label: "Take a test", to: "/dashboard/take", icon: FiTarget },
   { label: "Settings", to: "/dashboard/settings", icon: FiSettings },
   { label: "Help", to: "/dashboard/help", icon: FiHelpCircle },
@@ -126,6 +129,7 @@ function CommandSearch({ open, onClose, navigation }) {
     </Modal>
   );
 }
+CommandSearch.propTypes = { open: PropTypes.bool.isRequired, onClose: PropTypes.func.isRequired, navigation: PropTypes.array.isRequired };
 
 export default function Workspace() {
   const location = useLocation();

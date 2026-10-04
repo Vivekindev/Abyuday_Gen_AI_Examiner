@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from 'prop-types';
 import { FiArrowLeft, FiDownload, FiRefreshCw, FiSearch } from "react-icons/fi";
 import { Button, EmptyState, ErrorNotice, LoadingState } from "./ui";
 import useResource from "../hooks/useResource";
@@ -47,6 +48,7 @@ function Pager({ data, page, setPage }) {
     )
   );
 }
+Pager.propTypes = { data: PropTypes.shape({ total: PropTypes.number, pages: PropTypes.number }), page: PropTypes.number.isRequired, setPage: PropTypes.func.isRequired };
 function TokenChart({ rows }) {
   const max = Math.max(1, ...rows.map((row) => row.totalTokens));
   return (
@@ -91,6 +93,8 @@ function TokenChart({ rows }) {
     </section>
   );
 }
+TokenChart.propTypes = { rows: PropTypes.array.isRequired };
+UsageMonitor.propTypes = { teamId: PropTypes.string };
 
 export default function UsageMonitor({ teamId }) {
   const base = teamId ? `/teams/${teamId}/monitoring` : "/admin/monitoring";
@@ -306,7 +310,7 @@ export default function UsageMonitor({ teamId }) {
                             <strong>
                               {row._id === "questions"
                                 ? "Question generation"
-                                : "Answer explanations"}
+                                : row._id === 'planning' ? 'Assessment planning' : row._id === 'engine_build' ? 'Engine building' : "Answer explanations"}
                             </strong>
                             <small>
                               {number(row.calls)} calls ·{" "}
@@ -699,11 +703,11 @@ export default function UsageMonitor({ teamId }) {
                             : pane === "ai"
                               ? row.operation === "questions"
                                 ? "Question generation"
-                                : "Answer explanation"
+                                : row.operation === 'planning' ? 'Assessment planning' : row.operation === 'engine_build' ? 'Engine building' : "Answer explanation"
                               : `${row.method} ${row.route}`}
                         </strong>
                         {pane === "ai" && (
-                          <small className="table-subtitle">{row.model}</small>
+                          <small className="table-subtitle">{row.model}{row.agent ? ` · ${row.agent.replaceAll('-', ' ')}` : ''}</small>
                         )}
                         {row.testName && (
                           <small className="table-subtitle">

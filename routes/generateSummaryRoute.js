@@ -26,6 +26,9 @@ router.post('/generate-summary', authenticateToken, async (req, res) => {
     req.monitoringTeam = test?.team || null;
     const question = test?.response?.[questionIndex];
     if (!question) return res.sendStatus(404);
+    if (question.kind && question.kind !== 'mcq') {
+      return res.status(200).json({ summary: question.explanation });
+    }
     const summary = await geminiSummaryRun(question.questionText, question.answer, DEFAULT_GEMINI_MODEL, { user: user._id, team: test.team, testID });
     req.activity = { action: 'explanation.generated', testID };
     res.status(200).json({ summary });

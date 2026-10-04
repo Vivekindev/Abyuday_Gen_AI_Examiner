@@ -6,6 +6,7 @@ import { PageLoader } from "./components/ui";
 import AppErrorBoundary from "./components/ui/AppErrorBoundary";
 import { useTheme } from "./theme/context";
 import "./App.css";
+import './components/content/content.css';
 
 const Workspace = lazy(() => import("./pages/Workspace"));
 const Overview = lazy(() => import("./pages/workspace/Overview"));
@@ -16,6 +17,8 @@ const CreateAssessment = lazy(
   () => import("./pages/workspace/CreateAssessment"),
 );
 const TakeAssessment = lazy(() => import("./pages/workspace/TakeAssessment"));
+const InteractionLab = lazy(() => import('./pages/workspace/InteractionLab'));
+const EngineLibrary = lazy(() => import('./pages/workspace/EngineLibrary'));
 const Results = lazy(() => import("./pages/workspace/Results"));
 const Admin = lazy(() => import("./pages/workspace/Admin"));
 const Settings = lazy(() => import("./pages/workspace/Settings"));
@@ -44,6 +47,8 @@ export default function App() {
                 <Route path="tests" element={<AssessmentLibrary />} />
                 <Route path="create" element={<CreateAssessment />} />
                 <Route path="take" element={<TakeAssessment />} />
+                <Route path="labs" element={<InteractionLab />} />
+                <Route path="engines" element={<EngineLibrary />} />
                 <Route path="results" element={<Results />} />
                 <Route path="admin" element={<Admin />} />
                 <Route path="teams" element={<TeamsManager />} />

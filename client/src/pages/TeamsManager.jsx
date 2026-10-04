@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import {
   FiCopy,
+  FiClipboard,
   FiMail,
   FiPlus,
   FiShield,
@@ -35,7 +36,7 @@ export default function TeamsManager() {
   const canManage = team && ["owner", "admin"].includes(team.role);
   const requestedTab = params.get("tab");
   const tab =
-    canManage && ["invitations", "results", "activity"].includes(requestedTab)
+    ["requests"].includes(requestedTab) || (canManage && ["invitations", "results", "activity"].includes(requestedTab))
       ? requestedTab
       : "members";
   const invites = useResource(
@@ -44,6 +45,9 @@ export default function TeamsManager() {
   const results = useResource(
     canManage && tab === "results" ? `/teams/${selectedId}/results` : null,
   );
+  const requests = useResource(
+    selectedId && tab === "requests" ? `/teams/${selectedId}/assessment-requests` : null,
+  );
   const [dialog, setDialog] = useState(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -51,6 +55,10 @@ export default function TeamsManager() {
   const [inviteLink, setInviteLink] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [requestTitle, setRequestTitle] = useState("");
+  const [requestTopic, setRequestTopic] = useState("");
+  const [requestCount, setRequestCount] = useState(10);
+  const [requestDifficulty, setRequestDifficulty] = useState(5);
   const changeTab = (next) => setParams({ team: selectedId, tab: next });
   const openDialog = (value) => {
     setError("");
@@ -96,6 +104,37 @@ export default function TeamsManager() {
       toast.success("Invitation created");
     } catch (requestError) {
       setError(errorMessage(requestError));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const submitAssessmentRequest = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await api.post(`/teams/${selectedId}/assessment-requests`, {
+        title: requestTitle, topic: requestTopic,
+        questionCount: Number(requestCount), difficulty: Number(requestDifficulty),
+      });
+      setRequestTitle("");
+      setRequestTopic("");
+      requests.reload();
+      toast.success("Assessment request sent to your team admins");
+    } catch (requestError) {
+      setError(errorMessage(requestError));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const updateRequest = async (item, status) => {
+    setBusy(true);
+    try {
+      await api.patch(`/teams/${selectedId}/assessment-requests/${item.id}`, { status });
+      requests.reload();
+      toast.success(status === "fulfilled" ? "Request marked complete" : status === "declined" ? "Request declined" : "Request accepted");
+    } catch (requestError) {
+      toast.error(errorMessage(requestError));
     } finally {
       setBusy(false);
     }
@@ -249,6 +288,12 @@ export default function TeamsManager() {
                         Members
                         <span className="tab-count">{team.members.length}</span>
                       </button>
+                      <button
+                        className={tab === "requests" ? "active" : ""}
+                        onClick={() => changeTab("requests")}
+                      >
+                        Assessment requests
+                      </button>
                       {canManage && (
                         <>
                           <button
@@ -276,6 +321,37 @@ export default function TeamsManager() {
                   {tab === "activity" && canManage && (
                     <div className="team-monitoring">
                       <UsageMonitor key={selectedId} teamId={selectedId} />
+                    </div>
+                  )}
+                  {tab === "requests" && (
+                    <div className="team-requests">
+                      <form className="panel-padding form-stack team-request-form" onSubmit={submitAssessmentRequest}>
+                        <div>
+                          <h3>Request an assessment</h3>
+                          <p className="section-description">Send a topic and question count to your team admins.</p>
+                        </div>
+                        <ErrorNotice message={error} />
+                        <label className="field">Assessment name<input value={requestTitle} onChange={(event) => setRequestTitle(event.target.value)} minLength={2} maxLength={80} required placeholder="e.g. Intro to circuits" /></label>
+                        <label className="field">Topics and learning goals<textarea value={requestTopic} onChange={(event) => setRequestTopic(event.target.value)} minLength={8} maxLength={2000} rows={4} required placeholder="What should the assessment cover?" /></label>
+                        <div className="form-grid">
+                          <label className="field">Questions<input type="number" min="1" max="50" value={requestCount} onChange={(event) => setRequestCount(event.target.value)} /></label>
+                          <label className="field">Difficulty<select value={requestDifficulty} onChange={(event) => setRequestDifficulty(Number(event.target.value))}><option value={2}>Easy</option><option value={5}>Medium</option><option value={8}>Hard</option></select></label>
+                        </div>
+                        <div className="form-actions"><Button type="submit" disabled={busy}>Send request</Button></div>
+                      </form>
+                      <ErrorNotice message={requests.error} onRetry={requests.reload} />
+                      {requests.loading ? <LoadingState rows={3} /> : requests.data?.length ? (
+                        <div className="team-request-list">
+                          {requests.data.map((item) => (
+                            <article className="team-request-card" key={item.id}>
+                              <div className="team-request-heading"><div><h3>{item.title}</h3><p>Requested by {item.requestedBy.name} · {formatDate(item.createdAt)}</p></div><span className={`request-status request-${item.status}`}>{item.status.replace("_", " ")}</span></div>
+                              <p>{item.topic}</p>
+                              <div className="team-request-meta"><span>{item.questionCount} questions</span><span>Difficulty {item.difficulty}/10</span></div>
+                              {canManage && ["open", "in_progress"].includes(item.status) && <div className="form-actions"><Button variant="primary" className="btn-sm" to="/dashboard/create" state={{ request: item, teamId: selectedId }}>Create assessment</Button><Button variant="secondary" className="btn-sm" disabled={busy} onClick={() => updateRequest(item, "in_progress")}>Accept</Button><Button variant="secondary" className="btn-sm" disabled={busy} onClick={() => updateRequest(item, "fulfilled")}>Mark fulfilled</Button><Button variant="ghost" className="btn-sm text-danger" disabled={busy} onClick={() => updateRequest(item, "declined")}>Decline</Button></div>}
+                            </article>
+                          ))}
+                        </div>
+                      ) : !requests.error && <EmptyState icon={FiClipboard} title="No assessment requests yet" description="Requests from team members will appear here for admins to review." />}
                     </div>
                   )}
                   {tab === "members" && (

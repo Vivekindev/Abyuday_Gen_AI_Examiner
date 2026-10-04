@@ -104,6 +104,7 @@ export async function meteredGeneration({
   context,
   model,
   operation,
+  agent,
   execute,
   validate,
 }) {
@@ -116,6 +117,7 @@ export async function meteredGeneration({
     testID: context.testID,
     model,
     operation,
+    agent,
   });
   const start = performance.now();
   let response;
@@ -159,6 +161,7 @@ export async function meteredGeneration({
                     ? "PROVIDER_UNAVAILABLE"
                     : "REQUEST_FAILED"
               : undefined,
+            validationMessage: failure?.generationValidation ? String(failure.message).slice(0, 1200) : undefined,
           },
         },
       ),

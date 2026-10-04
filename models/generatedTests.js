@@ -11,6 +11,7 @@ const testSchema = new mongoose.Schema({
     type: Object,
     required: true
   },
+  generation: { type: mongoose.Schema.Types.Mixed },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'usersData',

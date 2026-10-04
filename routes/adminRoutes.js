@@ -8,6 +8,8 @@ import Tasks from "../models/pendingTasksDB.js";
 import Attempts from "../models/testWindow.js";
 import PlatformAdmin from "../models/platformAdmin.js";
 import AdminAudit from "../models/adminAudit.js";
+import Generated from "../models/generatedTests.js";
+import { EngineRequest } from "../models/assessmentEngine.js";
 
 const router = Router();
 router.use("/admin", authenticateToken, requirePlatformAdmin);
@@ -72,6 +74,25 @@ router.get("/admin/overview", async (_req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+router.delete("/admin/assessments/:testID", async (req, res, next) => {
+  try {
+    const testID = req.params.testID;
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(testID)) return res.status(400).json({ error: "Invalid assessment ID." });
+    const task = await Tasks.findOne({ testID }).select("_id team status");
+    if (!task) return res.status(404).json({ error: "Assessment not found." });
+    if (task.status === "Processing") return res.status(409).json({ error: "Wait for generation to finish before deleting this assessment." });
+    await Promise.all([
+      Tasks.deleteOne({ _id: task._id }),
+      Generated.deleteOne({ testID }),
+      Attempts.deleteMany({ testID }),
+      EngineRequest.deleteMany({ testID }),
+    ]);
+    req.monitoringTeam = task.team || null;
+    req.activity = { action: "assessment.deleted", testID };
+    res.sendStatus(204);
+  } catch (error) { next(error); }
 });
 
 router.get("/admin/users", async (req, res, next) => {

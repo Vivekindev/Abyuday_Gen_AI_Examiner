@@ -24,6 +24,7 @@ import workspaceRoute from './routes/workspaceRoute.js';
 import adminRoutes from './routes/adminRoutes.js';
 import { monitorRequests } from './functions/telemetry.js';
 import monitoringRoutes from './routes/monitoringRoutes.js';
+import engineRoutes from './routes/engineRoutes.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -44,6 +45,7 @@ app.use(helmet({
   strictTransportSecurity: process.env.NODE_ENV === 'production',
 }));
 if (process.env.CLIENT_ORIGIN) app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true }));
+app.use(['/api/test/saveoptions', '/api/test/submit'], express.json({ limit: '512kb' }));
 app.use(express.json({ limit: '32kb' }));
 app.use(cookieParser());
 app.use(passport.initialize());
@@ -74,13 +76,13 @@ const creationLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 20, standar
 const explanationLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 120, standardHeaders: 'draft-7', legacyHeaders: false });
 app.use(['/api/login', '/api/register'], authLimiter);
 app.use('/api/me/password', authLimiter);
-app.use('/api/test/create', creationLimiter);
+app.use(['/api/test/create', '/api/test/retry'], creationLimiter);
 app.use('/api/generate-summary', explanationLimiter);
 
 for (const route of [
   pendingTaskRoute, loginAuthRoute, registerAuthRoute, authorizationRoute,
   logoutRoute, QuestionDataRoute, testProcessRoute,
-  fetchCreatedTestRoute, generateSummaryRoute, teamRoutes, workspaceRoute, adminRoutes, monitoringRoutes,
+  fetchCreatedTestRoute, generateSummaryRoute, teamRoutes, workspaceRoute, adminRoutes, monitoringRoutes, engineRoutes,
 ]) app.use('/api', route);
 app.use('/', GoogleOauthRoute);
 

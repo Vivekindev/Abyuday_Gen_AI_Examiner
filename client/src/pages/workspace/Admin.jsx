@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
-import { FiRefreshCw, FiSearch, FiShield, FiUserPlus } from "react-icons/fi";
+import { FiRefreshCw, FiSearch, FiShield, FiUserPlus, FiTrash2 } from "react-icons/fi";
 import { toast } from "sonner";
 import {
   Button,
@@ -38,6 +38,7 @@ const columns = {
     ["team", "Team"],
     ["createdAt", "Created"],
     ["details", "Details"],
+    ["actions", "Actions"],
   ],
   teams: [
     ["name", "Team"],
@@ -97,11 +98,12 @@ export default function Admin() {
     try {
       if (confirm.action === "grant")
         await api.post("/admin/members", { email: confirm.email });
+      else if (confirm.action === "delete-assessment") await api.delete(`/admin/assessments/${encodeURIComponent(confirm.testID)}`);
       else await api.delete(`/admin/members/${confirm.id}`);
       toast.success(
         confirm.action === "grant"
           ? "Admin access granted"
-          : "Admin access removed",
+          : confirm.action === "delete-assessment" ? "Assessment deleted" : "Admin access removed",
       );
       setConfirm(null);
       setEmail("");
@@ -150,6 +152,7 @@ export default function Admin() {
           View details
         </button>
       );
+    if (key === "actions") return tab === "assessments" ? <button className="icon-button text-danger" title="Delete assessment" aria-label={`Delete ${row.name}`} onClick={() => { setError(""); setConfirm({ ...row, action: "delete-assessment" }); }}><FiTrash2 /></button> : "—";
     return row[key] || "—";
   };
   if (!me) return <LoadingState rows={4} />;
@@ -451,13 +454,13 @@ export default function Admin() {
         title={
           confirm?.action === "grant"
             ? "Grant admin access?"
-            : "Remove admin access?"
+            : confirm?.action === "delete-assessment" ? "Delete assessment?" : "Remove admin access?"
         }
       >
         <p className="section-description">
           {confirm?.action === "grant"
             ? `${confirm.email} will be able to view data across the entire app.`
-            : `${confirm?.email} will lose platform admin access. Their account and team permissions will remain available.`}
+            : confirm?.action === "delete-assessment" ? `${confirm?.name} and all related attempts and results will be permanently deleted.` : `${confirm?.email} will lose platform admin access. Their account and team permissions will remain available.`}
         </p>
         <ErrorNotice message={error} />
         <div className="form-actions">
@@ -473,7 +476,7 @@ export default function Admin() {
               ? "Saving…"
               : confirm?.action === "grant"
                 ? "Grant access"
-                : "Remove access"}
+                : confirm?.action === "delete-assessment" ? "Delete assessment" : "Remove access"}
           </Button>
         </div>
       </Modal>

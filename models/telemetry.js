@@ -13,10 +13,11 @@ const aiSchema = new mongoose.Schema({
   testID: { type: String, maxlength: 64 },
   operation: {
     type: String,
-    enum: ["questions", "explanation"],
+    enum: ["questions", "explanation", "planning", "engine_build"],
     required: true,
   },
   model: { type: String, required: true },
+  agent: { type: String, maxlength: 80 },
   modelVersion: String,
   status: {
     type: String,
@@ -34,6 +35,7 @@ const aiSchema = new mongoose.Schema({
   totalTokens: count,
   httpStatus: Number,
   errorCode: String,
+  validationMessage: { type: String, maxlength: 1200 },
   finishReason: String,
 });
 aiSchema.index({ startedAt: -1 });

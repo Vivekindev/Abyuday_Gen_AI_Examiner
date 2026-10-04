@@ -1,0 +1,45 @@
+@import 'katex/dist/katex.min.css';
+
+.rich-content { min-width: 0; max-width: 100%; color: inherit; font: inherit; line-height: 1.7; overflow-wrap: anywhere; white-space: normal; }
+.rich-content > :first-child { margin-top: 0; }
+.rich-content > :last-child { margin-bottom: 0; }
+.rich-content p { margin: .65em 0; color: inherit; font: inherit; line-height: inherit; }
+.rich-content h1, .rich-content h2, .rich-content h3, .rich-content h4, .rich-content h5, .rich-content h6 { margin: 1em 0 .45em; font-size: 1.1em; font-weight: 700; line-height: 1.5; }
+.rich-content strong, .rich-content b { font-weight: 750; }
+.rich-content em, .rich-content i { font-style: italic; }
+.rich-content ul, .rich-content ol { margin: .7em 0; padding-left: 1.6em; }
+.rich-content ul { list-style: disc; }
+.rich-content ol { list-style: decimal; }
+.rich-content li { display: list-item; padding: 0; margin: .25em 0; border: 0; background: none; }
+.rich-content blockquote { margin: .9em 0; padding: .25em 1em; border-left: 3px solid var(--accent); color: var(--muted); }
+.rich-content hr { margin: 1em 0; border: 0; border-top: 1px solid var(--line); }
+.rich-content a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.rich-content mark { background: var(--warning-bg); color: var(--warning); padding: 0 .2em; }
+.rich-content sub, .rich-content sup { font-size: .75em; }
+.rich-content code, .rich-content kbd, .rich-content pre { font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace; font-size: .9em; }
+.rich-content :not(pre) > code { background: var(--subtle); border-radius: 4px; padding: .12em .35em; white-space: pre-wrap; }
+.rich-content pre, .rich-content .content-inline-pre { display: block; margin: .8em 0; padding: 14px; max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--canvas); white-space: pre; text-align: left; line-height: 1.6; tab-size: 2; }
+.rich-content pre code, .rich-content .content-inline-pre > code { display: block; padding: 0; background: none; border: 0; font-size: 1em; white-space: pre; overflow-wrap: normal; }
+.rich-content kbd { border: 1px solid var(--line); border-radius: 3px; padding: .1em .35em; }
+.rich-content table { display: block; width: max-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: .9em 0; font-size: .95em; }
+.rich-content th, .rich-content td { border: 1px solid var(--line); padding: .5em .8em; text-align: left; }
+.rich-content th { font-weight: 700; background: var(--subtle); }
+.rich-content .katex { font-size: 1.12em; white-space: normal; }
+.rich-content .katex-display { display: block; max-width: 100%; margin: 1em 0; padding: 4px 0; overflow-x: auto; overflow-y: hidden; }
+.rich-content .katex-error { font-family: ui-monospace, monospace; white-space: pre-wrap; }
+.rich-content .content-inline-p + .content-inline-p, .rich-content .content-inline-li, .rich-content .content-inline-tr, .rich-content .content-inline-blockquote { display: block; margin-top: .3em; }
+.rich-content .content-inline-th, .rich-content .content-inline-td { display: inline-block; padding: .2em .5em; border: 1px solid var(--line); }
+.rich-content .content-inline-li::before { content: '• '; }
+.rich-content .content-image-alt { color: var(--muted); font-style: italic; }
+.rich-content.content-plain-fallback { white-space: pre-wrap; }
+.rich-content .hljs-comment, .rich-content .hljs-quote { color: var(--muted); font-style: italic; }
+.rich-content .hljs-keyword, .rich-content .hljs-selector-tag, .rich-content .hljs-literal { color: var(--info); }
+.rich-content .hljs-string, .rich-content .hljs-regexp, .rich-content .hljs-attr { color: var(--positive); }
+.rich-content .hljs-number, .rich-content .hljs-built_in, .rich-content .hljs-type { color: var(--warning); }
+.rich-content .hljs-title, .rich-content .hljs-name, .rich-content .hljs-selector-class { color: var(--link); }
+.rich-content .hljs-meta, .rich-content .hljs-symbol, .rich-content .hljs-variable { color: var(--negative); }
+.question-body .assessment-question-content { font-size: 20px; line-height: 1.65; font-weight: 500; margin-bottom: 16px; }
+.formatting-preview { margin-top: 24px; max-width: 820px; padding: 24px; }
+.formatting-preview textarea { width: 100%; min-height: 220px; resize: vertical; font-family: ui-monospace, monospace; font-size: 13px; }
+.formatting-preview-output { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 20px; }
+@media (max-width: 540px) { .question-body .assessment-question-content { font-size: 18px; } .formatting-preview { padding: 16px; } }

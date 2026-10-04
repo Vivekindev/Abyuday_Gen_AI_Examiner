@@ -1,9 +1,13 @@
 import amqp from "amqplib";
 import generatedTests from "../models/generatedTests.js";
-import geminiQueryRun from "./geminiQueryRun.js";
+import geminiQueryRun, { createAgentGenerator } from "./geminiQueryRun.js";
+import { generateInteractiveAssessment } from './assessment/orchestrator.js';
+import { createEngineRegistry } from './assessment/engineRegistry.js';
+import { EngineRequest } from '../models/assessmentEngine.js';
 import pendingTasksDB from "../models/pendingTasksDB.js";
 import { DEFAULT_GEMINI_MODEL } from "../config/geminiModels.js";
 import { recordActivity, workerHeartbeat } from "./telemetry.js";
+import { generationFailure } from './assessment/generationErrors.js';
 
 const QUEUE_NAME = "taskQueue";
 const POLL_INTERVAL = 10000; // Poll every 10 seconds
@@ -31,7 +35,19 @@ const validQuestions = (questions, count) =>
       Array.isArray(question.tag),
   );
 
-const processTask = async (task) => {
+export const processTask = async (task) => {
+  const attempt = task.generationAttempt || 0;
+  const delayed = await pendingTasksDB.findOne({ testID: task.testID, status: 'Queued', nextAttemptAt: { $gt: new Date() } }).select('generationAttempt');
+  if (delayed && (delayed.generationAttempt || 0) === attempt) return false;
+  // Claim against the attempt and status atomically so queue-failure recovery cannot
+  // race a worker into processing a failed or superseded delivery. Processing is
+  // accepted for RabbitMQ redelivery after a worker disconnects.
+  const pendingTask = await pendingTasksDB.findOneAndUpdate({
+    testID: task.testID,
+    status: { $in: ['queued', 'Queued', 'Processing'] },
+    ...(attempt === 0 ? { $or: [{ generationAttempt: 0 }, { generationAttempt: { $exists: false } }] } : { generationAttempt: attempt }),
+  }, { $set: { status: 'Processing' }, $unset: { generationError: 1, nextAttemptAt: 1 } }, { new: true }).select('+generationQuestions');
+  if (!pendingTask) return true;
   const {
     testID,
     testName,
@@ -41,13 +57,16 @@ const processTask = async (task) => {
     testModel,
     user,
     team,
-  } = task;
+  } = pendingTask;
   console.log(`Processing Pending Task ${testID}`);
-  const pendingTask = await pendingTasksDB.findOne({ testID });
   try {
-    if (!pendingTask) throw new Error("Pending task was not found");
-    pendingTask.status = "Processing";
-    await pendingTask.save();
+    // A redelivery after publication must not generate and charge for the same test again.
+    if (await generatedTests.exists({ testID })) {
+      pendingTask.status = 'Done';
+      pendingTask.generationStage = 'ready';
+      await pendingTask.save();
+      return true;
+    }
     const activeModel = pendingTask.testModel;
     await workerHeartbeat({
       workerStatus: "processing",
@@ -63,6 +82,22 @@ const processTask = async (task) => {
     let combinedResponse = [];
     let totalQuestionsCollected = 0;
     const maxRetries = 3;
+    let generation;
+    if (pendingTask.assessmentMode === 'interactive') {
+      const result = await generateInteractiveAssessment({
+        prompt: pendingTask.testPrompt, count: Number(pendingTask.questionCount), difficulty: Number(pendingTask.testDifficulty),
+        generate: createAgentGenerator(activeModel, { user: pendingTask.user, team: pendingTask.team, testID }),
+        registry: createEngineRegistry({ user: pendingTask.user, team: pendingTask.team, testID }),
+        savedPlan: pendingTask.generationPlan,
+        savedQuestions: pendingTask.generationQuestions,
+        onQuestion: async (questions) => { pendingTask.generationQuestions = [...questions]; pendingTask.markModified('generationQuestions'); await pendingTask.save(); },
+        onPlan: async (plan) => { pendingTask.generationPlan = plan; pendingTask.markModified('generationPlan'); await pendingTask.save(); },
+        onProgress: async ({ stage }) => { pendingTask.generationStage = stage; await pendingTask.save(); },
+      });
+      combinedResponse = result.questions;
+      totalQuestionsCollected = combinedResponse.length;
+      generation = { version: 1, plan: result.plan, trace: result.trace };
+    }
 
     while (totalQuestionsCollected < questionCount) {
       const currentBatchCount = Math.min(
@@ -132,6 +167,7 @@ const processTask = async (task) => {
     const newGeneratedTest = new generatedTests({
       testID,
       response: combinedResponse,
+      generation,
       user,
       team: team || null,
     });
@@ -139,6 +175,9 @@ const processTask = async (task) => {
 
     console.log(`Done Processing Task ${testID}`);
     pendingTask.status = "Done";
+    pendingTask.generationStage = 'ready';
+    pendingTask.generationError = undefined;
+    pendingTask.generationQuestions = undefined;
     await pendingTask.save();
     await recordActivity({
       user: pendingTask.user,
@@ -150,14 +189,16 @@ const processTask = async (task) => {
     await workerHeartbeat({ lastCompletedAt: new Date() });
     return true;
   } catch (error) {
-    console.error(`Error processing task ${testID}:`, error);
+    console.error(`Error processing task ${testID}:`, { ...generationFailure(error, pendingTask?.generationStage), httpStatus: error.status || null });
     if (pendingTask) {
+      pendingTask.generationError = generationFailure(error, pendingTask.generationStage);
       if (
         isTemporaryGeminiError(error) &&
-        pendingTask.retryCount < MAX_SERVICE_RETRIES
+        (error.engineBusy || pendingTask.retryCount < MAX_SERVICE_RETRIES)
       ) {
-        pendingTask.retryCount += 1;
+        if (!error.engineBusy) pendingTask.retryCount += 1;
         if (
+          !error.engineBusy &&
           error.status === 503 &&
           pendingTask.testModel === "gemini-3.8-flash" &&
           pendingTask.retryCount >= 3
@@ -168,6 +209,7 @@ const processTask = async (task) => {
           );
         }
         pendingTask.status = "Queued";
+        pendingTask.nextAttemptAt = new Date(Date.now() + (error.status === 429 ? 60000 : Math.min(60000, 10000 * 2 ** Math.min(pendingTask.retryCount, 3))));
         await pendingTask.save();
         await recordActivity({
           user: pendingTask.user,
@@ -180,6 +222,7 @@ const processTask = async (task) => {
       }
       pendingTask.status = "Error";
       await pendingTask.save();
+      await EngineRequest.updateMany({ testID, user: pendingTask.user, status: 'requested' }, { $set: { status: 'failed', message: 'Assessment generation stopped before this request could be built. Retry this assessment to try again.' } });
       await recordActivity({
         user: pendingTask.user,
         team: pendingTask.team,
