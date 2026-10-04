@@ -23,11 +23,12 @@ import "./results.css";
 
 export default function Results() {
   const [params, setParams] = useSearchParams();
+  const tab = ["analytics", "scoreboard"].includes(params.get("tab"))
+    ? params.get("tab")
+    : "history";
   const teams = useResource("/teams");
-  const manageable = (teams.data || []).filter((team) =>
-    ["owner", "admin"].includes(team.role),
-  );
-  const selectedTeam = manageable.find(
+  const availableTeams = teams.data || [];
+  const selectedTeam = availableTeams.find(
     (team) => team.id === params.get("team"),
   );
   const resource = useResource(
@@ -38,11 +39,11 @@ export default function Results() {
         : "/me/attempts",
     { interval: 30000 },
   );
+  const globalCatalog = useResource(
+    !selectedTeam && tab === "scoreboard" ? "/assessments/leaderboard" : null,
+  );
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const tab = ["analytics", "scoreboard"].includes(params.get("tab"))
-    ? params.get("tab")
-    : "history";
   const period = ["7", "30", "90"].includes(params.get("period"))
     ? params.get("period")
     : "all";
@@ -54,14 +55,23 @@ export default function Results() {
       summary.completed.map((row) => [row.testID, row.testName]),
     ).entries(),
   ];
-  const rankTestId = rankTests.some(([id]) => id === params.get("test"))
+  const selectedTeamTestId = rankTests.some(([id]) => id === params.get("test"))
     ? params.get("test")
     : rankTests[0]?.[0];
-  const ranking = rankScores(
-    selectedTeam
-      ? attempts.filter((row) => row.testID === rankTestId)
-      : attempts,
+  const personalAssessments = globalCatalog.data || [];
+  const selectedPersonalTestId = personalAssessments.some((item) => item.testID === params.get("test"))
+    ? params.get("test")
+    : personalAssessments[0]?.testID;
+  const personalRankingResource = useResource(
+    !selectedTeam && tab === "scoreboard" && selectedPersonalTestId
+      ? `/assessments/leaderboard?testID=${encodeURIComponent(selectedPersonalTestId)}`
+      : null,
   );
+  const rankTestId = selectedTeam ? selectedTeamTestId : selectedPersonalTestId;
+  const ranking = selectedTeam
+    ? rankScores(attempts.filter((row) => row.testID === rankTestId))
+    : personalRankingResource.data?.rows || [];
+  const leaderboardAssessment = selectedTeam ? null : personalRankingResource.data?.assessment;
   const filtered = (tab === "scoreboard" ? ranking : attempts).filter((row) =>
     `${row.testName} ${row.name || ""} ${row.email || ""}`
       .toLowerCase()
@@ -115,7 +125,8 @@ export default function Results() {
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
-  const loading = resource.loading || (params.has("team") && teams.loading);
+  const loading = resource.loading || (params.has("team") && teams.loading) ||
+    (tab === "scoreboard" && !selectedTeam && (globalCatalog.loading || (!!selectedPersonalTestId && personalRankingResource.loading)));
   return (
     <div>
       <PageHeading title="Results">
@@ -138,7 +149,7 @@ export default function Results() {
             disabled={teams.loading}
           >
             <option value="">My results</option>
-            {manageable.map((team) => (
+            {availableTeams.map((team) => (
               <option key={team.id} value={team.id}>
                 {team.name}
               </option>
@@ -265,14 +276,14 @@ export default function Results() {
                 {tab === "scoreboard"
                   ? selectedTeam
                     ? "Team rankings"
-                    : "Your highest scores"
+                    : "Assessment rankings"
                   : "Attempt history"}
               </h2>
               {tab === "scoreboard" && (
                 <p className="field-hint">
                   {selectedTeam
-                    ? "Compare members on the same assessment. Equal scores share a rank."
-                    : "Your assessments ranked by score."}
+                    ? "Choose an assessment to rank everyone in this team by their score. Equal scores share a rank."
+                    : "View participant rankings and attendance for every personal assessment."}
                 </p>
               )}
             </div>
@@ -280,11 +291,7 @@ export default function Results() {
               <FiSearch />
               <input
                 aria-label="Search results"
-                placeholder={
-                  selectedTeam
-                    ? "Search assessment or person"
-                    : "Search assessments"
-                }
+                placeholder={tab === "scoreboard" ? "Search participants" : selectedTeam ? "Search assessment or person" : "Search assessments"}
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
@@ -293,6 +300,19 @@ export default function Results() {
               />
             </label>
           </div>
+          {tab === "scoreboard" && !selectedTeam && personalAssessments.length > 0 && (
+            <div className="scoreboard-filter">
+              <label className="field">
+                Assessment
+                <select value={rankTestId} onChange={(event) => change("test", event.target.value)}>
+                  {personalAssessments.map((item) => (
+                    <option key={item.testID} value={item.testID}>{item.name} · {item.attendedCount} attended</option>
+                  ))}
+                </select>
+              </label>
+              {leaderboardAssessment && <p className="field-hint">{leaderboardAssessment.attendedCount} people attended · {leaderboardAssessment.completedCount} completed</p>}
+            </div>
+          )}
           {tab === "scoreboard" && selectedTeam && rankTests.length > 0 && (
             <div className="scoreboard-filter">
               <label className="field">
@@ -316,14 +336,14 @@ export default function Results() {
                 <thead>
                   <tr>
                     <th>
-                      {selectedTeam && tab === "scoreboard"
+                      {tab === "scoreboard"
                         ? "Participant"
                         : "Assessment"}
                     </th>
                     {tab === "scoreboard" ? <th>Rank</th> : <th>Status</th>}
                     <th>Score</th>
                     <th>Completed</th>
-                    {!(selectedTeam && tab === "scoreboard") && (
+                    {tab !== "scoreboard" && (
                       <th>{selectedTeam ? "Participant" : "Action"}</th>
                     )}
                   </tr>
@@ -333,7 +353,7 @@ export default function Results() {
                     <tr key={row.id}>
                       <td>
                         <strong className="table-title">
-                          {selectedTeam && tab === "scoreboard"
+                          {tab === "scoreboard"
                             ? row.name
                             : row.testName}
                         </strong>
@@ -367,7 +387,7 @@ export default function Results() {
                       <td data-label="Completed">
                         {row.isEnded ? formatDate(row.date) : "—"}
                       </td>
-                      {!(selectedTeam && tab === "scoreboard") && (
+                      {tab !== "scoreboard" && (
                         <td
                           data-label={selectedTeam ? "Participant" : "Action"}
                         >
@@ -392,9 +412,21 @@ export default function Results() {
           ) : (
             <EmptyState
               title={
-                query ? "No matching results" : "No results in this period"
+                query ? "No matching results" : tab === "scoreboard"
+                  ? !selectedTeam && !personalAssessments.length
+                    ? "No personal assessments available"
+                    : leaderboardAssessment?.attendedCount
+                      ? "No completed attempts yet"
+                      : "No one has attended this assessment yet"
+                  : "No results in this period"
               }
-              description="Results appear after an assessment is started or completed."
+              description={tab === "scoreboard"
+                ? !selectedTeam && !personalAssessments.length
+                  ? "There are no ready, non-team assessments to rank yet."
+                  : leaderboardAssessment?.attendedCount
+                    ? "Participant rankings appear when people complete the assessment."
+                    : "Attendance will appear here when someone starts the assessment."
+                : "Results appear after an assessment is started or completed."}
             />
           )}
           <div className="table-footer">

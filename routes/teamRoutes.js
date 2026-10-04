@@ -95,7 +95,6 @@ router.get('/teams/:teamId/results', async (req, res, next) => {
     const membership = await getTeamMembership(req.params.teamId, req.currentUser._id);
     if (!membership) return res.sendStatus(404);
     req.monitoringTeam = membership.team._id;
-    if (!canManageTeam(membership.role)) return res.sendStatus(403);
     const tests = await pendingTasksDB.find({ team: membership.team._id }).select('testID testName');
     const names = new Map(tests.map((test) => [test.testID, test.testName]));
     const attempts = await testWindow.find({ testID: { $in: [...names.keys()] }, isEnded: true })

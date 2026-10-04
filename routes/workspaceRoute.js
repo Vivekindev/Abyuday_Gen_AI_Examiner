@@ -27,6 +27,54 @@ router.get('/me/attempts', authenticateToken, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.get('/assessments/leaderboard', authenticateToken, async (req, res, next) => {
+  try {
+    const testID = typeof req.query.testID === 'string' ? req.query.testID.trim() : '';
+    if (testID && !/^[a-zA-Z0-9_-]{1,64}$/.test(testID)) return res.status(400).json({ error: 'Invalid assessment ID.' });
+
+    if (testID) {
+      const task = await pendingTasksDB.findOne({ testID, team: null, status: 'Done' }).select('testID testName');
+      if (!task) return res.status(404).json({ error: 'Assessment not found.' });
+      const [attendedCount, completedCount, attempts] = await Promise.all([
+        testWindow.countDocuments({ testID }),
+        testWindow.countDocuments({ testID, isEnded: true }),
+        testWindow.find({ testID, isEnded: true }).select('user results endedAt expiryTime startTime')
+          .populate('user', 'userName').sort({ startTime: -1 }).lean(),
+      ]);
+      const ranked = attempts.map((attempt) => {
+        const total = Number(attempt.results?.total) || 0;
+        const score = Math.min(total, Math.max(0, Number(attempt.results?.score) || 0));
+        return {
+          id: String(attempt._id), testID, testName: task.testName,
+          name: attempt.user?.userName || 'User',
+          score, total, percentage: total ? (score / total) * 100 : 0,
+          date: attempt.endedAt || attempt.expiryTime || attempt.startTime,
+        };
+      }).filter((attempt) => attempt.total > 0).sort((a, b) => b.percentage - a.percentage || new Date(b.date) - new Date(a.date));
+      let rank = 0;
+      ranked.forEach((attempt, index) => {
+        if (!index || Math.abs(attempt.percentage - ranked[index - 1].percentage) > 0.000001) rank = index + 1;
+        attempt.rank = rank;
+      });
+      return res.json({ assessment: { testID, name: task.testName, attendedCount, completedCount }, rows: ranked });
+    }
+
+    const [tasks, counts] = await Promise.all([
+      pendingTasksDB.find({ team: null, status: 'Done' }).select('testID testName').sort({ _id: -1 }).lean(),
+      testWindow.aggregate([
+        { $group: { _id: '$testID', attendedCount: { $sum: 1 }, completedCount: { $sum: { $cond: ['$isEnded', 1, 0] } } } },
+      ]),
+    ]);
+    const byTest = new Map(counts.map((item) => [item._id, item]));
+    res.json(tasks.map((task) => ({
+      testID: task.testID,
+      name: task.testName,
+      attendedCount: byTest.get(task.testID)?.attendedCount || 0,
+      completedCount: byTest.get(task.testID)?.completedCount || 0,
+    })));
+  } catch (error) { next(error); }
+});
+
 router.get('/me', authenticateToken, async (req, res, next) => {
   try {
     const user = await findUser(req.user.email);
