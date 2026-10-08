@@ -9,6 +9,7 @@ import TeamInvite from '../models/teamInvite.js';
 import pendingTasksDB from '../models/pendingTasksDB.js';
 import testWindow from '../models/testWindow.js';
 import TeamAssessmentRequest from '../models/teamAssessmentRequest.js';
+import { deleteTeam } from '../functions/deleteTeam.js';
 
 const router = Router();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,11 +26,12 @@ router.use('/teams', authenticateToken, async (req, res, next) => {
 router.get('/teams', async (req, res, next) => {
   try {
     const teams = await Team.find({ 'members.user': req.currentUser._id }).sort({ updatedAt: -1 });
-    res.json(teams.map((team) => ({
+    res.json(teams.filter((team) => !team.deletingAt || team.members.some((member) => String(member.user) === req.currentUser.id && member.role === 'owner')).map((team) => ({
       id: team.id,
       name: team.name,
       role: team.members.find((member) => String(member.user) === req.currentUser.id).role,
       memberCount: team.members.length,
+      deleting: !!team.deletingAt,
     })));
   } catch (error) { next(error); }
 });
@@ -50,8 +52,8 @@ router.post('/teams', async (req, res, next) => {
 
 router.get('/teams/invites/:token', async (req, res, next) => {
   try {
-    const invite = await TeamInvite.findOne({ tokenHash: hashToken(req.params.token), usedAt: null, expiresAt: { $gt: new Date() } }).populate('team', 'name');
-    if (!invite || !invite.team) return res.status(404).json({ error: 'Invite is invalid or expired.' });
+    const invite = await TeamInvite.findOne({ tokenHash: hashToken(req.params.token), usedAt: null, expiresAt: { $gt: new Date() } }).populate('team', 'name deletingAt');
+    if (!invite || !invite.team || invite.team.deletingAt) return res.status(404).json({ error: 'Invite is invalid or expired.' });
     res.json({ teamName: invite.team.name, email: invite.email, role: invite.role, expiresAt: invite.expiresAt });
   } catch (error) { next(error); }
 });
@@ -62,11 +64,11 @@ router.post('/teams/invites/:token/accept', async (req, res, next) => {
     if (!invite) return res.status(404).json({ error: 'Invite is invalid or expired.' });
     if (invite.email !== req.currentUser.email) return res.status(403).json({ error: 'Sign in with the invited email address.' });
     const joined = await Team.updateOne(
-      { _id: invite.team, 'members.user': { $ne: req.currentUser._id } },
+      { _id: invite.team, deletingAt: null, 'members.user': { $ne: req.currentUser._id } },
       { $push: { members: { user: req.currentUser._id, role: invite.role, joinedAt: new Date() } } },
     );
     const team = await Team.findById(invite.team);
-    if (!team) return res.sendStatus(404);
+    if (!team || team.deletingAt) return res.status(404).json({ error: 'This team is no longer available.' });
     invite.usedAt = new Date();
     await invite.save();
     req.monitoringTeam = team._id;
@@ -77,17 +79,35 @@ router.post('/teams/invites/:token/accept', async (req, res, next) => {
 
 router.get('/teams/:teamId', async (req, res, next) => {
   try {
-    const membership = await getTeamMembership(req.params.teamId, req.currentUser._id);
+    const membership = await getTeamMembership(req.params.teamId, req.currentUser._id, { allowDeleting: true });
     if (!membership) return res.sendStatus(404);
     req.monitoringTeam = membership.team._id;
     await membership.team.populate('members.user', 'email userName');
     res.json({
-      id: membership.team.id, name: membership.team.name, role: membership.role,
+      id: membership.team.id, name: membership.team.name, role: membership.role, deleting: !!membership.team.deletingAt,
       members: membership.team.members.map(({ user, role, joinedAt }) => ({
         id: user.id, email: user.email, name: user.userName, role, joinedAt,
       })),
     });
   } catch (error) { next(error); }
+});
+
+router.delete('/teams/:teamId', async (req, res, next) => {
+  try {
+    const membership = await getTeamMembership(req.params.teamId, req.currentUser._id, { allowDeleting: true });
+    if (!membership) return res.status(404).json({ error: 'Team not found.' });
+    if (membership.role !== 'owner') return res.status(403).json({ error: 'Only the team owner can delete this team.' });
+    if (typeof req.body?.confirmationName !== 'string' || req.body.confirmationName !== membership.team.name) {
+      return res.status(400).json({ error: 'Enter the team name exactly to confirm deletion.' });
+    }
+    req.monitoringTeam = membership.team._id;
+    await deleteTeam(membership.team, req.currentUser._id);
+    req.activity = { action: 'team.deleted' };
+    res.sendStatus(204);
+  } catch (error) {
+    if (error.status === 409) return res.status(409).json({ error: error.message });
+    next(error);
+  }
 });
 
 router.get('/teams/:teamId/results', async (req, res, next) => {
@@ -149,6 +169,10 @@ router.post('/teams/:teamId/assessment-requests', async (req, res, next) => {
       return res.status(409).json({ error: 'You already have five active requests for this team.' });
     }
     const request = await TeamAssessmentRequest.create({ team: membership.team._id, requestedBy: req.currentUser._id, title, topic, questionCount, difficulty });
+    if (!await Team.exists({ _id: membership.team._id, deletingAt: null })) {
+      await TeamAssessmentRequest.deleteOne({ _id: request._id });
+      return res.status(409).json({ error: 'This team is being deleted.' });
+    }
     req.activity = { action: 'assessment.requested' };
     res.status(201).json({ id: String(request._id), status: request.status });
   } catch (error) { next(error); }
@@ -197,6 +221,10 @@ router.post('/teams/:teamId/invites', async (req, res, next) => {
       team: membership.team._id, email, role, tokenHash: hashToken(token),
       invitedBy: req.currentUser._id, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
+    if (!await Team.exists({ _id: membership.team._id, deletingAt: null })) {
+      await TeamInvite.deleteOne({ _id: invite._id });
+      return res.status(409).json({ error: 'This team is being deleted.' });
+    }
     req.activity = { action: 'invite.created', role, targetUser: invitedUser?._id };
     res.status(201).json({ token, expiresAt: invite.expiresAt });
   } catch (error) { next(error); }

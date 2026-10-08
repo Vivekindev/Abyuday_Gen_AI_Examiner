@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { FiArrowRight, FiDownload, FiSearch } from "react-icons/fi";
 import {
   Button,
@@ -394,13 +394,15 @@ export default function Results() {
                           {selectedTeam ? (
                             row.name
                           ) : (
-                            <Link
-                              className="text-link"
+                            <Button
+                              className="btn-sm"
+                              variant={row.isEnded || row.expired ? 'secondary' : 'primary'}
                               to={`/test?testID=${row.testID}`}
+                              aria-label={`${row.isEnded || row.expired ? 'Review' : 'Resume'} ${row.testName}`}
                             >
                               {row.isEnded || row.expired ? "Review" : "Resume"}
                               <FiArrowRight />
-                            </Link>
+                            </Button>
                           )}
                         </td>
                       )}

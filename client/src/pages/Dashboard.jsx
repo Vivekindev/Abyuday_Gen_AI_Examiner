@@ -16,7 +16,8 @@ import { Button, ErrorNotice, Modal, PageLoader } from "../components/ui";
 import { api, errorMessage } from "../lib/api";
 import ThemeToggle from "../theme/ThemeToggle";
 import InteractiveQuestion from '../components/assessment/InteractiveQuestion';
-import { responsePresent } from '../components/assessment/interactionMeta';
+import QuestionNavigator from '../components/assessment/QuestionNavigator';
+import { interactionNames, responsePresent } from '../components/assessment/interactionMeta';
 import RichContent from '../components/content/RichContent';
 import "./exam.css";
 
@@ -42,10 +43,41 @@ export default function Dashboard() {
   const savingRef = useRef(false);
   const answersRef = useRef([]);
   const pendingSave = useRef(null);
+  const questionHeading = useRef(null);
+  const resultHeading = useRef(null);
+  const focusAfterNavigation = useRef(false);
   const [unsaved, setUnsaved] = useState(false);
   const [restarting, setRestarting] = useState(false);
   const ready = !!session;
   const ended = session?.isEnded;
+  const goToQuestion = (index) => {
+    if (index === active && !dialog) {
+      requestAnimationFrame(() => {
+        questionHeading.current?.focus({ preventScroll: true });
+        questionHeading.current?.scrollIntoView({ block: 'start' });
+      });
+      return;
+    }
+    focusAfterNavigation.current = true;
+    setActive(index);
+  };
+  useEffect(() => {
+    if (!focusAfterNavigation.current || loading || dialog) return;
+    const frame = requestAnimationFrame(() => {
+      focusAfterNavigation.current = false;
+      questionHeading.current?.focus({ preventScroll: true });
+      questionHeading.current?.scrollIntoView({ block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [active, loading, dialog]);
+  useEffect(() => {
+    if (!ended || loading) return;
+    const frame = requestAnimationFrame(() => {
+      resultHeading.current?.focus({ preventScroll: true });
+      resultHeading.current?.scrollIntoView({ block: 'center' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [ended, loading]);
   const startAgain = async () => {
     if (restarting) return;
     setRestarting(true);
@@ -57,9 +89,11 @@ export default function Dashboard() {
       setUnsaved(false);
       setRemaining(data.remTime);
       deadline.current = Date.now() + data.remTime * 1000;
+      focusAfterNavigation.current = true;
       setActive(0);
       setFlagged(new Set());
       setExplanations({});
+      setError("");
       setDialog(null);
     } catch (requestError) {
       setError(errorMessage(requestError, "Could not start another attempt."));
@@ -306,46 +340,45 @@ export default function Dashboard() {
   const answered = questions.filter((q, i) => responsePresent(q, answers[i])).length;
   const correct = session.results?.outcomes?.[active]?.correct ?? (answers[active] === question.answer);
   const interactive = question.kind && question.kind !== 'mcq';
+  const timeAnnouncement = ended ? '' : remaining === 0 ? 'Time is up. Submitting your saved answers.' : remaining <= 60 ? 'One minute or less remaining.' : remaining <= 300 ? 'Five minutes or less remaining.' : '';
   return (
     <div className="assessment-experience">
+      <a className="skip-link" href="#current-question">Skip to question</a>
       <header className="assessment-topbar">
         <button
           className="exam-back"
+          aria-label="Back to workspace"
           onClick={() =>
             ended ? navigate("/dashboard/results") : setDialog("leave")
           }
         >
-          <FiArrowLeft />
-          <span>Back to workspace</span>
+          <FiArrowLeft aria-hidden="true" />
+          <span className="exam-back-label">Back to workspace</span>
+          <span className="exam-back-short" aria-hidden="true">Back</span>
         </button>
         <span className="exam-mode">
-          <FiShield />
+          <FiShield aria-hidden="true" />
           {ended ? "Assessment review" : "Focus mode"}
         </span>
-        <ThemeToggle />
+        <div className="exam-topbar-tools">
+          {!ended && <div className={`assessment-timer ${remaining <= 60 ? 'timer-urgent' : ''}`} role="timer" aria-live="off" aria-label={`${Math.floor(remaining / 60)} minutes and ${remaining % 60} seconds remaining`}>
+            <FiClock aria-hidden="true" />
+            <div><small>{remaining <= 60 ? 'Time nearly up' : 'Time remaining'}</small><strong>{formatTime(remaining)}</strong></div>
+          </div>}
+          <ThemeToggle />
+        </div>
       </header>
       <main className="assessment-container">
+        <p className="sr-only" role="status" aria-atomic="true">{timeAnnouncement}</p>
         <div className="assessment-heading">
           <div>
+            <p className="exam-eyebrow">{ended ? 'Your assessment results' : 'One question at a time'}</p>
             <h1>{title}</h1>
             <p>
               {questions.length} questions <span>·</span> {questions.some((q) => q.kind && q.kind !== 'mcq') ? 'Interactive assessment' : 'Multiple choice'}{" "}
               <span>·</span> {ended ? "Completed" : "In progress"}
             </p>
           </div>
-          {!ended && (
-            <div
-              className={`assessment-timer ${remaining < 60 ? "timer-urgent" : ""}`}
-              role="timer"
-              aria-label={`${remaining} seconds remaining`}
-            >
-              <FiClock />
-              <div>
-                <small>Time remaining</small>
-                <strong>{formatTime(remaining)}</strong>
-              </div>
-            </div>
-          )}
         </div>
         <ErrorNotice
           message={error}
@@ -371,7 +404,7 @@ export default function Dashboard() {
               </span>
             </div>
             <div className="score-summary-copy">
-              <h2>Assessment complete</h2>
+              <h2 ref={resultHeading} tabIndex={-1} aria-label={`Assessment complete. Your score is ${session.results?.percentage ?? 0} percent.`}>Assessment complete</h2>
               <p>
                 Review your answers and explore the reasoning behind each one.
               </p>
@@ -403,19 +436,25 @@ export default function Dashboard() {
           </section>
         )}
         <div className="assessment-grid">
-          <section className="question-panel panel">
+          <QuestionNavigator questions={questions} answers={answers} active={active} flagged={flagged} ended={ended} outcomes={session.results?.outcomes} busy={submitting || saving} onNavigate={goToQuestion} onSubmit={() => setDialog('submit')} />
+          <section className="question-panel panel" aria-labelledby="current-question">
             <div className="question-top">
-              <span className="question-counter">
-                Question {String(active + 1).padStart(2, "0")}{" "}
-                <small>/ {String(questions.length).padStart(2, "0")}</small>
-              </span>
+              <div className="question-identity">
+                <span className="question-number" aria-hidden="true">{String(active + 1).padStart(2, '0')}</span>
+                <div>
+                  <h2 className="question-counter" id="current-question" ref={questionHeading} tabIndex={-1} aria-describedby="question-prompt">
+                    Question {active + 1} <span>of {questions.length}</span>
+                  </h2>
+                  <p className="question-kind">{interactionNames[question.kind || 'mcq'] || 'Interactive question'}</p>
+                </div>
+              </div>
               {!ended ? (
                 <button
                   className={`flag-button ${flagged.has(active) ? "flagged" : ""}`}
                   onClick={flag}
                   aria-pressed={flagged.has(active)}
                 >
-                  <FiFlag />
+                  <FiFlag aria-hidden="true" />
                   {flagged.has(active)
                     ? "Flagged for review"
                     : "Flag for review"}
@@ -434,15 +473,16 @@ export default function Dashboard() {
               )}
             </div>
             <div className="question-body">
-              <RichContent text={question.questionText} className="assessment-question-content" />
-              <p className="question-instruction">
+              <div id="question-prompt"><RichContent text={question.questionText} className="assessment-question-content" /></div>
+              <p className="question-instruction" id="question-instruction">
                 {ended
                   ? "Your response and the correct answer are shown below."
                   : interactive ? "Explore the task below. Your changes are saved automatically." : "Select the best answer."}
               </p>
               {interactive ? <InteractiveQuestion key={active} question={question} value={answers[active]} onChange={chooseAnswer} disabled={ended || submitting || remaining === 0} review={ended} /> : <fieldset
-                disabled={ended || saving || submitting || remaining === 0}
+                disabled={ended || submitting || remaining === 0}
                 className="question-options"
+                aria-describedby="question-instruction"
               >
                 <legend className="sr-only">Choose one answer</legend>
                 {question.options.map((option, index) => (
@@ -457,11 +497,13 @@ export default function Dashboard() {
                       checked={answers[active] === option}
                       onChange={() => chooseAnswer(option)}
                     />
-                    <span className="option-letter">
+                    <span className="option-letter" aria-hidden="true">
                       {String.fromCharCode(65 + index)}
                     </span>
                     <RichContent text={option} inline className="option-text" />
-                    <span className="option-indicator">
+                    <span className="option-feedback">
+                      {ended && (question.answer === option || answers[active] === option) && <span className="option-feedback-label">{question.answer === option ? answers[active] === option ? 'Your answer · Correct' : 'Correct answer' : 'Your answer · Incorrect'}</span>}
+                    <span className="option-indicator" aria-hidden="true">
                       {ended && question.answer === option ? (
                         <FiCheck />
                       ) : ended && answers[active] === option ? (
@@ -470,16 +512,17 @@ export default function Dashboard() {
                         <span />
                       ) : null}
                     </span>
+                    </span>
                   </label>
                 ))}
               </fieldset>}
-              {!ended && answers[active] && (
+              {!ended && responsePresent(question, answers[active]) && (
                 <button
                   className="clear-answer"
-                  disabled={saving || submitting}
+                  disabled={saving || submitting || remaining === 0}
                   onClick={() => chooseAnswer("")}
                 >
-                  Clear my selection
+                  {interactive ? 'Reset my response' : 'Clear my selection'}
                 </button>
               )}
               {ended && !interactive && (
@@ -515,7 +558,7 @@ export default function Dashboard() {
                 variant="secondary"
                 icon={FiArrowLeft}
                 disabled={active === 0}
-                onClick={() => setActive((value) => value - 1)}
+                onClick={() => goToQuestion(active - 1)}
               >
                 Previous
               </Button>
@@ -530,17 +573,17 @@ export default function Dashboard() {
                     <FiLoader className="spin" />
                     Saving answer…
                   </>
-                ) : error ? (
-                  "Check connection"
+                ) : unsaved ? (
+                  <><span>Changes not saved</span><button className="save-retry" disabled={submitting || remaining === 0} onClick={() => chooseAnswer(answers[active])}>Retry saving</button></>
                 ) : (
                   <>
                     <FiCheck />
-                    Answers saved
+                    {answered ? 'All changes saved' : 'Answers save automatically'}
                   </>
                 )}
               </span>
               {active < questions.length - 1 ? (
-                <Button onClick={() => setActive((value) => value + 1)}>
+                <Button onClick={() => goToQuestion(active + 1)}>
                   Next question <FiArrowRight />
                 </Button>
               ) : ended ? (
@@ -557,70 +600,13 @@ export default function Dashboard() {
               )}
             </div>
           </section>
-          <aside className="assessment-sidebar">
-            <section className="panel question-map">
-              <h2>{ended ? "Review your answers" : "Your progress"}</h2>
-              <div className="exam-progress-label">
-                <span>
-                  {answered} of {questions.length} answered
-                </span>
-                <strong>
-                  {Math.round((answered / questions.length) * 100)}%
-                </strong>
-              </div>
-              <div className="exam-progress-track">
-                <span
-                  style={{ width: `${(answered / questions.length) * 100}%` }}
-                />
-              </div>
-              <nav className="question-grid" aria-label="Question navigation">
-                {questions.map((item, index) => (
-                  <button
-                    type="button"
-                    key={index}
-                    onClick={() => setActive(index)}
-                    aria-label={`Question ${index + 1}${answers[index] ? ", answered" : ", unanswered"}${flagged.has(index) ? ", flagged" : ""}`}
-                    aria-current={active === index ? "step" : undefined}
-                    className={`${active === index ? "current" : ""} ${responsePresent(item, answers[index]) ? "answered" : ""} ${!ended && flagged.has(index) ? "flagged" : ""} ${ended && responsePresent(item, answers[index]) ? ((session.results?.outcomes?.[index]?.correct ?? (answers[index] === item.answer)) ? "correct" : "incorrect") : ""}`}
-                  >
-                    {index + 1}
-                    {!ended && flagged.has(index) && <i />}
-                  </button>
-                ))}
-              </nav>
-              <div className="map-legend">
-                <span>
-                  <i className="legend-answered" />
-                  {ended ? "Correct" : "Answered"}
-                </span>
-                <span>
-                  <i />
-                  Unanswered
-                </span>
-                <span>
-                  <i
-                    className={ended ? "legend-incorrect" : "legend-flagged"}
-                  />
-                  {ended ? "Incorrect" : "Flagged"}
-                </span>
-              </div>
-              {!ended && (
-                <Button
-                  className="btn-block"
-                  disabled={submitting || saving}
-                  onClick={() => setDialog("submit")}
-                >
-                  Review & submit <FiArrowRight />
-                </Button>
-              )}
-            </section>
-          </aside>
         </div>
       </main>
       <Modal
         open={!!dialog}
+        closeDisabled={submitting || restarting}
         onClose={() => {
-          if (!submitting) setDialog(null);
+          if (!submitting && !restarting) setDialog(null);
         }}
         title={
           dialog === "again" ? "Start another attempt?" : dialog === "leave"
@@ -633,6 +619,7 @@ export default function Dashboard() {
             : "Take a moment to check your progress. You cannot change answers after submitting."
         }
       >
+        {dialog === "again" && <ErrorNotice message={error} />}
         {dialog === "submit" && (
           <div className="submit-review">
             <div>
@@ -649,16 +636,21 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        {dialog === 'submit' && (answered < questions.length || flagged.size > 0) && <div className="submit-shortcuts">
+          {answered < questions.length && <Button variant="secondary" disabled={submitting} onClick={() => { setDialog(null); goToQuestion(questions.findIndex((item, index) => !responsePresent(item, answers[index]))); }}>Review unanswered <FiArrowRight aria-hidden="true" /></Button>}
+          {flagged.size > 0 && <Button variant="secondary" disabled={submitting} onClick={() => { setDialog(null); goToQuestion([...flagged].sort((a, b) => a - b)[0]); }}>Review flagged <FiFlag aria-hidden="true" /></Button>}
+        </div>}
         <div className="form-actions">
           <Button
             variant="secondary"
-            disabled={submitting}
+            disabled={submitting || restarting}
             onClick={() => setDialog(null)}
           >
             {dialog === "again" ? "Keep result" : dialog === "leave" ? "Keep going" : "Continue reviewing"}
           </Button>
           <Button
-            disabled={saving || submitting || (dialog === 'leave' && unsaved)}
+            disabled={saving || submitting || restarting || (dialog === 'leave' && unsaved)}
+            aria-busy={submitting || restarting}
             onClick={dialog === "again" ? startAgain : dialog === "leave" ? () => navigate("/dashboard/results") : submit}
           >
             {dialog === "again" ? restarting ? "Starting…" : "Start again" : dialog === "leave"

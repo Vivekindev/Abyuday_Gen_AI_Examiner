@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from "react";
+import PropTypes from 'prop-types';
 import { Link } from "react-router-dom";
 import {
   FiArrowUpRight,
@@ -29,14 +30,16 @@ export function Button({
   variant = "primary",
   className = "",
   icon: Icon,
+  disabled = false,
   ...props
 }) {
-  const Component = to ? Link : "button";
+  const Component = to ? disabled ? 'span' : Link : "button";
   return (
     <Component
-      {...(to ? { to } : { type: "button" })}
+      {...(to ? disabled ? { role: 'link', 'aria-disabled': true } : { to } : { type: "button", disabled })}
       className={`btn btn-${variant} ${className}`}
       {...props}
+      onClick={disabled ? undefined : props.onClick}
     >
       {Icon && <Icon aria-hidden="true" />}
       {children}
@@ -98,7 +101,7 @@ export function EmptyState({
 }) {
   return (
     <div className="empty-state">
-      <span className="empty-icon">
+      <span className="empty-icon" aria-hidden="true">
         <Icon />
       </span>
       <h3>{title}</h3>
@@ -111,7 +114,7 @@ export function ErrorNotice({ message, onRetry }) {
   if (!message) return null;
   return (
     <div className="notice notice-error" role="alert">
-      <FiAlertCircle />
+      <FiAlertCircle aria-hidden="true" />
       <span>{message}</span>
       {onRetry && (
         <button onClick={onRetry} type="button">
@@ -133,7 +136,7 @@ export function LoadingState({ rows = 3 }) {
 }
 export function PageLoader() {
   return (
-    <div className="page-loader">
+    <div className="page-loader" role="status">
       <Brand />
       <FiLoader className="spin" />
       <span>Opening your workspace…</span>
@@ -147,6 +150,7 @@ export function Modal({
   description,
   children,
   className = "",
+  closeDisabled = false,
 }) {
   const ref = useRef(null);
   const titleId = useId();
@@ -167,11 +171,11 @@ export function Modal({
       className={`modal ${className}`}
       onCancel={(event) => {
         event.preventDefault();
-        onClose();
+        if (!closeDisabled) onClose();
       }}
       onClose={onClose}
       onClick={(event) => {
-        if (event.target === ref.current) onClose();
+        if (!closeDisabled && event.target === ref.current) onClose();
       }}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
@@ -183,6 +187,7 @@ export function Modal({
             className="icon-button"
             onClick={onClose}
             aria-label="Close dialog"
+            disabled={closeDisabled}
           >
             <FiX />
           </button>
@@ -223,3 +228,31 @@ export function Stepper({ steps, current }) {
     </ol>
   );
 }
+
+Brand.propTypes = { compact: PropTypes.bool };
+Button.propTypes = {
+  children: PropTypes.node,
+  to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  variant: PropTypes.string,
+  className: PropTypes.string,
+  icon: PropTypes.elementType,
+  disabled: PropTypes.bool,
+  onClick: PropTypes.func,
+};
+Avatar.propTypes = { name: PropTypes.string, size: PropTypes.string, color: PropTypes.string };
+Status.propTypes = { value: PropTypes.string };
+PageHeading.propTypes = { eyebrow: PropTypes.node, title: PropTypes.node, description: PropTypes.node, children: PropTypes.node };
+EmptyState.propTypes = { icon: PropTypes.elementType, title: PropTypes.node, description: PropTypes.node, children: PropTypes.node };
+ErrorNotice.propTypes = { message: PropTypes.string, onRetry: PropTypes.func };
+LoadingState.propTypes = { rows: PropTypes.number };
+Modal.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.node,
+  description: PropTypes.node,
+  children: PropTypes.node,
+  className: PropTypes.string,
+  closeDisabled: PropTypes.bool,
+};
+SectionLink.propTypes = { to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]), children: PropTypes.node };
+Stepper.propTypes = { steps: PropTypes.arrayOf(PropTypes.string).isRequired, current: PropTypes.number.isRequired };

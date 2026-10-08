@@ -17,6 +17,7 @@ export const activityLabels = {
   "answers.saved": "Saved answers",
   "explanation.generated": "Generated explanation",
   "team.created": "Created team",
+  "team.deleted": "Deleted team",
   "team.joined": "Joined team",
   "team.left": "Left team",
   "invite.created": "Created invitation",

@@ -33,10 +33,10 @@ export default function TeamsManager() {
     : teams.data?.[0]?.id;
   const details = useResource(selectedId ? `/teams/${selectedId}` : null);
   const team = details.data;
-  const canManage = team && ["owner", "admin"].includes(team.role);
+  const canManage = team && !team.deleting && ["owner", "admin"].includes(team.role);
   const requestedTab = params.get("tab");
   const tab =
-    ["requests"].includes(requestedTab) || (canManage && ["invitations", "results", "activity"].includes(requestedTab))
+    (!team?.deleting && ["requests"].includes(requestedTab)) || (canManage && ["invitations", "results", "activity"].includes(requestedTab))
       ? requestedTab
       : "members";
   const invites = useResource(
@@ -59,10 +59,12 @@ export default function TeamsManager() {
   const [requestTopic, setRequestTopic] = useState("");
   const [requestCount, setRequestCount] = useState(10);
   const [requestDifficulty, setRequestDifficulty] = useState(5);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const changeTab = (next) => setParams({ team: selectedId, tab: next });
   const openDialog = (value) => {
     setError("");
     setInviteLink("");
+    setDeleteConfirmation('');
     setDialog(value);
   };
   const closeDialog = () => {
@@ -184,6 +186,30 @@ export default function TeamsManager() {
       setBusy(false);
     }
   };
+  const removeTeam = async (event) => {
+    event.preventDefault();
+    if (busy || dialog?.type !== 'delete-team' || deleteConfirmation !== dialog.team.name) return;
+    const target = dialog.team;
+    setBusy(true);
+    setError('');
+    try {
+      await api.delete(`/teams/${encodeURIComponent(target.id)}`, { data: { confirmationName: deleteConfirmation } });
+      const remaining = (teams.data || []).filter((item) => item.id !== target.id);
+      teams.setData(remaining);
+      if (selectedId === target.id) setParams(remaining.length ? { team: remaining[0].id } : {}, { replace: true });
+      teams.reload();
+      setDialog(null);
+      setDeleteConfirmation('');
+      toast.success(`${target.name} deleted`);
+      requestAnimationFrame(() => document.getElementById('create-team-button')?.focus());
+    } catch (requestError) {
+      setError(errorMessage(requestError, 'Could not finish deleting the team. Please retry.'));
+      if (requestError.response?.status === 404) teams.reload();
+      details.reload();
+    } finally {
+      setBusy(false);
+    }
+  };
   const copy = async () => {
     try {
       await copyText(inviteLink);
@@ -193,19 +219,18 @@ export default function TeamsManager() {
     }
   };
   const dialogTitle =
-    dialog?.type === "create"
-      ? "A shared space for your people"
-      : dialog?.type === "invite"
-        ? "Invite someone to your team"
-        : dialog?.type === "transfer"
-          ? "Transfer team ownership?"
-          : dialog?.type === "revoke"
-            ? "Revoke this invitation?"
-            : "Remove this team member?";
+    ({
+      'delete-team': 'Delete this team?',
+      create: 'A shared space for your people',
+      invite: 'Invite someone to your team',
+      transfer: 'Transfer team ownership?',
+      revoke: 'Revoke this invitation?',
+      remove: 'Remove this team member?',
+    })[dialog?.type] || '';
   return (
     <div className="route-transition">
       <PageHeading title="Teams & people">
-        <Button icon={FiPlus} onClick={() => openDialog({ type: "create" })}>
+        <Button id="create-team-button" icon={FiPlus} onClick={() => openDialog({ type: "create" })}>
           Create a team
         </Button>
       </PageHeading>
@@ -270,15 +295,27 @@ export default function TeamsManager() {
                         </p>
                       </div>
                     </div>
-                    {canManage && (
-                      <Button
-                        icon={FiUserPlus}
-                        onClick={() => openDialog({ type: "invite" })}
-                      >
-                        Invite people
-                      </Button>
-                    )}
+                    <div className="team-header-actions">
+                      {canManage && (
+                        <Button icon={FiUserPlus} disabled={busy} onClick={() => openDialog({ type: "invite" })}>
+                          Invite people
+                        </Button>
+                      )}
+                      {team.role === 'owner' && (
+                        <Button
+                          variant="secondary"
+                          className="team-delete-button"
+                          icon={FiTrash2}
+                          disabled={busy}
+                          onClick={() => openDialog({ type: 'delete-team', team: { id: team.id, name: team.name } })}
+                          aria-label={`Delete team ${team.name}`}
+                        >
+                          {team.deleting ? 'Finish deleting team' : 'Delete team'}
+                        </Button>
+                      )}
+                    </div>
                   </div>
+                  {team.deleting && <div className="team-deletion-notice notice notice-error" role="status">Deletion has not finished. This team is unavailable to members. Choose “Finish deleting team” to complete the cleanup.</div>}
                   <div className="team-content-tabs">
                     <nav className="tabs" aria-label="Team sections">
                       <button
@@ -291,6 +328,7 @@ export default function TeamsManager() {
                       <button
                         className={tab === "requests" ? "active" : ""}
                         onClick={() => changeTab("requests")}
+                        disabled={team.deleting}
                       >
                         Assessment requests
                       </button>
@@ -384,7 +422,7 @@ export default function TeamsManager() {
                                 </div>
                               </td>
                               <td data-label="Role">
-                                {team.role === "owner" &&
+                                {canManage && team.role === "owner" &&
                                 member.role !== "owner" ? (
                                   <div className="team-member-controls">
                                     <select
@@ -429,7 +467,7 @@ export default function TeamsManager() {
                                         <FiTrash2 />
                                       </button>
                                     )}
-                                  {team.role === "owner" &&
+                                  {canManage && team.role === "owner" &&
                                     member.role !== "owner" && (
                                       <Button
                                         variant="ghost"
@@ -649,6 +687,7 @@ export default function TeamsManager() {
       )}
       <Modal
         open={!!dialog}
+        closeDisabled={busy}
         onClose={closeDialog}
         title={dialogTitle}
         description={
@@ -660,6 +699,26 @@ export default function TeamsManager() {
         }
       >
         <ErrorNotice message={error} />
+        {dialog?.type === 'delete-team' && <form className="form-stack" onSubmit={removeTeam}>
+          <div className="team-delete-summary">
+            <p><strong>{dialog.team.name}</strong> will be permanently deleted for everyone. This cannot be undone.</p>
+            <ul>
+              <li>All members lose access and invitation links stop working.</li>
+              <li>Team assessments, saved attempts, scores, and assessment requests are deleted.</li>
+              <li>Reusable activities saved for this team are deleted.</li>
+            </ul>
+            <p className="field-hint">Member accounts, other teams, and personal assessments are kept.</p>
+          </div>
+          <label className="field" htmlFor="delete-team-confirmation">
+            <span>Type <strong>{dialog.team.name}</strong> to confirm</span>
+            <input id="delete-team-confirmation" value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={80} disabled={busy} required aria-describedby="delete-team-hint" />
+          </label>
+          <p className="field-hint" id="delete-team-hint">The name must match exactly. Assessments that are currently generating must finish before deletion.</p>
+          <div className="form-actions">
+            <Button variant="secondary" onClick={closeDialog} disabled={busy}>Keep team</Button>
+            <Button type="submit" variant="danger" icon={FiTrash2} disabled={busy || deleteConfirmation !== dialog.team.name} aria-busy={busy}>{busy ? 'Deleting team…' : 'Delete team permanently'}</Button>
+          </div>
+        </form>}
         {dialog?.type === "create" && (
           <form className="form-stack" onSubmit={createTeam}>
             <label className="field">

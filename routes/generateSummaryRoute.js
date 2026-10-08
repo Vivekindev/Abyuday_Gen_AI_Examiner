@@ -22,7 +22,7 @@ router.post('/generate-summary', authenticateToken, async (req, res) => {
     const session = await testWindow.findOne({ testID, user: user._id, isEnded: true });
     if (!session) return res.status(403).json({ error: 'Complete this test to view explanations.' });
     const test = await generatedTests.findOne({ testID });
-    if (test?.team && !await Team.exists({ _id: test.team, 'members.user': user._id })) return res.sendStatus(403);
+    if (test?.team && !await Team.exists({ _id: test.team, deletingAt: null, 'members.user': user._id })) return res.sendStatus(403);
     req.monitoringTeam = test?.team || null;
     const question = test?.response?.[questionIndex];
     if (!question) return res.sendStatus(404);

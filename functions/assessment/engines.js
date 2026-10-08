@@ -1,8 +1,9 @@
 // Server-owned interaction contracts. Generated content is data, never executable UI/code.
 import { validDynamicResponse, gradeDynamicQuestion, validateDynamicQuestion } from '../../shared/dynamicEngine.js';
 import { validateQuestionContent } from './contentValidation.js';
-export const ENGINE_KINDS = ['mcq', 'circuit', 'graph', 'ordering', 'matching', 'dynamic'];
-export const ENGINE_MINUTES = { mcq: 1, circuit: 5, graph: 4, ordering: 3, matching: 3 };
+import { ACTIVITY_TEMPLATES, validActivityResponse, gradeActivity, activityProgress, validateActivity } from '../../shared/activityTemplates.js';
+export const ENGINE_KINDS = ['mcq', 'circuit', 'graph', 'ordering', 'matching', 'dynamic', ...Object.keys(ACTIVITY_TEMPLATES)];
+export const ENGINE_MINUTES = { mcq: 1, circuit: 5, graph: 4, ordering: 3, matching: 3, ...Object.fromEntries(Object.entries(ACTIVITY_TEMPLATES).map(([kind, item]) => [kind, item.minutes])) };
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const text = (v, max = 2000) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;
 const num = (v, min, max) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
@@ -22,6 +23,7 @@ export function validAnswer(question, answer) {
   if (answer === '') return true;
   const kind = question.kind || 'mcq';
   const c = question.config;
+  if (Object.hasOwn(ACTIVITY_TEMPLATES, kind)) return validActivityResponse(question, answer);
   switch (kind) {
     case 'dynamic': return validDynamicResponse(c.engine, answer);
     case 'mcq': return typeof answer === 'string' && question.options.includes(answer);
@@ -35,6 +37,7 @@ export function validAnswer(question, answer) {
 
 export function hasAnswer(question, answer) {
   if (answer === '' || answer === undefined || answer === null) return false;
+  if (Object.hasOwn(ACTIVITY_TEMPLATES, question.kind || 'mcq')) return activityProgress(question, answer).answered > 0;
   if (question.kind === 'matching') return Object.values(answer).some(Boolean);
   if (question.kind === 'dynamic') return Object.values(answer).some((v) => v !== '');
   return true;
@@ -42,6 +45,7 @@ export function hasAnswer(question, answer) {
 
 export function gradeAnswer(question, answer) {
   if (!hasAnswer(question, answer) || !validAnswer(question, answer)) return false;
+  if (Object.hasOwn(ACTIVITY_TEMPLATES, question.kind || 'mcq')) return gradeActivity(question, answer);
   switch (question.kind || 'mcq') {
     case 'dynamic': return gradeDynamicQuestion(question, answer);
     case 'mcq': return answer === question.answer;
@@ -65,6 +69,7 @@ export function validateQuestion(q) {
   assert(text(q.explanation, 3000), 'An interaction needs a review explanation');
   const c = q.config;
   assert(object(c), 'Missing interaction configuration');
+  if (Object.hasOwn(ACTIVITY_TEMPLATES, kind)) validateActivity(q);
   if (kind === 'dynamic') validateDynamicQuestion(q);
   if (kind === 'ordering') {
     assert(exactKeys(c, ['items']) && cards(c.items) && permutation(q.answer, c.items.map((i) => i.id)), 'Invalid ordering task');

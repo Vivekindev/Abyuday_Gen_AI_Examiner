@@ -45,14 +45,14 @@ const primary = [
     icon: FiGrid,
     end: true,
   },
-  { label: "Assessments", to: "/dashboard/tests", icon: FiBookOpen },
+  { label: "Assessments", mobileLabel: "Tests", to: "/dashboard/tests", icon: FiBookOpen },
+  { label: "Take a test", mobileLabel: "Take test", to: "/dashboard/take", icon: FiTarget },
   { label: "Results", to: "/dashboard/results", icon: FiTrendingUp },
   { label: "Teams", to: "/dashboard/teams", icon: FiUsers },
 ];
 const secondary = [
   { label: 'Engine library', to: '/dashboard/engines', icon: FiGrid },
   { label: 'Interaction playground', to: '/dashboard/labs', icon: FiGrid },
-  { label: "Take a test", to: "/dashboard/take", icon: FiTarget },
   { label: "Settings", to: "/dashboard/settings", icon: FiSettings },
   { label: "Help", to: "/dashboard/help", icon: FiHelpCircle },
 ];
@@ -142,6 +142,8 @@ export default function Workspace() {
     () => window.matchMedia("(max-width: 767px)").matches,
   );
   const sidebarRef = useRef(null);
+  const contentRef = useRef(null);
+  const previousPath = useRef(location.pathname);
   const adminItems = ["owner", "admin"].includes(user.data?.platformRole)
     ? [{ label: "Admin", to: "/dashboard/admin", icon: FiShield }]
     : [];
@@ -159,6 +161,14 @@ export default function Workspace() {
     window.scrollTo({ top: 0 });
     document.title = `${current?.label || "Workspace"} · Abyuday`;
   }, [location.pathname, current?.label]);
+  useEffect(() => {
+    if (previousPath.current === location.pathname || mobileOpen || searchOpen) return;
+    const frame = requestAnimationFrame(() => {
+      contentRef.current?.focus({ preventScroll: true });
+      previousPath.current = location.pathname;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [location.pathname, mobileOpen, searchOpen]);
   useEffect(() => {
     const keyboard = (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
@@ -219,7 +229,7 @@ export default function Workspace() {
   };
   const navLink = ({ label, to, end, icon: Icon }) => (
     <NavLink key={to} to={to} end={end} title={label} aria-label={label}>
-      <Icon />
+      <Icon aria-hidden="true" />
       <span className="nav-label">{label}</span>
     </NavLink>
   );
@@ -237,6 +247,7 @@ export default function Workspace() {
       )}
       <aside
         ref={sidebarRef}
+        id="workspace-navigation"
         className={`workspace-sidebar ${mobileOpen ? "is-open" : ""}`}
         aria-label="Navigation"
         inert={isMobile && !mobileOpen ? "" : undefined}
@@ -297,6 +308,7 @@ export default function Workspace() {
               onClick={() => setMobileOpen(true)}
               aria-label="Open menu"
               aria-expanded={mobileOpen}
+              aria-controls="workspace-navigation"
             >
               <FiMenu />
             </button>
@@ -323,9 +335,11 @@ export default function Workspace() {
           </div>
         </header>
         <main
+          ref={contentRef}
           className="workspace-content"
           id="workspace-content"
           tabIndex={-1}
+          aria-label={current?.label || 'Workspace'}
         >
           <ErrorNotice message={user.error} onRetry={user.reload} />
           <Suspense
@@ -345,8 +359,8 @@ export default function Workspace() {
         inert={mobileOpen ? "" : undefined}
       >
         {primary.map(({ label, mobileLabel, to, end, icon: Icon }) => (
-          <NavLink key={to} to={to} end={end}>
-            <Icon />
+          <NavLink key={to} to={to} end={end} aria-label={label} className={to === '/dashboard/take' ? 'mobile-take-test' : undefined}>
+            <Icon aria-hidden="true" />
             <span>{mobileLabel || label}</span>
           </NavLink>
         ))}

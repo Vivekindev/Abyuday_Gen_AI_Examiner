@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import { interactionExamples } from '../client/src/components/assessment/examples.js';
+import { activityExamples } from '../client/src/components/assessment/activityExamples.js';
 import { energyEngine, energyQuestion, energyObjective } from './fixtures/dynamic.js';
 import { createEngineRegistry, engineScope } from '../functions/assessment/engineRegistry.js';
 import { AssessmentEngine, EngineRequest } from '../models/assessmentEngine.js';
@@ -60,6 +61,27 @@ test('interactive API hides solutions, persists structured answers, grades and l
   assert.equal((await post('/generate-summary', { testID, questionIndex: 0 })).data.summary, interactionExamples[0].explanation);
   assert.equal((await post('/test/saveoptions', { testID, selectedOptions: ['', '', '', ''] })).status, 409);
   assert.equal((await post('/test/submit', { testID, selectedOptions: ['', '', '', ''] })).data.results.score, 4);
+
+  await t.test('new activity types persist partial work, hide solutions and grade completed responses', async () => {
+    const activityID = 'activity-templates-api';
+    await Generated.create({ testID: activityID, user: user._id, response: activityExamples });
+    const started = await post('/test/begin', { testID: activityID });
+    assert.equal(started.status, 200);
+    assert.equal(started.data.testQuestions.length, 5);
+    for (const q of started.data.testQuestions) { assert.equal(q.answer, undefined); assert.equal(q.explanation, undefined); }
+    const partial = [['dna', '', ''], ['', 'carbon', ''], ['rabbit'], [], { position: 0 }];
+    assert.equal((await post('/test/saveoptions', { testID: activityID, selectedOptions: partial })).status, 200);
+    assert.deepEqual((await post('/test/begin', { testID: activityID })).data.selectedOptions, partial);
+    const forged = structuredClone(partial); forged[2] = ['rabbit', 'rabbit'];
+    assert.equal((await post('/test/saveoptions', { testID: activityID, selectedOptions: forged })).status, 400);
+    const correct = activityExamples.map((q) => q.kind === 'numberline' ? { position: q.answer } : q.answer);
+    const finished = await post('/test/submit', { testID: activityID, selectedOptions: correct });
+    assert.equal(finished.status, 200);
+    assert.equal(finished.data.results.score, 5);
+    assert.equal(finished.data.results.percentage, 100);
+    assert.deepEqual(finished.data.testQuestions.map((q) => q.answer), activityExamples.map((q) => q.answer));
+    assert.equal((await post('/test/saveoptions', { testID: activityID, selectedOptions: partial })).status, 409);
+  });
 
   await Generated.create({ testID: 'interactive-expiry', user: user._id, response: [interactionExamples[0]] });
   await post('/test/begin', { testID: 'interactive-expiry' });

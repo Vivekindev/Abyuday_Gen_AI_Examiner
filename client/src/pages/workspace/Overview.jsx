@@ -39,11 +39,11 @@ export default function Overview() {
   return (
     <div>
       <PageHeading title="Overview">
-        <Button to="/dashboard/take" variant="secondary" icon={FiTarget}>
-          Take a test
-        </Button>
-        <Button to="/dashboard/create" icon={FiPlus}>
+        <Button to="/dashboard/create" variant="secondary" icon={FiPlus}>
           Create assessment
+        </Button>
+        <Button to="/dashboard/take" icon={FiTarget}>
+          Take a test
         </Button>
       </PageHeading>
       <ErrorNotice message={overview.error} onRetry={overview.reload} />
@@ -91,7 +91,7 @@ export default function Overview() {
                         {test.questionCount} questions · {test.teamName}
                       </small>
                     </div>
-                    <Status value={test.status} />
+                    {test.status === 'Done' ? <span className="row-action">Take test <FiArrowRight aria-hidden="true" /></span> : <Status value={test.status} />}
                   </Link>
                 </li>
               ))}
@@ -126,16 +126,11 @@ export default function Overview() {
                   >
                     <div>
                       <strong>{attempt.testName}</strong>
-                      <small>{formatDate(attempt.startTime)}</small>
+                      <small>{formatDate(attempt.startTime)}{attempt.isEnded ? ` · ${attempt.results?.percentage ?? 0}% scored` : ''}</small>
                     </div>
-                    <span className="result-mini">
-                      {attempt.isEnded
-                        ? `${attempt.results?.percentage ?? 0}%`
-                        : attempt.expired
-                          ? "Review"
-                          : "Resume"}
+                    <span className={`row-action ${attempt.isEnded || attempt.expired ? 'row-action-secondary' : ''}`}>
+                      {attempt.isEnded || attempt.expired ? 'Review' : 'Resume'} <FiArrowRight aria-hidden="true" />
                     </span>
-                    <FiArrowRight />
                   </Link>
                 </li>
               ))}
@@ -147,7 +142,7 @@ export default function Overview() {
                 title="No attempts yet"
                 description="Your saved attempts and scores will appear here."
               >
-                <Button variant="secondary" to="/dashboard/take">
+                <Button to="/dashboard/take">
                   Take a test
                 </Button>
               </EmptyState>

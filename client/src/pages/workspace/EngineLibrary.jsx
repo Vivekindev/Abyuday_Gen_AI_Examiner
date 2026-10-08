@@ -4,6 +4,7 @@ import { Button, ErrorNotice, LoadingState, PageHeading } from '../../components
 import useResource from '../../hooks/useResource';
 import DynamicWorkbench from '../../components/assessment/DynamicWorkbench';
 import RichContent from '../../components/content/RichContent';
+import { ACTIVITY_TEMPLATES } from '../../../../shared/activityTemplates.js';
 import '../../components/assessment/interactive.css';
 
 const statuses = { requested: 'Requested', building: 'Building', ready: 'Registered', reused: 'Reused', failed: 'Failed', unsupported: 'Needs a new runtime capability', adapted: 'Recovered with another interaction' };
@@ -19,6 +20,7 @@ export default function EngineLibrary() {
   const data = resource.data;
   return <div className="route-transition">
     <PageHeading title="Engine library" description="Reusable interactions built automatically from assessment requirements."><Button to="/dashboard/create">Create assessment</Button></PageHeading>
+    <section aria-labelledby="builtin-activities"><div className="panel-heading"><h2 id="builtin-activities">Ready-to-use activities</h2><Link className="text-link" to="/dashboard/labs">Browse the playground</Link></div><p className="lab-preview-note">The same activity adapts to different topics, questions, and difficulty levels. The planner picks a suitable format for each learning objective.</p><div className="engine-library-grid">{Object.entries(ACTIVITY_TEMPLATES).map(([kind, activity]) => <article className="panel engine-library-card" key={kind}><span className="interaction-badge">Built in · {activity.minutes} minutes</span><h3>{activity.name}</h3><p>{activity.description}</p><p>{activity.topics.join(' · ')}</p><Button variant="secondary" to={`/dashboard/labs?activity=${kind}`}>Try activity</Button></article>)}</div></section>
     <div className="notice notice-info"><span>When a question needs a new interaction, its requirements appear here. The builder validates and registers a reusable engine automatically. Later assessments can reuse it. Engine previews have no grading or saved scores.</span></div>
     <label className="field" style={{ maxWidth: 360, marginTop: 20 }}>Engine workspace<select value={teamId} onChange={(e) => { setTeamId(e.target.value); setPage(1); setPreview(null); setValue(''); }}><option value="">Personal</option>{(teams.data || []).filter((team) => ['owner', 'admin'].includes(team.role)).map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
     <ErrorNotice message={teams.error || resource.error} onRetry={resource.reload} />

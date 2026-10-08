@@ -89,7 +89,7 @@ function AssessmentForm({ userId }) {
   const change = (field, value) =>
     setForm((previous) => ({ ...previous, [field]: value, ...(field === 'assessmentMode' ? { assessmentFormatSelected: !!value } : {}), ...(field === 'assessmentMode' && value === 'interactive' ? { numQuestions: Math.min(20, Number(previous.numQuestions)) } : {}) }));
   const manageable = (teams.data || []).filter((team) =>
-    ["owner", "admin"].includes(team.role),
+    !team.deleting && ["owner", "admin"].includes(team.role),
   );
   const unavailableTeam =
     form.teamId && !manageable.some((team) => team.id === form.teamId);
@@ -136,7 +136,7 @@ function AssessmentForm({ userId }) {
       ><Button variant="secondary" to="/dashboard/labs">Try interactive examples</Button></PageHeading>
       <form className="panel creation-form form-stack" onSubmit={submit}>
         <ErrorNotice message={error} />
-        <label className="field">Assessment format<select required value={form.assessmentMode} onChange={(event) => change('assessmentMode', event.target.value)}><option value="" disabled>Choose an assessment format</option><option value="mcq">Multiple choice only</option><option value="interactive">Interactive — choose activities for my topic</option></select><small>{form.assessmentMode === 'interactive' ? 'Combines suitable circuit, graph, ordering, category, and multiple-choice tasks. Each question is worth one point.' : form.assessmentMode === 'mcq' ? 'Four answer choices per question.' : 'Choose the type of questions you want to create.'}</small></label>
+        <label className="field">Assessment format<select required value={form.assessmentMode} onChange={(event) => change('assessmentMode', event.target.value)}><option value="" disabled>Choose an assessment format</option><option value="mcq">Multiple choice only</option><option value="interactive">Interactive — choose activities for my topic</option></select><small>{form.assessmentMode === 'interactive' ? 'Chooses from pair connections, word puzzles, diagrams, code detective, number lines, circuits, graphs, and more to fit your topic. Each question is worth one point.' : form.assessmentMode === 'mcq' ? 'Four answer choices per question.' : 'Choose the type of questions you want to create.'}</small></label>
         {form.assessmentMode === 'interactive' && <div className="notice notice-info"><span>Describe what students should change, calculate, label, or solve. When an existing engine does not fit, a builder automatically creates a reusable workbench with controls and live measurements. Track its requirements and progress in the Engine library.</span></div>}
         <label className="field">
           Name

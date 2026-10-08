@@ -78,7 +78,15 @@ export default function AssessmentLibrary() {
     }
   };
   const actions = (test) => (
-    <div className="table-actions">
+    <div className="table-actions assessment-actions">
+      <Button
+        className="btn-sm assessment-open"
+        variant={test.status === 'Done' ? 'primary' : 'secondary'}
+        to={`/dashboard/take?testID=${encodeURIComponent(test.testID)}`}
+        aria-label={`${test.status === 'Done' ? 'Take test' : 'View status'}: ${test.testName}`}
+      >
+        {test.status === 'Done' ? 'Take test' : 'View status'} <FiArrowUpRight aria-hidden="true" />
+      </Button>
       {test.status === 'Error' && test.canRetry && <RetryAssessmentButton testID={test.testID} name={test.testName} onRetried={resource.reload} />}
       <button
         className="icon-button"
@@ -88,14 +96,6 @@ export default function AssessmentLibrary() {
       >
         <FiCopy />
       </button>
-      <Link
-        className="icon-button"
-        to={`/dashboard/take?testID=${test.testID}`}
-        aria-label={`Open ${test.testName}`}
-        title="Open assessment"
-      >
-        <FiArrowUpRight />
-      </Link>
       {test.canManage && <button className="icon-button text-danger" onClick={() => { setDeleteError(""); setDeleteTarget(test); }} aria-label={`Delete ${test.testName}`} title="Delete assessment"><FiTrash2 /></button>}
     </div>
   );
@@ -327,7 +327,7 @@ export default function AssessmentLibrary() {
           </div>
         </div>
       </section>
-      <Modal open={!!deleteTarget} onClose={() => { if (!deleting) setDeleteTarget(null); }} title="Delete assessment?">
+      <Modal open={!!deleteTarget} closeDisabled={deleting} onClose={() => { if (!deleting) setDeleteTarget(null); }} title="Delete assessment?">
         <p className="section-description">{deleteTarget?.testName} and all saved attempts and results will be permanently deleted.</p>
         <ErrorNotice message={deleteError} />
         <div className="form-actions"><Button variant="secondary" disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</Button><Button className="btn-danger" disabled={deleting} onClick={async () => { setDeleting(true); setDeleteError(""); try { await api.delete(`/test/${encodeURIComponent(deleteTarget.testID)}`); toast.success("Assessment deleted"); setDeleteTarget(null); resource.reload(); } catch (error) { setDeleteError(errorMessage(error)); } finally { setDeleting(false); } }}>{deleting ? "Deleting…" : "Delete assessment"}</Button></div>

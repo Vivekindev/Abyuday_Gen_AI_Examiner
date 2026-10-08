@@ -46,7 +46,7 @@ const getContext = async (req, res) => {
     res.status(404).json({ error: 'Test is not ready or does not exist.' });
     return null;
   }
-  if (test.team && !await Team.exists({ _id: test.team, 'members.user': user._id })) {
+  if (test.team && !await Team.exists({ _id: test.team, deletingAt: null, 'members.user': user._id })) {
     res.sendStatus(403);
     return null;
   }
@@ -78,6 +78,10 @@ router.post('/test/begin', async (req, res, next) => {
       { upsert: true, new: true, setDefaultsOnInsert: true, includeResultMetadata: true },
     );
     const session = result.value;
+    if (test.team && !await Team.exists({ _id: test.team, deletingAt: null })) {
+      if (!result.lastErrorObject?.updatedExisting) await testWindow.deleteOne({ _id: session._id });
+      return res.status(409).json({ error: 'This team is being deleted. The assessment is no longer available.' });
+    }
     req.activity = { testID, action: !result.lastErrorObject?.updatedExisting ? 'attempt.started' : session.isEnded ? 'attempt.reviewed' : 'attempt.resumed' };
     if (req.activity.action === 'attempt.started') req.activity.eventKey = `attempt.started:${session.id}`;
     if (!session.isEnded && remainingSeconds(session) === 0) await finish(session, questions, test.team);

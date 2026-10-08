@@ -2,6 +2,8 @@ import { useId } from 'react';
 import PropTypes from 'prop-types';
 import { interactionNames } from './interactionMeta';
 import DynamicWorkbench from './DynamicWorkbench';
+import ActivityQuestion, { ActivitySolution } from './ActivityQuestion';
+import { ACTIVITY_TEMPLATES } from '../../../../shared/activityTemplates.js';
 import RichContent from '../content/RichContent';
 import './interactive.css';
 
@@ -88,8 +90,11 @@ Ordering.propTypes = rendererProps;
 Matching.propTypes = rendererProps;
 export default function InteractiveQuestion({ question, value, onChange, disabled = false, review = false }) {
   const Renderer = renderers[question.kind];
-  if (!Renderer) return <p role="alert">This interaction is not supported by this version of the app.</p>;
-  return <div className="interactive-question"><span className="interaction-badge">{interactionNames[question.kind]}</span><Renderer config={question.config} value={value} onChange={onChange} disabled={disabled} />
+  const activity = Object.hasOwn(ACTIVITY_TEMPLATES, question.kind);
+  if (!Renderer && !activity) return <p role="alert">This interaction is not supported by this version of the app.</p>;
+  return <div className="interactive-question"><span className="interaction-badge">{interactionNames[question.kind]}</span>
+    {activity ? <ActivityQuestion question={question} value={value} onChange={onChange} disabled={disabled || review} /> : <Renderer config={question.config} value={value} onChange={onChange} disabled={disabled || review} />}
+    {review && activity && <div className="activity-solution"><ActivitySolution question={question} /></div>}
     {review && <div className="lab-review"><strong>Solution & reasoning</strong>{question.kind === 'ordering' && <ol>{question.answer.map((id) => <li key={id}><RichContent text={question.config.items.find((item) => item.id === id)?.label} inline /></li>)}</ol>}{question.kind === 'matching' && <ul>{question.config.items.map((item) => <li key={item.id}><RichContent text={item.label} inline /> → <RichContent text={question.config.categories.find((category) => category.id === question.answer[item.id])?.label} inline /></li>)}</ul>}<RichContent text={question.explanation} /></div>}
   </div>;
 }

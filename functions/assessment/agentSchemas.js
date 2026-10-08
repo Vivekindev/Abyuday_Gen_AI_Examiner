@@ -1,3 +1,4 @@
+import { activityAgents } from './activitySchemas.js';
 const str = { type: 'string' };
 const number = { type: 'number' };
 const array = (items, minItems, maxItems) => ({ type: 'array', items, ...(minItems === undefined ? {} : { minItems, maxItems }) });
@@ -10,6 +11,7 @@ const circuitState = object({ r1: number, r2: number, topology: { type: 'string'
 const graphState = object({ slope: number, intercept: number });
 
 export const agents = {
+  ...activityAgents,
   mcq: {
     name: 'knowledge-author',
     instructions: 'Write four distinct options and one unambiguous correct answer that exactly matches an option.',

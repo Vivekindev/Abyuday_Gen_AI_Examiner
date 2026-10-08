@@ -59,6 +59,10 @@ router.post('/test/create', authenticateToken, async (req, res) => {
         // Save before publishing so the worker can always find the task.
         const newTask = new pendingTasksDB(task);
         await newTask.save();
+        if (teamId && !await getTeamMembership(teamId, user._id)) {
+            await pendingTasksDB.deleteOne({ _id: newTask._id });
+            return res.status(409).json({ message: 'This team is no longer available for new assessments.' });
+        }
         req.activity = { action: 'assessment.created', testID: testId };
 
         try {

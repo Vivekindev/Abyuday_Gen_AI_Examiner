@@ -21,5 +21,6 @@ export function validateQuestionContent(question) {
   question.options?.forEach((value, index) => validateContentFormat(value, `options[${index}]`));
   validateContentFormat(question.config?.instructions, 'instructions');
   validateContentFormat(question.config?.engine?.description, 'engine description');
-  for (const key of ['items', 'categories']) question.config?.[key]?.forEach((item, index) => validateContentFormat(item.label, `${key}[${index}].label`));
+  for (const key of ['items', 'categories', 'left', 'right', 'options', 'nodes']) question.config?.[key]?.forEach((item, index) => validateContentFormat(item.label, `${key}[${index}].label`));
+  question.config?.segments?.forEach((segment, index) => validateContentFormat(segment, `segments[${index}]`));
 }

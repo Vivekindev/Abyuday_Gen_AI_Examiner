@@ -20,7 +20,11 @@ const questions = [
   ],
   [
     "What can team members, admins, and owners do?",
-    "Members can take team assessments. Admins can create team assessments, invite people, manage members, and review team results. Owners can also change member roles and transfer ownership.",
+    "Members can take team assessments. Admins can create team assessments, invite people, manage members, and review team results. Owners can also change member roles, transfer ownership, and delete their team.",
+  ],
+  [
+    "How do I delete a team?",
+    "Open Teams & people, select a team you own, and choose Delete team beside Invite people. Type the team name to confirm. This permanently removes the team, its assessments, attempts, scores, requests, invitations, and saved activity engines. Member accounts and personal assessments are kept. Wait for any assessment generation to finish first.",
   ],
   [
     "How do team invitations work?",

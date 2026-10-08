@@ -2,6 +2,26 @@
 
 Create an assessment with **Interactive** selected, or open **Interaction playground** in the workspace to try the built-in examples. The playground makes no model calls and does not save scores. Existing MCQ assessments and API callers that omit `assessmentMode` retain their previous behavior.
 
+## Topic-aware activity templates
+
+The planner now also chooses from five reusable activities. Templates are data driven: the React controls, validation and grading stay fixed while generated content changes with the topic. Definitions and response contracts live in `shared/activityTemplates.js`; specialist schemas and routing advice live in `functions/assessment/activitySchemas.js`. Each task is graded as one point after submission.
+
+| Kind | Interaction | Fits | Saved response |
+| --- | --- | --- | --- |
+| `pairs` | Tap a concept, then its partner; visual connections and letter badges | Vocabulary, definitions, tools and purposes | Partner IDs in left-card order, empty strings for unfinished pairs |
+| `cloze` | Fill selected blanks from a shuffled bank, with distractors | Language, scientific explanations, terminology | Token IDs in blank order, empty strings for unfinished blanks |
+| `hotspots` | Select numbered nodes in a directed concept map or use labelled buttons | Food webs, systems, dependencies, workflows | An unordered set of node IDs |
+| `bughunt` | Inspect code and select faulty lines | Programming, SQL, debugging | An unordered set of 1-based line numbers |
+| `numberline` | Move a marker with a slider, arrow controls, or numeric input | Fractions, probability, signed arithmetic, conversions | `{ position: number }`, including a valid zero |
+
+Pairs/tokens cannot be reused in one response. Diagram nodes are bounded and spaced for distinct touch targets; edges must reference known nodes. Code is displayed as escaped text and never executed. Number-line targets must be reachable using the available range and step; private answers never appear in public configs. Partial work uses the existing save/resume API, and review controls are locked after submission.
+
+The playground provides nine practice activities, progress indicators, reset controls and check-answer feedback for the five new templates. Live assessments show response progress only; correctness is revealed after submission. The Engine library links to individual activity examples. Native buttons, range controls, labelled diagram alternatives, visible focus indicators and reduced-motion styles support keyboard and touch input.
+
+Design references: [H5P activity types](https://h5p.org/content-types-and-applications?field_category_tid=All), [React Flow diagram examples](https://reactflow.dev/examples), and [dnd kit accessibility guidance](https://dndkit.com/legacy/guides/accessibility/). These informed the interaction patterns; the implementation reuses this app's React components and adds no package dependencies. This is not an accessibility certification.
+
+Generation checks establish valid references, legal responses and numerical reachability. They cannot independently verify every generated definition, code diagnosis or factual statement. Diagram explorer supports concept maps; arbitrary image annotation, branching simulations and code execution require other runtime capabilities.
+
 ## Generation and execution
 
 Failed assessments have a **Retry** action in the assessment list/card and details page. Personal creators and current team owners/admins can retry; team members cannot. `POST /api/test/retry` accepts `{ "testID": "..." }`, atomically queues only failed assessments without published questions, and resets the provider retry count. Concurrent clicks cannot queue the same attempt twice. Retries retain the assessment ID, selected/current model, saved plan and registered engines; validated question checkpoints are reused and only missing questions are authored again, consuming AI quota. This does not guarantee that an unsupported interaction or invalid generated definition will succeed on the next attempt.
@@ -28,7 +48,7 @@ flowchart LR
   H --> I[Server engine grades on submission]
 ```
 
-The planner selects an engine, domain and learning objective per question. It dispatches to `electronics-author`, `graph-author`, `sequence-author`, `classification-author` or `knowledge-author`. When a different interaction is needed, it requests a `dynamic` engine with a stable key and concrete requirements. The `engine-builder` produces a reusable definition, which is validated and registered automatically. The `dynamic-task-author` then writes a question and private grading checks using that definition. Each specialist has a separate prompt, output schema and model call.
+The planner selects an engine, domain and learning objective per question. It dispatches to `electronics-author`, `graph-author`, `sequence-author`, `classification-author`, `knowledge-author`, or the new `pair-author`, `word-bank-author`, `diagram-author`, `debugging-author` and `number-line-author`. It is instructed to vary suitable activities and prefer a dedicated template when it fits the learning objective. When a different interaction is needed, it requests a `dynamic` engine with a stable key and concrete requirements. The `engine-builder` produces a reusable definition, which is validated and registered automatically. The `dynamic-task-author` then writes a question and private grading checks using that definition. Each specialist has a separate prompt, output schema and model call.
 
 ## Automatic engine creation and request tracking
 

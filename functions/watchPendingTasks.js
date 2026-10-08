@@ -5,6 +5,7 @@ import { generateInteractiveAssessment } from './assessment/orchestrator.js';
 import { createEngineRegistry } from './assessment/engineRegistry.js';
 import { EngineRequest } from '../models/assessmentEngine.js';
 import pendingTasksDB from "../models/pendingTasksDB.js";
+import Team from '../models/team.js';
 import { DEFAULT_GEMINI_MODEL } from "../config/geminiModels.js";
 import { recordActivity, workerHeartbeat } from "./telemetry.js";
 import { generationFailure } from './assessment/generationErrors.js';
@@ -48,6 +49,15 @@ export const processTask = async (task) => {
     ...(attempt === 0 ? { $or: [{ generationAttempt: 0 }, { generationAttempt: { $exists: false } }] } : { generationAttempt: attempt }),
   }, { $set: { status: 'Processing' }, $unset: { generationError: 1, nextAttemptAt: 1 } }, { new: true }).select('+generationQuestions');
   if (!pendingTask) return true;
+  if (pendingTask.team) {
+    // Check after claiming Processing: deletion either sees the active worker,
+    // or this worker sees the deletion lock before creating any content.
+    const owningTeam = await Team.findById(pendingTask.team).select('deletingAt');
+    if (!owningTeam || owningTeam.deletingAt) {
+      await pendingTasksDB.updateOne({ _id: pendingTask._id, status: 'Processing' }, { $set: { status: 'Queued' } });
+      return !owningTeam;
+    }
+  }
   const {
     testID,
     testName,
