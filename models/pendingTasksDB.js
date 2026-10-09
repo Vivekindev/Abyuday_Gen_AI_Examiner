@@ -41,6 +41,7 @@ const taskSchema = new mongoose.Schema({
   generationStage: { type: String, default: 'queued' },
   generationPlan: { type: mongoose.Schema.Types.Mixed },
   generationQuestions: { type: [mongoose.Schema.Types.Mixed], default: undefined, select: false },
+  grounding: { type: mongoose.Schema.Types.Mixed, select: false },
   generationError: { type: mongoose.Schema.Types.Mixed },
   user: {
     type: mongoose.Schema.Types.ObjectId,

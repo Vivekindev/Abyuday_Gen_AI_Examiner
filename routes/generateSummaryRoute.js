@@ -27,14 +27,20 @@ router.post('/generate-summary', authenticateToken, async (req, res) => {
     const question = test?.response?.[questionIndex];
     if (!question) return res.sendStatus(404);
     if (question.kind && question.kind !== 'mcq') {
-      return res.status(200).json({ summary: question.explanation });
+      return res.status(200).json({ summary: question.explanation, grounding: test.grounding || null });
     }
-    const summary = await geminiSummaryRun(question.questionText, question.answer, DEFAULT_GEMINI_MODEL, { user: user._id, team: test.team, testID });
+    let grounding = null;
+    const summary = await geminiSummaryRun(question.questionText, question.answer, DEFAULT_GEMINI_MODEL, {
+      user: user._id, team: test.team, testID, onGrounding: (value) => { grounding = value; },
+    });
     req.activity = { action: 'explanation.generated', testID };
-    res.status(200).json({ summary });
+    res.status(200).json({ summary, grounding });
   } catch (error) {
-    console.error('Error in /generate-summary:', error);
-    res.status(502).json({ error: 'Failed to generate explanation' });
+    console.error('Error in /generate-summary:', { httpStatus: error.status || null });
+    res.status(error.status === 429 ? 429 : 502).json({
+      error: error.status === 429 ? 'Gemini’s quota or rate limit was reached. Check your Google AI Studio quota and billing, then try again.'
+        : error.status === 503 ? 'Gemini is busy right now. Try the explanation again shortly.' : 'Failed to generate explanation',
+    });
   }
 });
 

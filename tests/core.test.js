@@ -74,12 +74,14 @@ test('team access, invitation, and exam answers stay scoped', async (t) => {
   assert.equal(queuedList.status, 200);
   assert.equal(queuedList.data.find((item) => item.testID === 'test-queued-1')?.status, 'Queued');
   await pendingTasksDB.create({ testID: 'test-core-1', testName: 'Core test', testPrompt: 'A topic', questionCount: '1', testDifficulty: '5', testModel: 'gemini-3.5-flash-lite', status: 'Done', user: ownerUser._id, team: teamId });
-  await generatedTests.create({ testID: 'test-core-1', user: ownerUser._id, team: teamId, response: [{ questionText: '2 + 2?', options: ['3', '4', '5', '6'], answer: '4', tag: ['arithmetic'] }] });
+  const grounding = { sources: [{ url: 'https://docs.example.test/arithmetic', title: 'Arithmetic reference' }], searchSuggestions: ['<div>Google Search suggestions</div>'] };
+  await generatedTests.create({ testID: 'test-core-1', user: ownerUser._id, team: teamId, grounding, response: [{ questionText: '2 + 2?', options: ['3', '4', '5', '6'], answer: '4', tag: ['arithmetic'] }] });
   const outsiderAttempt = await request('/api/test/begin', { method: 'POST', cookie: outsiderCookie, body: { testID: 'test-core-1' } });
   assert.equal(outsiderAttempt.status, 403);
   const begun = await request('/api/test/begin', { method: 'POST', cookie: memberCookie, body: { testID: 'test-core-1' } });
   assert.equal(begun.status, 200);
   assert.equal(begun.data.testQuestions[0].answer, undefined);
+  assert.equal(begun.data.grounding, null);
   const activeAttempts = await request('/api/me/attempts', { cookie: memberCookie });
   assert.equal(activeAttempts.status, 200);
   assert.equal(activeAttempts.data[0].testName, 'Core test');
@@ -92,6 +94,9 @@ test('team access, invitation, and exam answers stay scoped', async (t) => {
   assert.equal(submitted.status, 200);
   assert.equal(submitted.data.results.score, 1);
   assert.equal(submitted.data.testQuestions[0].answer, '4');
+  assert.deepEqual(submitted.data.grounding, grounding);
+  const review = await request('/api/test/begin', { method: 'POST', cookie: memberCookie, body: { testID: 'test-core-1' } });
+  assert.deepEqual(review.data.grounding, grounding);
   const completedAttempts = await request('/api/me/attempts', { cookie: memberCookie });
   assert.equal(completedAttempts.data[0].results.percentage, 100);
   assert.equal(completedAttempts.data[0].isEnded, true);

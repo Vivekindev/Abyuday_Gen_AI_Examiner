@@ -24,6 +24,7 @@
     "ag-grid-community": "^32.2.1",
     "ag-grid-react": "^32.2.1",
     "axios": "^1.7.4",
+    "dompurify": "^3.4.16",
     "framer-motion": "^11.5.4",
     "katex": "^0.19.0",
     "ldrs": "^1.0.2",

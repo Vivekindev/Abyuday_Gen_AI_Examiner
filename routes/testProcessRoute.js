@@ -54,12 +54,13 @@ const getContext = async (req, res) => {
   return { user, test, testID, questions: test.response };
 };
 
-const respondSession = (res, session, questions) => res.json({
+const respondSession = (res, session, questions, grounding) => res.json({
   isEnded: session.isEnded,
   remTime: session.isEnded ? 0 : remainingSeconds(session),
   selectedOptions: session.selectedOptions,
   testQuestions: session.isEnded ? questions : publicQuestions(questions),
   results: session.isEnded ? session.results : null,
+  grounding: session.isEnded ? grounding || null : null,
 });
 
 router.post('/test/begin', async (req, res, next) => {
@@ -85,7 +86,7 @@ router.post('/test/begin', async (req, res, next) => {
     req.activity = { testID, action: !result.lastErrorObject?.updatedExisting ? 'attempt.started' : session.isEnded ? 'attempt.reviewed' : 'attempt.resumed' };
     if (req.activity.action === 'attempt.started') req.activity.eventKey = `attempt.started:${session.id}`;
     if (!session.isEnded && remainingSeconds(session) === 0) await finish(session, questions, test.team);
-    respondSession(res, session, questions);
+    respondSession(res, session, questions, test.grounding);
   } catch (error) { next(error); }
 });
 
@@ -109,7 +110,7 @@ router.post('/test/again', async (req, res, next) => {
     );
     if (!reset) return res.status(409).json({ error: 'This attempt has already been restarted.' });
     req.activity = { action: 'attempt.restarted', testID: context.testID, eventKey: `attempt.restarted:${reset.id}:${now.getTime()}` };
-    respondSession(res, reset, context.questions);
+    respondSession(res, reset, context.questions, context.test.grounding);
   } catch (error) { next(error); }
 });
 
@@ -161,7 +162,7 @@ router.post('/test/submit', async (req, res, next) => {
       session.selectedOptions = req.body.selectedOptions;
     }
     await finish(session, context.questions, context.test.team);
-    respondSession(res, session, context.questions);
+    respondSession(res, session, context.questions, context.test.grounding);
   } catch (error) { next(error); }
 });
 

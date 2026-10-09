@@ -11,6 +11,7 @@ import { recordActivity, workerHeartbeat } from "./telemetry.js";
 import { generationFailure } from './assessment/generationErrors.js';
 import { notifyGeneration } from './emailing/notifications.js';
 import { difficultyRating } from '../shared/difficulty.js';
+import { mergeGrounding } from './geminiGrounding.js';
 
 const QUEUE_NAME = "taskQueue";
 const POLL_INTERVAL = 10000; // Poll every 10 seconds
@@ -49,7 +50,7 @@ export const processTask = async (task) => {
     testID: task.testID,
     status: { $in: ['queued', 'Queued', 'Processing'] },
     ...(attempt === 0 ? { $or: [{ generationAttempt: 0 }, { generationAttempt: { $exists: false } }] } : { generationAttempt: attempt }),
-  }, { $set: { status: 'Processing' }, $unset: { generationError: 1, nextAttemptAt: 1 } }, { new: true }).select('+generationQuestions');
+  }, { $set: { status: 'Processing' }, $unset: { generationError: 1, nextAttemptAt: 1 } }, { new: true }).select('+generationQuestions +grounding');
   if (!pendingTask) return true;
   if (pendingTask.team) {
     // Check after claiming Processing: deletion either sees the active worker,
@@ -82,6 +83,11 @@ export const processTask = async (task) => {
       return true;
     }
     const activeModel = pendingTask.testModel;
+    const onGrounding = async (grounding) => {
+      pendingTask.grounding = mergeGrounding(pendingTask.grounding, grounding);
+      pendingTask.markModified('grounding');
+      await pendingTask.save();
+    };
     await workerHeartbeat({
       workerStatus: "processing",
       currentTestID: testID,
@@ -100,7 +106,7 @@ export const processTask = async (task) => {
     if (pendingTask.assessmentMode === 'interactive') {
       const result = await generateInteractiveAssessment({
         prompt: pendingTask.testPrompt, count: Number(pendingTask.questionCount), difficulty: difficultyRating(pendingTask.testDifficulty),
-        generate: createAgentGenerator(activeModel, { user: pendingTask.user, team: pendingTask.team, testID }),
+        generate: createAgentGenerator(activeModel, { user: pendingTask.user, team: pendingTask.team, testID, onGrounding }),
         registry: createEngineRegistry({ user: pendingTask.user, team: pendingTask.team, testID }),
         savedPlan: pendingTask.generationPlan,
         savedQuestions: pendingTask.generationQuestions,
@@ -133,7 +139,7 @@ export const processTask = async (task) => {
             currentBatchCount,
             difficultyRating(testDifficulty),
             activeModel,
-            { user: pendingTask.user, team: pendingTask.team, testID },
+            { user: pendingTask.user, team: pendingTask.team, testID, onGrounding },
           );
 
           parsedResponse = JSON.parse(response);
@@ -184,6 +190,7 @@ export const processTask = async (task) => {
       testID,
       response: combinedResponse,
       generation,
+      grounding: pendingTask.grounding,
       user,
       team: team || null,
     });
@@ -195,6 +202,7 @@ export const processTask = async (task) => {
     pendingTask.generationNotificationPending = true;
     pendingTask.generationError = undefined;
     pendingTask.generationQuestions = undefined;
+    pendingTask.grounding = undefined;
     await pendingTask.save();
     await notifyGeneration(pendingTask, true);
     await recordActivity({

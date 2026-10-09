@@ -57,6 +57,10 @@ Configure the mail settings in `.env.example` and see [email notifications](docs
 for events, recipients, retries, and deployment settings. Use the correct `APP_URL`
 for links in emails; configure secrets separately in deployed environments.
 
+Gemini models use Google Search grounding by default, with a separate research
+step for Flash-Lite JSON generation. See [grounding configuration and provider
+limits](docs/gemini-grounding.md). Set `GEMINI_WEB_SEARCH_ENABLED=false` to disable it.
+
 For an isolated local stack, use `docker compose -f compose.dev.yml up --build` after creating `.env`. Stop any existing app on port 4040 first. This Compose file is for development; use authenticated managed databases and TLS for a public deployment.
 
 ## Platform admin setup

@@ -19,6 +19,7 @@ import InteractiveQuestion from '../components/assessment/InteractiveQuestion';
 import QuestionNavigator from '../components/assessment/QuestionNavigator';
 import { interactionNames, responsePresent } from '../components/assessment/interactionMeta';
 import RichContent from '../components/content/RichContent';
+import GroundingSources from '../components/content/GroundingSources';
 import "./exam.css";
 
 const formatTime = (seconds) =>
@@ -296,13 +297,13 @@ export default function Dashboard() {
       });
       setExplanations((previous) => ({
         ...previous,
-        [index]: { text: data.summary },
+        [index]: { text: data.summary, grounding: data.grounding },
       }));
-    } catch {
+    } catch (requestError) {
       setExplanations((previous) => ({
         ...previous,
         [index]: {
-          error: "Explanation is unavailable right now. Try again shortly.",
+          error: errorMessage(requestError, 'Explanation is unavailable right now. Try again shortly.'),
         },
       }));
     }
@@ -435,6 +436,7 @@ export default function Dashboard() {
             </div>
           </section>
         )}
+        {ended && <GroundingSources grounding={session.grounding} title="Assessment sources" />}
         <div className="assessment-grid">
           <QuestionNavigator questions={questions} answers={answers} active={active} flagged={flagged} ended={ended} outcomes={session.results?.outcomes} busy={submitting || saving} onNavigate={goToQuestion} onSubmit={() => setDialog('submit')} />
           <section className="question-panel panel" aria-labelledby="current-question">
@@ -547,6 +549,7 @@ export default function Dashboard() {
                   {explanations[active]?.text && (
                     <RichContent text={explanations[active].text} />
                   )}
+                  {explanations[active]?.text && <GroundingSources grounding={explanations[active].grounding} />}
                   {explanations[active]?.error && (
                     <p role="alert">{explanations[active].error}</p>
                   )}

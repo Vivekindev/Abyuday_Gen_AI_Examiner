@@ -3,7 +3,7 @@ import {
   DEFAULT_GEMINI_MODEL,
   isSupportedGeminiModel,
 } from "../config/geminiModels.js";
-import { meteredGeneration } from "./telemetry.js";
+import { generateGroundedContent } from './geminiGrounding.js';
 import { CONTENT_FORMAT_INSTRUCTIONS } from './assessment/contentInstructions.js';
 import { validateContentFormat, validateQuestionContent } from './assessment/contentValidation.js';
 
@@ -47,7 +47,8 @@ const geminiQueryRun = async (
   testModel = DEFAULT_GEMINI_MODEL,
   context,
 ) => {
-  const response = await meteredGeneration({
+  const response = await generateGroundedContent({
+    generate: (request) => getClient().models.generateContent(request),
     context,
     model: resolveModel(testModel),
     operation: "questions",
@@ -74,16 +75,12 @@ const geminiQueryRun = async (
         throw new Error("Invalid question response");
       questions.forEach(validateQuestionContent);
     },
-    execute: () =>
-      getClient().models.generateContent({
-        model: resolveModel(testModel),
-        contents: `Create exactly ${questionCount} distinct multiple-choice questions about: ${testPrompt}. Difficulty: ${testDifficulty}/10. Each question must have four distinct plausible options, one answer that exactly matches an option, and relevant tags. Use clear, unambiguous language. ${CONTENT_FORMAT_INSTRUCTIONS} Return only the requested JSON array.`,
-        config: {
-          temperature: 0.7,
-          responseMimeType: "application/json",
-          responseSchema: questionSchema,
-        },
-      }),
+    contents: `Create exactly ${questionCount} distinct multiple-choice questions about: ${testPrompt}. Difficulty: ${testDifficulty}/10. Each question must have four distinct plausible options, one answer that exactly matches an option, and relevant tags. Use clear, unambiguous language. ${CONTENT_FORMAT_INSTRUCTIONS} Return only the requested JSON array.`,
+    config: {
+      temperature: 0.7,
+      responseMimeType: "application/json",
+      responseSchema: questionSchema,
+    },
   });
   if (!response.text)
     throw new Error("Gemini returned an empty question response");
@@ -96,7 +93,8 @@ const geminiSummaryRun = async (
   testModel = DEFAULT_GEMINI_MODEL,
   context,
 ) => {
-  const response = await meteredGeneration({
+  const response = await generateGroundedContent({
+    generate: (request) => getClient().models.generateContent(request),
     context,
     model: resolveModel(testModel),
     operation: "explanation",
@@ -104,12 +102,8 @@ const geminiSummaryRun = async (
       if (!result.text?.trim()) throw new Error("Empty explanation");
       validateContentFormat(result.text, 'Explanation');
     },
-    execute: () =>
-      getClient().models.generateContent({
-        model: resolveModel(testModel),
-        contents: `In about 50 words, explain why this answer is correct. ${CONTENT_FORMAT_INSTRUCTIONS}\nQuestion: ${questionText}\nCorrect answer: ${correctAnswer}`,
-        config: { temperature: 0.4 },
-      }),
+    contents: `In about 50 words, explain why this answer is correct. ${CONTENT_FORMAT_INSTRUCTIONS}\nQuestion: ${questionText}\nCorrect answer: ${correctAnswer}`,
+    config: { temperature: 0.4 },
   });
   if (!response.text) throw new Error("Gemini returned an empty explanation");
   return response.text.trim();
@@ -119,14 +113,12 @@ export default geminiQueryRun;
 // Structured specialist calls use the same metering, timeout and model allowlist as MCQs.
 export const createAgentGenerator = (model, context) => async ({ agent, schema, instructions, validate, operation }) => {
   const resolved = resolveModel(model);
-  const result = await meteredGeneration({
+  const result = await generateGroundedContent({
+    generate: (request) => getClient().models.generateContent(request),
     context, model: resolved, operation, agent,
     validate: (response) => validate(JSON.parse(response.text || 'null')),
-    execute: () => getClient().models.generateContent({
-      model: resolved,
-      contents: `${instructions}\n${CONTENT_FORMAT_INSTRUCTIONS}`,
-      config: { temperature: 0.4, responseMimeType: 'application/json', responseJsonSchema: schema },
-    }),
+    contents: `${instructions}\n${CONTENT_FORMAT_INSTRUCTIONS}`,
+    config: { temperature: 0.4, responseMimeType: 'application/json', responseJsonSchema: schema },
   });
   return JSON.parse(result.text);
 };
