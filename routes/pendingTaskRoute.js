@@ -9,6 +9,8 @@ import { DEFAULT_GEMINI_MODEL, isSupportedGeminiModel } from '../config/geminiMo
 import { canManageTeam, getTeamMembership } from '../functions/teamAccess.js';
 import { EngineRequest } from '../models/assessmentEngine.js';
 import testWindow from '../models/testWindow.js';
+import { difficultyRating } from '../shared/difficulty.js';
+import { cancelPendingEmails, notifyGeneration } from '../functions/emailing/notifications.js';
 
 const router = Router();
 
@@ -18,15 +20,15 @@ router.post('/test/create', authenticateToken, async (req, res) => {
         const { testName, prompt, numQuestions, difficulty, selectedModel, teamId, assessmentMode = 'mcq' } = req.body;
         const testId = crypto.randomBytes(8).toString('hex');
         const count = Number(numQuestions);
-        const level = Number(difficulty);
+        const level = difficultyRating(difficulty);
         const model = selectedModel || DEFAULT_GEMINI_MODEL;
         if (typeof testName !== 'string' || testName.trim().length < 2 || testName.length > 80 ||
             typeof prompt !== 'string' || prompt.trim().length < 8 || prompt.length > 3000 ||
             !Number.isInteger(count) || count < 1 || count > 50 ||
-            !Number.isInteger(level) || level < 1 || level > 10 ||
+            level === null ||
             !isSupportedGeminiModel(model) || !['mcq', 'interactive'].includes(assessmentMode) ||
             (assessmentMode === 'interactive' && count > 20)) {
-            return res.status(400).json({ message: 'Check the test name, prompt, question count (1-50; interactive 1-20), difficulty (1-10), format, and model.' });
+            return res.status(400).json({ message: 'Check the test name, prompt, question count (1-50; interactive 1-20), difficulty (Easy, Medium, Hard, or 0-10), format, and model.' });
         }
         
         const user = await findUser(req.user.email);
@@ -68,7 +70,8 @@ router.post('/test/create', authenticateToken, async (req, res) => {
         try {
             await publishAssessmentTask(newTask);
         } catch (queueError) {
-            await pendingTasksDB.updateOne({ _id: newTask._id, status: 'Queued', generationAttempt: 0 }, { $set: { status: 'Error' } });
+            const failed = await pendingTasksDB.updateOne({ _id: newTask._id, status: 'Queued', generationAttempt: 0 }, { $set: { status: 'Error', generationNotificationPending: true } });
+            if (failed.modifiedCount) await notifyGeneration(newTask, false);
             throw queueError;
         }
 
@@ -114,9 +117,12 @@ router.post('/test/retry', authenticateToken, async (req, res, next) => {
             // Do not overwrite a worker that already received an ambiguously confirmed message.
             const restored = await pendingTasksDB.updateOne(
                 { _id: queued._id, status: 'Queued', generationAttempt: queued.generationAttempt },
-                { $set: { status: 'Error' } },
+                { $set: { status: 'Error', generationNotificationPending: true } },
             );
-            if (restored.modifiedCount) return res.status(503).json({ message: 'Could not queue the retry. Your assessment is still available to retry.' });
+            if (restored.modifiedCount) {
+                await notifyGeneration(queued, false);
+                return res.status(503).json({ message: 'Could not queue the retry. Your assessment is still available to retry.' });
+            }
         }
         req.activity = { action: 'assessment.retried', testID };
         return res.status(202).json({ testID, status: 'Queued', message: 'Assessment queued for another generation attempt.' });
@@ -138,6 +144,7 @@ router.delete('/test/:testID', authenticateToken, async (req, res, next) => {
             return res.status(403).json({ message: 'Only the creator can manage this assessment.' });
         }
         if (task.status === 'Processing') return res.status(409).json({ message: 'Wait for generation to finish before deleting this assessment.' });
+        await cancelPendingEmails({ testID });
         await Promise.all([
             pendingTasksDB.deleteOne({ _id: task._id }),
             generatedTests.deleteOne({ testID }),

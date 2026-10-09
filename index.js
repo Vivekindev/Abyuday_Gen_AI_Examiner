@@ -25,6 +25,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import { monitorRequests } from './functions/telemetry.js';
 import monitoringRoutes from './routes/monitoringRoutes.js';
 import engineRoutes from './routes/engineRoutes.js';
+import startEmailWorker from './functions/emailing/worker.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -113,7 +114,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   connectDB().then(() => {
     const server = app.listen(Number(process.env.PORT) || 4040, () => console.log(`Server running on port ${Number(process.env.PORT) || 4040}`));
     const workerTimer = process.env.RUN_WORKER === 'false' ? null : startTaskWorker();
-    const shutdown = async () => { if (workerTimer) clearInterval(workerTimer); server.close(); };
+    const mailTimer = process.env.RUN_MAIL_WORKER === 'false' ? null : startEmailWorker();
+    const shutdown = async () => { if (workerTimer) clearInterval(workerTimer); if (mailTimer) clearInterval(mailTimer); server.close(); };
     process.once('SIGINT', shutdown);
     process.once('SIGTERM', shutdown);
   }).catch((error) => { console.error('Startup failed:', error); process.exitCode = 1; });

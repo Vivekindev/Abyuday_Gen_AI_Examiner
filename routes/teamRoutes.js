@@ -10,6 +10,10 @@ import pendingTasksDB from '../models/pendingTasksDB.js';
 import testWindow from '../models/testWindow.js';
 import TeamAssessmentRequest from '../models/teamAssessmentRequest.js';
 import { deleteTeam } from '../functions/deleteTeam.js';
+import { difficultyRating } from '../shared/difficulty.js';
+import { cancelPendingEmails, notifyInvite, notifyTeamEvent } from '../functions/emailing/notifications.js';
+import EmailOutbox from '../models/emailOutbox.js';
+import { emailDeliveryStatus } from '../functions/emailing/deliveryStatus.js';
 
 const router = Router();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -71,8 +75,12 @@ router.post('/teams/invites/:token/accept', async (req, res, next) => {
     if (!team || team.deletingAt) return res.status(404).json({ error: 'This team is no longer available.' });
     invite.usedAt = new Date();
     await invite.save();
+    await cancelPendingEmails({ invite: invite._id });
     req.monitoringTeam = team._id;
-    if (joined.modifiedCount) req.activity = { action: 'team.joined', role: invite.role };
+    if (joined.modifiedCount) {
+      req.activity = { action: 'team.joined', role: invite.role };
+      await notifyTeamEvent({ team, actor: req.currentUser, event: 'team.joined', eventId: invite.id, title: `${req.currentUser.userName || 'A member'} joined ${team.name}`, message: `${req.currentUser.userName || 'A new member'} accepted an invitation to ${team.name} as ${invite.role}.`, recipients: [...team.members.filter((member) => ['owner', 'admin'].includes(member.role)).map((member) => member.user), req.currentUser._id] });
+    }
     res.json({ id: team.id, name: team.name });
   } catch (error) { next(error); }
 });
@@ -102,6 +110,7 @@ router.delete('/teams/:teamId', async (req, res, next) => {
     }
     req.monitoringTeam = membership.team._id;
     await deleteTeam(membership.team, req.currentUser._id);
+    await notifyTeamEvent({ team: membership.team, actor: req.currentUser, event: 'team.deleted', eventId: membership.team.id, title: `Team deleted: ${membership.team.name}`, message: `${membership.team.name} was deleted by its owner. Its assessments and team records are no longer available.`, requiresMembership: false });
     req.activity = { action: 'team.deleted' };
     res.sendStatus(204);
   } catch (error) {
@@ -159,10 +168,10 @@ router.post('/teams/:teamId/assessment-requests', async (req, res, next) => {
     const title = typeof req.body?.title === 'string' ? req.body.title.trim() : '';
     const topic = typeof req.body?.topic === 'string' ? req.body.topic.trim() : '';
     const questionCount = Number(req.body?.questionCount);
-    const difficulty = Number(req.body?.difficulty);
+    const difficulty = difficultyRating(req.body?.difficulty);
     if (title.length < 2 || title.length > 80 || topic.length < 8 || topic.length > 2000 ||
       !Number.isInteger(questionCount) || questionCount < 1 || questionCount > 50 ||
-      !Number.isInteger(difficulty) || difficulty < 1 || difficulty > 10) {
+      difficulty === null) {
       return res.status(400).json({ error: 'Enter a title, topic, 1–50 questions, and a valid difficulty.' });
     }
     if (await TeamAssessmentRequest.countDocuments({ team: membership.team._id, requestedBy: req.currentUser._id, status: { $in: ['open', 'in_progress'] } }) >= 5) {
@@ -174,6 +183,7 @@ router.post('/teams/:teamId/assessment-requests', async (req, res, next) => {
       return res.status(409).json({ error: 'This team is being deleted.' });
     }
     req.activity = { action: 'assessment.requested' };
+    await notifyTeamEvent({ team: membership.team, actor: req.currentUser, event: 'assessment.requested', eventId: request.id, adminsOnly: true, title: `Assessment requested: ${title}`, message: `${req.currentUser.userName || 'A team member'} requested ${title} with ${questionCount} questions. Review the request to accept it or create an assessment.`, actionPath: `/dashboard/teams?team=${membership.team.id}&tab=requests` });
     res.status(201).json({ id: String(request._id), status: request.status });
   } catch (error) { next(error); }
 });
@@ -193,6 +203,8 @@ router.patch('/teams/:teamId/assessment-requests/:requestId', async (req, res, n
     );
     if (!request) return res.status(404).json({ error: 'This request is no longer open.' });
     req.activity = { action: 'assessment.request_updated', status };
+    const label = { in_progress: 'accepted', fulfilled: 'completed', declined: 'declined' }[status];
+    await notifyTeamEvent({ team: membership.team, actor: req.currentUser, event: 'assessment.request_updated', eventId: `${request.id}:${status}`, recipients: [request.requestedBy], title: `Assessment request ${label}: ${request.title}`, message: `${req.currentUser.userName || 'A team admin'} ${label} your request for ${request.title}.`, actionPath: `/dashboard/teams?team=${membership.team.id}&tab=requests` });
     res.json({ id: String(request._id), status: request.status });
   } catch (error) { next(error); }
 });
@@ -226,7 +238,8 @@ router.post('/teams/:teamId/invites', async (req, res, next) => {
       return res.status(409).json({ error: 'This team is being deleted.' });
     }
     req.activity = { action: 'invite.created', role, targetUser: invitedUser?._id };
-    res.status(201).json({ token, expiresAt: invite.expiresAt });
+    const emailStatus = await notifyInvite(invite, token, membership.team, req.currentUser);
+    res.status(201).json({ id: invite.id, token, email: invite.email, expiresAt: invite.expiresAt, emailStatus });
   } catch (error) { next(error); }
 });
 
@@ -238,7 +251,29 @@ router.get('/teams/:teamId/invites', async (req, res, next) => {
     if (!canManageTeam(membership.role)) return res.sendStatus(403);
     const invites = await TeamInvite.find({ team: membership.team._id, usedAt: null, expiresAt: { $gt: new Date() } })
       .select('email role expiresAt').sort({ createdAt: -1 }).limit(100);
-    res.json(invites.map((invite) => ({ id: invite.id, email: invite.email, role: invite.role, expiresAt: invite.expiresAt })));
+    const emails = await EmailOutbox.find({ invite: { $in: invites.map((invite) => invite._id) } }).select('invite status attempts sentAt nextAttemptAt');
+    const mailByInvite = new Map(emails.map((mail) => [String(mail.invite), mail]));
+    res.json(invites.map((invite) => ({
+      id: invite.id, email: invite.email, role: invite.role, expiresAt: invite.expiresAt,
+      ...emailDeliveryStatus(mailByInvite.get(invite.id)),
+    })));
+  } catch (error) { next(error); }
+});
+
+router.get('/teams/:teamId/invites/:inviteId/delivery', async (req, res, next) => {
+  try {
+    const membership = await getTeamMembership(req.params.teamId, req.currentUser._id);
+    if (!membership) return res.sendStatus(404);
+    req.monitoringTeam = membership.team._id;
+    if (!canManageTeam(membership.role)) return res.sendStatus(403);
+    if (!mongoose.isValidObjectId(req.params.inviteId)) return res.sendStatus(404);
+    const invite = await TeamInvite.findOne({ _id: req.params.inviteId, team: membership.team._id }).select('usedAt expiresAt');
+    if (!invite) return res.status(404).json({ error: 'This invitation is no longer available.' });
+    const mail = await EmailOutbox.findOne({ invite: invite._id, team: membership.team._id }).select('status attempts sentAt nextAttemptAt');
+    res.set('Cache-Control', 'no-store').json({
+      ...emailDeliveryStatus(mail),
+      invitationStatus: invite.usedAt ? 'accepted' : invite.expiresAt <= new Date() ? 'expired' : 'pending',
+    });
   } catch (error) { next(error); }
 });
 
@@ -250,6 +285,7 @@ router.delete('/teams/:teamId/invites/:inviteId', async (req, res, next) => {
     if (!canManageTeam(membership.role)) return res.sendStatus(403);
     if (!mongoose.isValidObjectId(req.params.inviteId)) return res.sendStatus(404);
     const removed = await TeamInvite.deleteOne({ _id: req.params.inviteId, team: membership.team._id, usedAt: null });
+    await cancelPendingEmails({ invite: req.params.inviteId });
     if (removed.deletedCount) req.activity = { action: 'invite.revoked' };
     res.sendStatus(204);
   } catch (error) { next(error); }
@@ -268,6 +304,7 @@ router.post('/teams/:teamId/transfer', async (req, res, next) => {
     target.role = 'owner';
     await membership.team.save();
     req.activity = { action: 'team.ownership_transferred', targetUser: target.user };
+    await notifyTeamEvent({ team: membership.team, actor: req.currentUser, event: 'team.ownership_transferred', eventId: crypto.randomUUID(), title: `Ownership updated: ${membership.team.name}`, message: `${req.currentUser.userName || 'The team owner'} transferred ownership of ${membership.team.name}. Open the team to see the updated roles.` });
     res.json({ ownerId: req.body.userId });
   } catch (error) { next(error); }
 });
@@ -283,9 +320,11 @@ router.patch('/teams/:teamId/members/:userId', async (req, res, next) => {
     const target = membership.team.members.find((member) => String(member.user) === req.params.userId);
     if (!target) return res.sendStatus(404);
     if (target.role === 'owner') return res.status(409).json({ error: 'The owner role cannot be changed.' });
+    if (target.role === role) return res.json({ id: req.params.userId, role });
     target.role = role;
     await membership.team.save();
     req.activity = { action: 'member.role_changed', targetUser: target.user, role };
+    await notifyTeamEvent({ team: membership.team, actor: req.currentUser, event: 'member.role_changed', eventId: crypto.randomUUID(), recipients: [target.user], title: `Your role changed in ${membership.team.name}`, message: `${req.currentUser.userName || 'The team owner'} changed your role to ${role}.` });
     res.json({ id: req.params.userId, role });
   } catch (error) { next(error); }
 });
@@ -303,6 +342,8 @@ router.delete('/teams/:teamId/members/:userId', async (req, res, next) => {
     req.activity = { action: self ? 'team.left' : 'member.removed', targetUser: target.user };
     membership.team.members = membership.team.members.filter((member) => String(member.user) !== req.params.userId);
     await membership.team.save();
+    await notifyTeamEvent({ team: membership.team, actor: req.currentUser, event: self ? 'team.left' : 'member.removed', eventId: crypto.randomUUID(), adminsOnly: true, title: `Membership updated: ${membership.team.name}`, message: `${self ? req.currentUser.userName || 'A member' : 'A member'} ${self ? 'left' : 'was removed from'} ${membership.team.name}.` });
+    if (!self) await notifyTeamEvent({ team: membership.team, actor: req.currentUser, event: 'member.removed_notice', eventId: crypto.randomUUID(), recipients: [target.user], requiresMembership: false, title: `You were removed from ${membership.team.name}`, message: `${req.currentUser.userName || 'A team admin'} removed you from ${membership.team.name}. You no longer have access to its assessments.`, actionPath: '/dashboard/teams' });
     res.sendStatus(204);
   } catch (error) { next(error); }
 });

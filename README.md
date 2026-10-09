@@ -7,6 +7,8 @@ A MERN exam platform with Gemini question generation, timed attempts, teams, inv
 - Register, sign in, or use Google OAuth. Authentication uses HTTP-only access and refresh cookies.
 - Create personal tests or tests restricted to a team. Jobs are stored in MongoDB and processed by a RabbitMQ worker.
 - Track queued, processing, ready, and failed tests. The dashboard refreshes status automatically.
+- Choose Easy, Medium, or Hard; the API consistently maps these to ratings 2, 5, and 8, and accepts numeric difficulty from 0 to 10.
+- Receive assessment generation alerts, invitation emails, and team updates. Manage generation and team email preferences in Settings.
 - Retry failed assessments from the library or details page while keeping their ID and registered engines. Available to personal creators and team owners/admins.
 - Take timed tests with server-side answer storage and scoring. Correct answers are returned only after an attempt ends.
 - Create up to 10 teams, invite members or admins with a seven-day email-bound link, revoke invitations, change roles, transfer ownership, and review team results.
@@ -49,6 +51,11 @@ Assessment content supports LaTeX equations, syntax-highlighted code, Markdown t
 4. Open `http://localhost:4040/`. `npm run startdev` restarts the API when server files change. For Vite hot reload, run `npm run dev --prefix client` in another terminal and open `http://localhost:5173/`.
 
 The default `npm start` process also runs the task worker. For separate processes, set `RUN_WORKER=false` for the web process and run `npm run worker` separately.
+
+Email delivery reuses the reference project's Gmail sender and Nodemailer layout.
+Configure the mail settings in `.env.example` and see [email notifications](docs/email-notifications.md)
+for events, recipients, retries, and deployment settings. Use the correct `APP_URL`
+for links in emails; configure secrets separately in deployed environments.
 
 For an isolated local stack, use `docker compose -f compose.dev.yml up --build` after creating `.env`. Stop any existing app on port 4040 first. This Compose file is for development; use authenticated managed databases and TLS for a public deployment.
 

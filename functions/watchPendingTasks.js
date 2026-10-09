@@ -9,6 +9,8 @@ import Team from '../models/team.js';
 import { DEFAULT_GEMINI_MODEL } from "../config/geminiModels.js";
 import { recordActivity, workerHeartbeat } from "./telemetry.js";
 import { generationFailure } from './assessment/generationErrors.js';
+import { notifyGeneration } from './emailing/notifications.js';
+import { difficultyRating } from '../shared/difficulty.js';
 
 const QUEUE_NAME = "taskQueue";
 const POLL_INTERVAL = 10000; // Poll every 10 seconds
@@ -74,7 +76,9 @@ export const processTask = async (task) => {
     if (await generatedTests.exists({ testID })) {
       pendingTask.status = 'Done';
       pendingTask.generationStage = 'ready';
+      pendingTask.generationNotificationPending = true;
       await pendingTask.save();
+      await notifyGeneration(pendingTask, true);
       return true;
     }
     const activeModel = pendingTask.testModel;
@@ -95,7 +99,7 @@ export const processTask = async (task) => {
     let generation;
     if (pendingTask.assessmentMode === 'interactive') {
       const result = await generateInteractiveAssessment({
-        prompt: pendingTask.testPrompt, count: Number(pendingTask.questionCount), difficulty: Number(pendingTask.testDifficulty),
+        prompt: pendingTask.testPrompt, count: Number(pendingTask.questionCount), difficulty: difficultyRating(pendingTask.testDifficulty),
         generate: createAgentGenerator(activeModel, { user: pendingTask.user, team: pendingTask.team, testID }),
         registry: createEngineRegistry({ user: pendingTask.user, team: pendingTask.team, testID }),
         savedPlan: pendingTask.generationPlan,
@@ -127,7 +131,7 @@ export const processTask = async (task) => {
           response = await geminiQueryRun(
             testPrompt,
             currentBatchCount,
-            testDifficulty,
+            difficultyRating(testDifficulty),
             activeModel,
             { user: pendingTask.user, team: pendingTask.team, testID },
           );
@@ -149,7 +153,9 @@ export const processTask = async (task) => {
               `Task ${testID} failed: Maximum retries reached for JSON parsing`,
             );
             pendingTask.status = "Error";
+            pendingTask.generationNotificationPending = true;
             await pendingTask.save();
+            await notifyGeneration(pendingTask, false);
             await recordActivity({
               user: pendingTask.user,
               team: pendingTask.team,
@@ -186,9 +192,11 @@ export const processTask = async (task) => {
     console.log(`Done Processing Task ${testID}`);
     pendingTask.status = "Done";
     pendingTask.generationStage = 'ready';
+    pendingTask.generationNotificationPending = true;
     pendingTask.generationError = undefined;
     pendingTask.generationQuestions = undefined;
     await pendingTask.save();
+    await notifyGeneration(pendingTask, true);
     await recordActivity({
       user: pendingTask.user,
       team: pendingTask.team,
@@ -231,7 +239,9 @@ export const processTask = async (task) => {
         return false;
       }
       pendingTask.status = "Error";
+      pendingTask.generationNotificationPending = true;
       await pendingTask.save();
+      await notifyGeneration(pendingTask, false);
       await EngineRequest.updateMany({ testID, user: pendingTask.user, status: 'requested' }, { $set: { status: 'failed', message: 'Assessment generation stopped before this request could be built. Retry this assessment to try again.' } });
       await recordActivity({
         user: pendingTask.user,

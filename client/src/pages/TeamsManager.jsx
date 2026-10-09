@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import {
-  FiCopy,
   FiClipboard,
   FiMail,
   FiPlus,
@@ -20,9 +19,12 @@ import {
   Modal,
   PageHeading,
 } from "../components/ui";
-import { api, copyText, errorMessage, formatDate } from "../lib/api";
+import { api, errorMessage, formatDate } from "../lib/api";
 import useResource from "../hooks/useResource";
 import UsageMonitor from "../components/UsageMonitor";
+import EmailDeliveryStatus from '../components/EmailDeliveryStatus';
+import InvitationReceipt from '../components/InvitationReceipt';
+import { DIFFICULTY_OPTIONS, difficultyLabel, difficultyRating } from '../../../shared/difficulty.js';
 
 export default function TeamsManager() {
   const { me } = useOutletContext();
@@ -41,6 +43,7 @@ export default function TeamsManager() {
       : "members";
   const invites = useResource(
     canManage && tab === "invitations" ? `/teams/${selectedId}/invites` : null,
+    { interval: 10000 },
   );
   const results = useResource(
     canManage && tab === "results" ? `/teams/${selectedId}/results` : null,
@@ -52,18 +55,18 @@ export default function TeamsManager() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
-  const [inviteLink, setInviteLink] = useState("");
+  const [createdInvitation, setCreatedInvitation] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [requestTitle, setRequestTitle] = useState("");
   const [requestTopic, setRequestTopic] = useState("");
   const [requestCount, setRequestCount] = useState(10);
-  const [requestDifficulty, setRequestDifficulty] = useState(5);
+  const [requestDifficulty, setRequestDifficulty] = useState('medium');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const changeTab = (next) => setParams({ team: selectedId, tab: next });
   const openDialog = (value) => {
     setError("");
-    setInviteLink("");
+    setCreatedInvitation(null);
     setDeleteConfirmation('');
     setDialog(value);
   };
@@ -94,6 +97,7 @@ export default function TeamsManager() {
   };
   const invite = async (event) => {
     event.preventDefault();
+    if (busy) return;
     setBusy(true);
     setError("");
     try {
@@ -101,9 +105,17 @@ export default function TeamsManager() {
         email,
         role,
       });
-      setInviteLink(`${window.location.origin}/join?token=${data.token}`);
+      setCreatedInvitation({
+        id: data.id, teamId: selectedId, email: data.email || email.trim().toLowerCase(),
+        link: `${window.location.origin}/join?token=${data.token}`,
+        expiresAt: data.expiresAt, emailStatus: data.emailStatus || 'not_sent',
+      });
       invites.reload();
-      toast.success("Invitation created");
+      if (data.emailStatus === 'queued') {
+        toast.success('Invitation created', { description: 'The email is queued. We’ll update its status here.' });
+      } else {
+        toast.info('Invitation link ready', { description: 'Email delivery is unavailable. Copy the link to share it directly.' });
+      }
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -117,12 +129,12 @@ export default function TeamsManager() {
     try {
       await api.post(`/teams/${selectedId}/assessment-requests`, {
         title: requestTitle, topic: requestTopic,
-        questionCount: Number(requestCount), difficulty: Number(requestDifficulty),
+        questionCount: Number(requestCount), difficulty: difficultyRating(requestDifficulty),
       });
       setRequestTitle("");
       setRequestTopic("");
       requests.reload();
-      toast.success("Assessment request sent to your team admins");
+      toast.success('Assessment request submitted', { description: 'Your team admins can review it in Requests.' });
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -210,19 +222,11 @@ export default function TeamsManager() {
       setBusy(false);
     }
   };
-  const copy = async () => {
-    try {
-      await copyText(inviteLink);
-      toast.success("Invitation link copied");
-    } catch (copyError) {
-      toast.error(copyError.message);
-    }
-  };
   const dialogTitle =
     ({
       'delete-team': 'Delete this team?',
       create: 'A shared space for your people',
-      invite: 'Invite someone to your team',
+      invite: createdInvitation ? 'Invitation status' : 'Invite someone to your team',
       transfer: 'Transfer team ownership?',
       revoke: 'Revoke this invitation?',
       remove: 'Remove this team member?',
@@ -379,7 +383,7 @@ export default function TeamsManager() {
                         <label className="field">Topics and learning goals<textarea value={requestTopic} onChange={(event) => setRequestTopic(event.target.value)} minLength={8} maxLength={2000} rows={4} required placeholder="What should the assessment cover?" /></label>
                         <div className="form-grid">
                           <label className="field">Questions<input type="number" min="1" max="50" value={requestCount} onChange={(event) => setRequestCount(event.target.value)} /></label>
-                          <label className="field">Difficulty<select value={requestDifficulty} onChange={(event) => setRequestDifficulty(Number(event.target.value))}><option value={2}>Easy</option><option value={5}>Medium</option><option value={8}>Hard</option></select></label>
+                          <label className="field">Difficulty<select value={requestDifficulty} onChange={(event) => setRequestDifficulty(event.target.value)}>{DIFFICULTY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
                         </div>
                         <div className="form-actions"><Button type="submit" disabled={busy}>Send request</Button></div>
                       </form>
@@ -390,7 +394,7 @@ export default function TeamsManager() {
                             <article className="team-request-card" key={item.id}>
                               <div className="team-request-heading"><div><h3>{item.title}</h3><p>Requested by {item.requestedBy.name} · {formatDate(item.createdAt)}</p></div><span className={`request-status request-${item.status}`}>{item.status.replace("_", " ")}</span></div>
                               <p>{item.topic}</p>
-                              <div className="team-request-meta"><span>{item.questionCount} questions</span><span>Difficulty {item.difficulty}/10</span></div>
+                              <div className="team-request-meta"><span>{item.questionCount} questions</span><span>{difficultyLabel(item.difficulty)}</span></div>
                               {canManage && ["open", "in_progress"].includes(item.status) && <div className="form-actions"><Button variant="primary" className="btn-sm" to="/dashboard/create" state={{ request: item, teamId: selectedId }}>Create assessment</Button><Button variant="secondary" className="btn-sm" disabled={busy} onClick={() => updateRequest(item, "in_progress")}>Accept</Button><Button variant="secondary" className="btn-sm" disabled={busy} onClick={() => updateRequest(item, "fulfilled")}>Mark fulfilled</Button><Button variant="ghost" className="btn-sm text-danger" disabled={busy} onClick={() => updateRequest(item, "declined")}>Decline</Button></div>}
                             </article>
                           ))}
@@ -523,9 +527,10 @@ export default function TeamsManager() {
                                       <span className="avatar">
                                         <FiMail />
                                       </span>
-                                      <span className="table-title">
-                                        {item.email}
-                                      </span>
+                                      <div>
+                                        <span className="table-title">{item.email}</span>
+                                        <EmailDeliveryStatus status={item.emailStatus} sentAt={item.sentAt} nextAttemptAt={item.nextAttemptAt} />
+                                      </div>
                                     </div>
                                   </td>
                                   <td data-label="Role">
@@ -699,7 +704,7 @@ export default function TeamsManager() {
         description={
           dialog?.type === "create"
             ? "Choose a name your teammates will recognize."
-            : dialog?.type === "invite"
+            : dialog?.type === "invite" && !createdInvitation
               ? `Invite a member or admin to ${team?.name || "your team"}.`
               : undefined
         }
@@ -750,35 +755,8 @@ export default function TeamsManager() {
           </form>
         )}
         {dialog?.type === "invite" &&
-          (inviteLink ? (
-            <>
-              <div className="notice notice-success">
-                <FiMail />
-                <span>
-                  Your invitation is ready. Share this link with{" "}
-                  <strong>{email}</strong>.
-                </span>
-              </div>
-              <div className="inline-copy">
-                <input
-                  className="input"
-                  value={inviteLink}
-                  readOnly
-                  aria-label="Invitation link"
-                  onFocus={(event) => event.target.select()}
-                />
-                <Button icon={FiCopy} onClick={copy}>
-                  Copy
-                </Button>
-              </div>
-              <p className="invite-guide">
-                This link expires in 7 days. The recipient must sign in with the
-                invited email address. Invitations are shared manually.
-              </p>
-              <div className="form-actions" style={{ marginTop: 20 }}>
-                <Button onClick={closeDialog}>Done</Button>
-              </div>
-            </>
+          (createdInvitation ? (
+            <InvitationReceipt invitation={createdInvitation} onDone={closeDialog} />
           ) : (
             <form className="form-stack" onSubmit={invite}>
               <label className="field">
@@ -789,6 +767,7 @@ export default function TeamsManager() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   maxLength={254}
+                  disabled={busy}
                   required
                   placeholder="teammate@example.com"
                 />
@@ -798,6 +777,7 @@ export default function TeamsManager() {
                 <select
                   value={role}
                   onChange={(event) => setRole(event.target.value)}
+                  disabled={busy}
                 >
                   <option value="member">Member — take team assessments</option>
                   <option value="admin">
@@ -806,7 +786,7 @@ export default function TeamsManager() {
                 </select>
               </label>
               <p className="field-hint">
-                We’ll create a private invitation link for you to share.
+                We’ll email a private invitation and give you a link to share.
               </p>
               <div className="form-actions">
                 <Button
@@ -816,8 +796,8 @@ export default function TeamsManager() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={busy} icon={FiUserPlus}>
-                  {busy ? "Creating…" : "Create invitation"}
+                <Button type="submit" disabled={busy} icon={FiUserPlus} aria-busy={busy}>
+                  {busy ? "Creating invitation…" : "Send invitation"}
                 </Button>
               </div>
             </form>

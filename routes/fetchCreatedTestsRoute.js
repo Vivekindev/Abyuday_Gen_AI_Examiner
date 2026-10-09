@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { difficultyLabel } from '../shared/difficulty.js';
 import { authenticateToken } from '../functions/authFunctions.js';
 
 import findUser from '../functions/findUser.js';
@@ -38,17 +39,6 @@ router.post('/fetchcreatedtests',authenticateToken, async (req, res) => {
 
   function convertTestData(input, teamNames, managedTeams, userId) {
     return input.map((item, index) => {
-        let difficultyLevel;
-        const difficulty = parseInt(item.testDifficulty);
-        
-        if (difficulty >= 1 && difficulty <= 3) {
-            difficultyLevel = "Easy";
-        } else if (difficulty >= 4 && difficulty <= 6) {
-            difficultyLevel = "Medium";
-        } else if (difficulty >= 7 && difficulty <= 10) {
-            difficultyLevel = "Hard";
-        }
-
         return {
             id: index + 1,
             testID: item.testID,
@@ -61,7 +51,7 @@ router.post('/fetchcreatedtests',authenticateToken, async (req, res) => {
             assessmentMode: item.assessmentMode || 'mcq',
             generationStage: item.generationStage,
             generationError: item.status === 'Error' && (item.team ? managedTeams.has(String(item.team)) : String(item.user) === String(userId)) ? item.generationError : undefined,
-            difficulty: difficultyLevel,
+            difficulty: difficultyLabel(item.testDifficulty),
             testModel: GEMINI_MODELS[item.testModel] || item.testModel,
             teamName: item.team ? teamNames.get(String(item.team)) || 'Team' : 'Personal',
         };

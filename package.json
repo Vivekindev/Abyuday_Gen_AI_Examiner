@@ -30,6 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "katex": "^0.16.47",
     "mongoose": "^8.5.3",
+    "nodemailer": "^10.0.16",
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0"

@@ -35,6 +35,7 @@ const taskSchema = new mongoose.Schema({
     default: 0
   },
   generationAttempt: { type: Number, default: 0 },
+  generationNotificationPending: { type: Boolean, default: false },
   nextAttemptAt: Date,
   assessmentMode: { type: String, enum: ['mcq', 'interactive'], default: 'mcq' },
   generationStage: { type: String, default: 'queued' },

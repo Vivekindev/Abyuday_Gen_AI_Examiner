@@ -702,6 +702,11 @@
   display: grid;
   gap: 24px;
 }
+.notification-option { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-control); cursor: pointer; }
+.notification-option:has(input:checked) { border-color: var(--link); background: var(--accent-soft); }
+.notification-option input { width: 18px; height: 18px; margin-top: 3px; flex: none; accent-color: var(--accent); }
+.notification-option strong { display: block; font-size: 14px; font-weight: 600; }
+.notification-option small { display: block; font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 6px; }
 .help-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -888,6 +893,65 @@
   color: var(--muted);
   line-height: 1.6;
   margin-top: 12px;
+}
+.email-delivery-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--subtle);
+}
+.email-delivery-badge svg { flex-shrink: 0; }
+.email-delivery-badge[data-tone="info"] { color: var(--link); background: var(--accent-soft); }
+.email-delivery-badge[data-tone="success"] { color: var(--positive); background: var(--positive-bg); }
+.email-delivery-badge[data-tone="warning"] { color: var(--warning); background: var(--warning-bg); }
+.invitation-receipt { display: grid; gap: 20px; }
+.invitation-delivery {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--subtle);
+}
+.invitation-delivery > div { min-width: 0; }
+.invitation-delivery h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+.invitation-delivery p { margin: 8px 0 0; font-size: 13px; line-height: 1.6; color: var(--muted); overflow-wrap: anywhere; }
+.invitation-delivery p.invitation-recipient { margin-top: 4px; font-weight: 500; color: var(--ink); }
+.invitation-delivery p.invitation-delivery-time { font-size: 12px; }
+.invitation-delivery-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 18px;
+}
+.invitation-delivery[data-tone="info"] .invitation-delivery-icon { color: var(--link); background: var(--accent-soft); }
+.invitation-delivery[data-tone="success"] .invitation-delivery-icon { color: var(--positive); background: var(--positive-bg); }
+.invitation-delivery[data-tone="warning"] .invitation-delivery-icon { color: var(--warning); background: var(--warning-bg); }
+.invitation-share-label { font-size: 13px; font-weight: 600; }
+.invitation-share .inline-copy { margin: 10px 0 0; }
+.invitation-share .inline-copy .btn { flex-shrink: 0; }
+.invitation-share .field-hint { margin-top: 8px; }
+.invitation-refresh { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px 12px; }
+.invitation-refresh .field-hint { flex: 1; min-width: 180px; }
+.invitation-refresh .btn { flex-shrink: 0; }
+@media (max-width: 480px) {
+  .invitation-delivery { padding: 14px; gap: 10px; }
+  .invitation-share .inline-copy { flex-wrap: wrap; }
+  .invitation-share .inline-copy .input { flex-basis: 100%; }
+  .invitation-share .inline-copy .btn { width: 100%; }
 }
 .result-score {
   display: flex;

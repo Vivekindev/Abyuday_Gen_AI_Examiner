@@ -10,6 +10,7 @@ import {
 } from "../../components/ui";
 import { api, errorMessage } from "../../lib/api";
 import useResource from "../../hooks/useResource";
+import { DIFFICULTY_OPTIONS, difficultyRating, difficultyValue } from '../../../../shared/difficulty.js';
 
 const models = [
   { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite" },
@@ -19,7 +20,7 @@ const defaults = {
   testName: "",
   prompt: "",
   numQuestions: 10,
-  difficulty: 5,
+  difficulty: 'medium',
   selectedModel: models[0].id,
   teamId: "",
   assessmentMode: "",
@@ -40,9 +41,7 @@ const readDraft = (key) => {
         draft.numQuestions <= 50
           ? Number(draft.numQuestions)
           : 10,
-      difficulty: [2, 5, 8].includes(Number(draft.difficulty))
-        ? Number(draft.difficulty)
-        : 5,
+      difficulty: difficultyValue(draft.difficulty),
       selectedModel: models.some((model) => model.id === draft.selectedModel)
         ? draft.selectedModel
         : models[0].id,
@@ -71,7 +70,7 @@ function AssessmentForm({ userId }) {
       testName: request.title || saved.testName,
       prompt: request.topic || saved.prompt,
       numQuestions: request.questionCount || saved.numQuestions,
-      difficulty: request.difficulty || saved.difficulty,
+      difficulty: difficultyValue(request.difficulty ?? saved.difficulty),
       teamId: location.state.teamId || saved.teamId,
       assessmentMode: "",
       assessmentFormatSelected: false,
@@ -108,6 +107,7 @@ function AssessmentForm({ userId }) {
       const { data } = await api.post("/test/create", {
         ...form,
         numQuestions: Number(form.numQuestions),
+        difficulty: difficultyRating(form.difficulty),
         teamId: form.teamId || undefined,
       });
       try {
@@ -180,12 +180,10 @@ function AssessmentForm({ userId }) {
             <select
               value={form.difficulty}
               onChange={(event) =>
-                change("difficulty", Number(event.target.value))
+                change("difficulty", event.target.value)
               }
             >
-              <option value={2}>Easy</option>
-              <option value={5}>Medium</option>
-              <option value={8}>Hard</option>
+              {DIFFICULTY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
         </div>

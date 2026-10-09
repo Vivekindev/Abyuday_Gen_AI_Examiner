@@ -2,13 +2,14 @@ import { FiBookOpen, FiTarget, FiUsers } from "react-icons/fi";
 import { PageHeading, SectionLink } from "../../components/ui";
 
 const questions = [
+  ["How do I manage email alerts?", "Open Settings → Notifications to turn assessment generation and team updates on or off. Invitations and security emails remain enabled. Team alerts include assessment requests, membership changes, and ownership updates."],
   [
     "How does assessment creation work?",
     "Choose a name and describe the topics you want to cover. Set the number of questions, difficulty, model, and audience, then select Create assessment. You’ll be taken to your assessment library to follow progress.",
   ],
   [
     "Why is my assessment queued or generating?",
-    "Questions are created in the background. Queued means your assessment is waiting for the worker; generating means it is being processed. Your library refreshes every 10 seconds. If generation fails, create a new assessment and try again.",
+    "Questions are created in the background. Queued means your assessment is waiting for the worker; generating means it is being processed. Your library refreshes every 10 seconds. Generation alerts are emailed when delivery is enabled. If generation fails, choose Retry generation from the assessment library or details page.",
   ],
   [
     "How do I share an assessment?",
@@ -28,7 +29,7 @@ const questions = [
   ],
   [
     "How do team invitations work?",
-    "An owner or admin creates an invitation for an email address and shares the generated link. The recipient must sign in with that exact email address. Links expire after seven days and can be revoked from the team’s Invitations tab.",
+    "An owner or admin sends an invitation to an email address. The invitation is emailed when delivery is enabled, and its link can also be copied and shared. The recipient must sign in with that exact email address. Links expire after seven days and can be revoked from the team’s Invitations tab, which also shows email delivery status.",
   ],
   [
     "Where can I review or export results?",

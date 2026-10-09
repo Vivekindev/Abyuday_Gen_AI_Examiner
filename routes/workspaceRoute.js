@@ -8,8 +8,31 @@ import bcrypt from 'bcryptjs';
 import { generateAccessToken, generateRefreshToken } from '../functions/authFunctions.js';
 import { setAuthCookies } from '../functions/authCookies.js';
 import { getPlatformRole } from '../functions/platformAccess.js';
+import { emailEnabled } from '../functions/emailing/transport.js';
+import { queueEmail } from '../functions/emailing/notifications.js';
 
 const router = Router();
+
+router.get('/me/email-preferences', authenticateToken, async (req, res, next) => {
+  try {
+    const user = await findUser(req.user.email);
+    if (!user) return res.sendStatus(401);
+    res.json({ generation: user.emailPreferences?.generation !== false, team: user.emailPreferences?.team !== false, deliveryEnabled: emailEnabled() });
+  } catch (error) { next(error); }
+});
+
+router.patch('/me/email-preferences', authenticateToken, async (req, res, next) => {
+  try {
+    const { generation, team } = req.body || {};
+    if (typeof generation !== 'boolean' || typeof team !== 'boolean') return res.status(400).json({ error: 'Choose your email preferences.' });
+    const user = await findUser(req.user.email);
+    if (!user) return res.sendStatus(401);
+    user.emailPreferences = { generation, team };
+    await user.save();
+    req.activity = { action: 'email_preferences.updated' };
+    res.json({ generation, team, deliveryEnabled: emailEnabled() });
+  } catch (error) { next(error); }
+});
 
 router.get('/me/attempts', authenticateToken, async (req, res, next) => {
   try {
@@ -113,6 +136,7 @@ router.post('/me/password', authenticateToken, async (req, res, next) => {
     const identity = { email: user.email, version: user.tokenVersion };
     setAuthCookies(res, user, generateAccessToken(identity), generateRefreshToken(identity));
     req.activity = { action: 'password.changed' };
+    await queueEmail({ key: `password:${user.id}:${user.tokenVersion}`, event: 'password.changed', category: 'security', email: user.email, user: user._id, payload: { name: user.userName, title: 'Your password was changed', message: 'Your Abyuday password was changed and your other sessions were signed out. If you did not make this change, secure your account immediately.', actionLabel: 'Open security settings', actionPath: '/dashboard/settings?tab=security', preferences: false } }).catch((error) => console.error('Could not queue security notification:', { code: error.code || 'QUEUE_ERROR' }));
     res.json({ changed: true });
   } catch (error) { next(error); }
 });

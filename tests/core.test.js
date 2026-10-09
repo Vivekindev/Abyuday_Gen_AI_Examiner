@@ -101,7 +101,10 @@ test('team access, invitation, and exam answers stay scoped', async (t) => {
   assert.equal(results.status, 200);
   assert.equal(results.data[0].score, 1);
   const memberResults = await request(`/api/teams/${teamId}/results`, { cookie: memberCookie });
-  assert.equal(memberResults.status, 403);
+  // Current members can compare rankings; users outside the team cannot.
+  assert.equal(memberResults.status, 200);
+  assert.equal(memberResults.data[0].score, 1);
+  assert.equal((await request(`/api/teams/${teamId}/results`, { cookie: outsiderCookie })).status, 404);
   await t.test('platform access is separate from team roles and revoked immediately', async () => {
     const previousOwner = process.env.PLATFORM_OWNER_EMAIL;
     process.env.PLATFORM_OWNER_EMAIL = '';

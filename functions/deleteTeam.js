@@ -6,6 +6,7 @@ import Tasks from '../models/pendingTasksDB.js';
 import Generated from '../models/generatedTests.js';
 import Attempts from '../models/testWindow.js';
 import { AssessmentEngine, EngineRequest } from '../models/assessmentEngine.js';
+import { cancelPendingEmails } from './emailing/notifications.js';
 
 const conflict = (message) => Object.assign(new Error(message), { status: 409 });
 
@@ -35,6 +36,7 @@ export async function deleteTeam(team, ownerId) {
     const generated = await Generated.find({ team: team._id }).select('testID').lean();
     const testIDs = [...new Set([...tasks, ...generated].map((test) => test.testID))];
     const related = { $or: [{ team: team._id }, { testID: { $in: testIDs } }] };
+    await cancelPendingEmails({ team: team._id });
 
     await Attempts.deleteMany({ testID: { $in: testIDs } });
     await EngineRequest.deleteMany(related);

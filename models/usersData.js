@@ -17,7 +17,11 @@ const userSchema = new mongoose.Schema({
     type : String,
     
   },
-  tokenVersion: { type: Number, default: 0 }
+  tokenVersion: { type: Number, default: 0 },
+  emailPreferences: {
+    generation: { type: Boolean, default: true },
+    team: { type: Boolean, default: true },
+  },
 });
 
 const usersData = mongoose.model('usersData', userSchema);

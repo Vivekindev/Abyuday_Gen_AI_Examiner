@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FiCheck, FiLock, FiShield } from "react-icons/fi";
-import { Avatar, Button, ErrorNotice, PageHeading } from "../../components/ui";
+import { Avatar, Button, ErrorNotice, LoadingState, PageHeading } from "../../components/ui";
 import { api, errorMessage } from "../../lib/api";
 import { useTheme } from "../../theme/context";
+import useResource from '../../hooks/useResource';
 
 export default function Settings() {
   const { me, setMe } = useOutletContext();
   const [params, setParams] = useSearchParams();
-  const tab = ["security", "appearance"].includes(params.get("tab"))
+  const tab = ["security", "appearance", "notifications"].includes(params.get("tab"))
     ? params.get("tab")
     : "profile";
   const { preference, setPreference } = useTheme();
@@ -21,6 +22,22 @@ export default function Settings() {
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const emailSettings = useResource(tab === 'notifications' ? '/me/email-preferences' : null);
+  const [emailPreferences, setEmailPreferences] = useState({ generation: true, team: true });
+  useEffect(() => {
+    if (emailSettings.data) setEmailPreferences({ generation: emailSettings.data.generation, team: emailSettings.data.team });
+  }, [emailSettings.data]);
+  const saveEmailPreferences = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const { data } = await api.patch('/me/email-preferences', emailPreferences);
+      emailSettings.setData(data);
+      toast.success('Email preferences saved');
+    } catch (requestError) { setError(errorMessage(requestError)); }
+    finally { setBusy(false); }
+  };
   useEffect(() => {
     setName(me?.name || "");
   }, [me?.name]);
@@ -60,7 +77,7 @@ export default function Settings() {
   };
   return (
     <div className="settings-layout route-transition">
-      <PageHeading title="Settings" description="Manage your profile, security, and appearance." />
+      <PageHeading title="Settings" description="Manage your profile, security, notifications, and appearance." />
       <nav className="tabs" aria-label="Settings sections">
         <button
           className={tab === "profile" ? "active" : ""}
@@ -89,9 +106,28 @@ export default function Settings() {
         >
           Appearance
         </button>
+        <button className={tab === 'notifications' ? 'active' : ''} aria-pressed={tab === 'notifications'} onClick={() => { setParams({ tab: 'notifications' }); setError(''); }}>Notifications</button>
       </nav>
       <ErrorNotice message={error} />
-      {tab === "appearance" ? (
+      {tab === 'notifications' ? (
+        <section className="panel">
+          <div className="settings-section">
+            <div><h2>Email notifications</h2><p>Sent to {me?.email}. Choose which updates you receive.</p></div>
+            <div>
+              <ErrorNotice message={emailSettings.error} onRetry={emailSettings.reload} />
+              {emailSettings.loading && !emailSettings.data ? <LoadingState rows={2} /> : emailSettings.data && <form className="settings-form" onSubmit={saveEmailPreferences}>
+                {!emailSettings.data.deliveryEnabled && <div className="notice notice-info">Email delivery is not configured yet. Your preferences will still be saved.</div>}
+                {[
+                  ['generation', 'Assessment generation', 'Get notified when your assessment is ready or generation fails, and when a new team assessment is available.'],
+                  ['team', 'Team updates', 'Assessment requests, membership changes, and ownership updates for your teams.'],
+                ].map(([key, label, description]) => <label className="notification-option" key={key}><input type="checkbox" checked={emailPreferences[key]} onChange={(event) => setEmailPreferences((previous) => ({ ...previous, [key]: event.target.checked }))} disabled={busy} /><span><strong>{label}</strong><small>{description}</small></span></label>)}
+                <p className="field-hint">Invitations and account security emails are always sent when delivery is enabled.</p>
+                <div className="form-actions"><Button type="submit" icon={FiCheck} disabled={busy || (emailPreferences.generation === emailSettings.data.generation && emailPreferences.team === emailSettings.data.team)}>{busy ? 'Saving…' : 'Save preferences'}</Button></div>
+              </form>}
+            </div>
+          </div>
+        </section>
+      ) : tab === "appearance" ? (
         <section className="panel">
           <div className="settings-section">
             <div>

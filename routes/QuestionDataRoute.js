@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { difficultyLabel } from '../shared/difficulty.js';
 import { authenticateToken } from '../functions/authFunctions.js';
 import findUser from '../functions/findUser.js';
 import generatedTests from '../models/generatedTests.js';
@@ -34,7 +35,7 @@ router.post('/test/getinfo', authenticateToken, async (req, res, next) => {
       noOfQuestions: Number(details.questionCount), testTime: generated ? `${assessmentMinutes(generated.response)} minutes` : details.assessmentMode === 'interactive' ? 'Calculated when ready' : `${details.questionCount} minutes`,
       assessmentMode: details.assessmentMode || 'mcq', generationStage: details.generationStage,
       questionKinds: generated ? [...new Set(generated.response.map((q) => q.kind || 'mcq'))] : [],
-      difficulty: Number(details.testDifficulty) >= 7 ? 'Hard' : Number(details.testDifficulty) >= 4 ? 'Medium' : 'Easy',
+      difficulty: difficultyLabel(details.testDifficulty),
       status: generated ? 'Ready' : details.status,
       attemptStatus,
       generationError: details.status === 'Error' && (details.team ? canManageTeam(membership.role) : String(details.user?._id) === String(user._id)) ? details.generationError : undefined,
