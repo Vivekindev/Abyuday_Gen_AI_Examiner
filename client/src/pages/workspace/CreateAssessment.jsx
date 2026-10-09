@@ -129,15 +129,15 @@ function AssessmentForm({ userId }) {
     }
   };
   return (
-    <div className="create-layout">
+    <div className="route-transition">
       <PageHeading
         title="Create assessment"
         description="Turn a topic into questions, experiments, and hands-on challenges."
       ><Button variant="secondary" to="/dashboard/labs">Try interactive examples</Button></PageHeading>
-      <form className="panel creation-form form-stack" onSubmit={submit}>
+      <form className="panel creation-form create-layout form-stack" onSubmit={submit}>
         <ErrorNotice message={error} />
         <label className="field">Assessment format<select required value={form.assessmentMode} onChange={(event) => change('assessmentMode', event.target.value)}><option value="" disabled>Choose an assessment format</option><option value="mcq">Multiple choice only</option><option value="interactive">Interactive — choose activities for my topic</option></select><small>{form.assessmentMode === 'interactive' ? 'Chooses from pair connections, word puzzles, diagrams, code detective, number lines, circuits, graphs, and more to fit your topic. Each question is worth one point.' : form.assessmentMode === 'mcq' ? 'Four answer choices per question.' : 'Choose the type of questions you want to create.'}</small></label>
-        {form.assessmentMode === 'interactive' && <div className="notice notice-info"><span>Describe what students should change, calculate, label, or solve. When an existing engine does not fit, a builder automatically creates a reusable workbench with controls and live measurements. Track its requirements and progress in the Engine library.</span></div>}
+        {form.assessmentMode === 'interactive' && <div className="notice notice-info"><span>Describe what learners should change, calculate, label, or solve. Activities are chosen to fit your topic. Explore available formats in the Engine library.</span></div>}
         <label className="field">
           Name
           <input

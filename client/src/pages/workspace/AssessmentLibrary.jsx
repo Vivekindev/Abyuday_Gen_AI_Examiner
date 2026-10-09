@@ -101,12 +101,11 @@ export default function AssessmentLibrary() {
   );
   return (
     <div className="route-transition">
-      <PageHeading title="Assessments">
+      <PageHeading title="Assessments" description="Create, share, and manage your personal and team assessments.">
         <Button to="/dashboard/create" icon={FiPlus}>
           Create assessment
         </Button>
       </PageHeading>
-      <p className="section-description library-management-note">Manage assessments you created and assessments shared with teams you administer. Deleting removes their attempts and results.</p>
       {params.get("created") && (
         <div className="notice notice-success" role="status">
           <FiCheckQueued />

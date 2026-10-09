@@ -11,6 +11,9 @@ import {
   FiArrowRight,
   FiBookOpen,
   FiGrid,
+  FiLayers,
+  FiCompass,
+  FiChevronRight,
   FiHelpCircle,
   FiLogOut,
   FiMenu,
@@ -51,8 +54,8 @@ const primary = [
   { label: "Teams", to: "/dashboard/teams", icon: FiUsers },
 ];
 const secondary = [
-  { label: 'Engine library', to: '/dashboard/engines', icon: FiGrid },
-  { label: 'Interaction playground', to: '/dashboard/labs', icon: FiGrid },
+  { label: 'Engine library', to: '/dashboard/engines', icon: FiLayers },
+  { label: 'Interaction playground', to: '/dashboard/labs', icon: FiCompass },
   { label: "Settings", to: "/dashboard/settings", icon: FiSettings },
   { label: "Help", to: "/dashboard/help", icon: FiHelpCircle },
 ];
@@ -265,6 +268,7 @@ export default function Workspace() {
         </div>
         <Button
           to="/dashboard/create"
+          variant="secondary"
           icon={FiPlus}
           className="sidebar-create"
           title="Create assessment"
@@ -272,11 +276,14 @@ export default function Workspace() {
         >
           Create assessment
         </Button>
+        <p className="sidebar-section-label" aria-hidden="true">Workspace</p>
         <nav aria-label="Workspace">
           {[...primary, ...adminItems].map(navLink)}
         </nav>
+        <p className="sidebar-section-label sidebar-tools-label" aria-hidden="true">Learning tools</p>
+        <nav aria-label="Learning tools">{secondary.slice(0, 2).map(navLink)}</nav>
         <div className="sidebar-bottom">
-          <nav aria-label="Account and tools">{secondary.map(navLink)}</nav>
+          <nav aria-label="Account">{secondary.slice(2).map(navLink)}</nav>
           <div className="sidebar-profile">
             <Link to="/dashboard/settings" aria-label="Account settings">
               <Avatar name={user.data?.name || "User"} />
@@ -312,7 +319,8 @@ export default function Workspace() {
             >
               <FiMenu />
             </button>
-            <strong>{current?.label || "Workspace"}</strong>
+            <span className="breadcrumb-root">Workspace <FiChevronRight aria-hidden="true" /></span>
+            <strong>{current?.label || "Overview"}</strong>
           </div>
           <div className="topbar-actions">
             <button

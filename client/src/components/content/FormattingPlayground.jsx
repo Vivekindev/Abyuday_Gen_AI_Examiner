@@ -26,10 +26,11 @@ CODE_FENCE
 
 export default function FormattingPlayground() {
   const [source, setSource] = useState(example);
-  return <section className="panel formatting-preview">
-    <h2>Content formatting playground</h2>
-    <p className="lab-preview-note">Try equations, code, tables, lists, or emphasis. This uses the same renderer as assessments and makes no AI calls.</p>
-    <label className="field">Source content<textarea value={source} maxLength={12000} onChange={(event) => setSource(event.target.value)} spellCheck={false} /></label>
-    <div className="formatting-preview-output"><RichContent text={source} /></div>
+  return <section className="panel formatting-preview" aria-labelledby="formatting-preview-title">
+    <div className="panel-heading"><div><h2 id="formatting-preview-title">Content formatting</h2><p>Preview equations, code, tables, and formatted text.</p></div></div>
+    <div className="panel-padding formatting-preview-grid">
+      <label className="field">Content<textarea value={source} maxLength={12000} onChange={(event) => setSource(event.target.value)} spellCheck={false} /></label>
+      <div className="formatting-preview-output"><h3>Preview</h3><RichContent text={source} /></div>
+    </div>
   </section>;
 }

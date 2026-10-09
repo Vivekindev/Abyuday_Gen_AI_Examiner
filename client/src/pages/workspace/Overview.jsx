@@ -38,7 +38,7 @@ export default function Overview() {
   const data = overview.data;
   return (
     <div>
-      <PageHeading title="Overview">
+      <PageHeading title="Overview" description="Your assessments, recent activity, and learning progress.">
         <Button to="/dashboard/create" variant="secondary" icon={FiPlus}>
           Create assessment
         </Button>
@@ -57,10 +57,7 @@ export default function Overview() {
           <div className="stat-card" key={label}>
             <span className="stat-top">
               {label}
-              <span
-                className={`stat-icon stat-icon-${label.toLowerCase()}`}
-                aria-hidden="true"
-              >
+              <span className="stat-icon" aria-hidden="true">
                 <Icon />
               </span>
             </span>

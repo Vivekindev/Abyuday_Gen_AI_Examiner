@@ -1,6 +1,6 @@
 .admin-metrics {
   margin: 0;
-  padding: 8px 24px;
+  padding: 8px var(--panel-padding);
 }
 .admin-metrics > div {
   display: flex;
@@ -22,7 +22,7 @@
 }
 .admin-access h2,
 .admin-page .panel-padding h2 {
-  font-size: 17px;
+  font-size: var(--text-section);
   margin-bottom: 12px;
 }
 .admin-page .panel-padding > .btn {
@@ -71,7 +71,7 @@
   margin-top: 5px;
 }
 .admin-audit li {
-  padding: 18px 24px;
+  padding: 20px var(--panel-padding);
   border-top: 1px solid var(--line);
 }
 .admin-audit li:first-child {
@@ -102,10 +102,6 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.pagination .btn {
-  width: auto;
-  padding: 8px 12px;
-}
 .admin-page .data-table td {
   overflow-wrap: anywhere;
 }
@@ -119,8 +115,5 @@
   }
   .admin-members li > div {
     min-width: 60%;
-  }
-  .admin-audit li {
-    padding: 18px 20px;
   }
 }

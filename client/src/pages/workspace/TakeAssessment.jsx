@@ -142,7 +142,7 @@ export default function TakeAssessment() {
             </section>
           )}
           {details && (
-            <section className={`panel test-preview ${details.status === 'Ready' ? 'test-preview-ready' : ''}`} aria-labelledby="assessment-preview-title">
+            <section className="panel test-preview" aria-labelledby="assessment-preview-title">
               <div className="preview-top">
                 <span className="assessment-glyph">
                   <FiBookOpen />
@@ -199,8 +199,8 @@ export default function TakeAssessment() {
         </div>
         <aside className="panel take-guide" aria-labelledby="take-guide-title">
           <span className="take-guide-icon" aria-hidden="true"><FiTarget /></span>
-          <h2 id="take-guide-title">A little focus goes a long way.</h2>
-          <p>Settle in before you start.</p>
+          <h2 id="take-guide-title">Before you start</h2>
+          <p>A few things to know about your assessment.</p>
           <ul>
             <li><FiClock aria-hidden="true" /><div><strong>Make time</strong><span>The timer keeps running if you leave the assessment.</span></div></li>
             <li><FiCheckCircle aria-hidden="true" /><div><strong>Go at your pace</strong><span>Answers save automatically. You can move between questions.</span></div></li>

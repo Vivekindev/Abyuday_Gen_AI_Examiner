@@ -50,7 +50,7 @@ const questions = [
 export default function Help() {
   return (
     <div className="route-transition">
-      <PageHeading title="Help" />
+      <PageHeading title="Help" description="Guides and answers for assessments, teams, and your account." />
       <div className="help-grid">
         {[
           [
@@ -76,7 +76,7 @@ export default function Help() {
           ],
         ].map(([Icon, title, description, to, label]) => (
           <article className="panel help-card" key={to}>
-            <Icon />
+            <Icon aria-hidden="true" />
             <h2>{title}</h2>
             <p>{description}</p>
             <SectionLink to={to}>{label}</SectionLink>

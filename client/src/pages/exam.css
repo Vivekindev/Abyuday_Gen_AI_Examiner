@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
+  padding: 0 var(--page-gutter);
   gap: 16px;
   position: sticky;
   top: 0;
@@ -37,18 +37,18 @@
 .assessment-container {
   max-width: 1360px;
   margin: auto;
-  padding: 36px 32px 64px;
+  padding: 32px var(--page-gutter) 64px;
 }
 .assessment-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 .assessment-heading h1 {
   font-family: var(--font-brand);
-  font-size: clamp(23px, 2.5vw, 32px);
+  font-size: var(--text-title);
   font-weight: 700;
   letter-spacing: -0.5px;
   overflow-wrap: anywhere;
@@ -109,12 +109,12 @@
   overflow: hidden;
   grid-area: question;
   min-width: 0;
-  border-radius: 16px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow-soft);
 }
 .assessment-sidebar { grid-area: map; min-width: 0; position: sticky; top: 88px; max-height: calc(100dvh - 112px); overflow-y: auto; scrollbar-width: thin; }
 .question-top {
-  padding: 20px 28px;
+  padding: 20px var(--panel-padding);
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
@@ -142,7 +142,7 @@
   border: 1px solid var(--line);
   background: var(--surface);
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   color: var(--muted);
   font-size: 12px;
 }
@@ -152,7 +152,7 @@
   border-color: var(--warning);
 }
 .question-body {
-  padding: 32px 28px;
+  padding: 32px var(--panel-padding);
 }
 .question-body h2 {
   font-size: 20px;
@@ -270,7 +270,7 @@
   margin-top: 8px;
 }
 .question-footer {
-  padding: 20px 24px;
+  padding: 20px var(--panel-padding);
   border-top: 1px solid var(--line);
   display: flex;
   align-items: center;
@@ -292,11 +292,11 @@
 .save-retry { background: transparent; color: var(--link); min-height: 44px; padding: 6px; border: 0; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
 .question-map {
   padding: 20px;
-  border-radius: 16px;
+  border-radius: var(--radius);
 }
 .question-map h2 {
-  font-size: 15px;
-  font-weight: 550;
+  font-size: var(--text-section);
+  font-weight: 600;
   margin: 0;
 }
 .question-map-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
@@ -387,8 +387,8 @@
   align-items: center;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 28px;
+  border-radius: var(--radius);
+  padding: var(--panel-padding);
   margin-bottom: 24px;
 }
 .score-summary-copy .btn { margin-top: 14px; }
@@ -570,7 +570,7 @@
   }
   .assessment-heading > div:first-child { flex: 1 1 180px; }
   .assessment-heading h1 {
-    font-size: 21px;
+    font-size: var(--text-title);
   }
   .assessment-timer {
     padding: 4px 10px;

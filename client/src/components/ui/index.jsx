@@ -105,7 +105,18 @@ export function EmptyState({
         <Icon />
       </span>
       <h3>{title}</h3>
-      <p>{description}</p>
+      {description && <p>{description}</p>}
+      {children}
+    </div>
+  );
+}
+export function SectionHeading({ id, title, description, children }) {
+  return (
+    <div className="section-header">
+      <div>
+        <h2 id={id}>{title}</h2>
+        {description && <p>{description}</p>}
+      </div>
       {children}
     </div>
   );
@@ -242,6 +253,7 @@ Button.propTypes = {
 Avatar.propTypes = { name: PropTypes.string, size: PropTypes.string, color: PropTypes.string };
 Status.propTypes = { value: PropTypes.string };
 PageHeading.propTypes = { eyebrow: PropTypes.node, title: PropTypes.node, description: PropTypes.node, children: PropTypes.node };
+SectionHeading.propTypes = { id: PropTypes.string, title: PropTypes.node, description: PropTypes.node, children: PropTypes.node };
 EmptyState.propTypes = { icon: PropTypes.elementType, title: PropTypes.node, description: PropTypes.node, children: PropTypes.node };
 ErrorNotice.propTypes = { message: PropTypes.string, onRetry: PropTypes.func };
 LoadingState.propTypes = { rows: PropTypes.number };

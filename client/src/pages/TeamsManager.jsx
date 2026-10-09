@@ -229,7 +229,7 @@ export default function TeamsManager() {
     })[dialog?.type] || '';
   return (
     <div className="route-transition">
-      <PageHeading title="Teams & people">
+      <PageHeading title="Teams & people" description="Manage your teams, shared assessments, and member access.">
         <Button id="create-team-button" icon={FiPlus} onClick={() => openDialog({ type: "create" })}>
           Create a team
         </Button>
@@ -247,6 +247,7 @@ export default function TeamsManager() {
               <Link
                 key={item.id}
                 className={selectedId === item.id ? "active" : ""}
+                aria-current={selectedId === item.id ? "page" : undefined}
                 to={`/dashboard/teams?team=${item.id}`}
               >
                 <span className="team-initial">
@@ -320,6 +321,7 @@ export default function TeamsManager() {
                     <nav className="tabs" aria-label="Team sections">
                       <button
                         className={tab === "members" ? "active" : ""}
+                        aria-pressed={tab === "members"}
                         onClick={() => changeTab("members")}
                       >
                         Members
@@ -327,6 +329,7 @@ export default function TeamsManager() {
                       </button>
                       <button
                         className={tab === "requests" ? "active" : ""}
+                        aria-pressed={tab === "requests"}
                         onClick={() => changeTab("requests")}
                         disabled={team.deleting}
                       >
@@ -336,18 +339,21 @@ export default function TeamsManager() {
                         <>
                           <button
                             className={tab === "invitations" ? "active" : ""}
+                            aria-pressed={tab === "invitations"}
                             onClick={() => changeTab("invitations")}
                           >
                             Invitations
                           </button>
                           <button
                             className={tab === "results" ? "active" : ""}
+                            aria-pressed={tab === "results"}
                             onClick={() => changeTab("results")}
                           >
                             Results
                           </button>
                           <button
                             className={tab === "activity" ? "active" : ""}
+                            aria-pressed={tab === "activity"}
                             onClick={() => changeTab("activity")}
                           >
                             Usage & activity
@@ -672,7 +678,7 @@ export default function TeamsManager() {
           <section className="panel">
             <EmptyState
               icon={FiUsers}
-              title="Good things happen together"
+              title="No teams yet"
               description="Create a team to share assessments, invite collaborators, and follow everyone’s progress."
             >
               <Button

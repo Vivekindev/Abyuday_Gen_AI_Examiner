@@ -129,7 +129,7 @@ export default function Results() {
     (tab === "scoreboard" && !selectedTeam && (globalCatalog.loading || (!!selectedPersonalTestId && personalRankingResource.loading)));
   return (
     <div>
-      <PageHeading title="Results">
+      <PageHeading title="Results" description="Review attempts, follow progress, and compare assessment rankings.">
         <Button
           variant="secondary"
           icon={FiDownload}

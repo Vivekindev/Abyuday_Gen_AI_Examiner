@@ -60,7 +60,7 @@ export default function Settings() {
   };
   return (
     <div className="settings-layout route-transition">
-      <PageHeading title="Settings" />
+      <PageHeading title="Settings" description="Manage your profile, security, and appearance." />
       <nav className="tabs" aria-label="Settings sections">
         <button
           className={tab === "profile" ? "active" : ""}

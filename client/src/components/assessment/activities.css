@@ -69,25 +69,18 @@
 .numberline-confirm { margin:0 auto; }
 .activity-solution { padding:18px; border:1px solid var(--positive); background:var(--positive-bg); border-radius:12px; margin-top:20px; font-size:14px; line-height:1.7; }
 .activity-solution ul { margin:0; padding-left:18px; }
-.playground-intro { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:28px; background:linear-gradient(120deg,var(--accent-soft),var(--surface)); border:1px solid var(--line); border-radius:16px; margin-bottom:24px; }
-.playground-eyebrow { display:flex; align-items:center; gap:8px; color:var(--link); font-size:11px; font-weight:700; letter-spacing:1.2px; }
-.playground-intro h2 { font-size:24px; font-weight:650; letter-spacing:-.5px; margin:12px 0 8px; }
-.playground-intro p { max-width:600px; color:var(--muted); font-size:14px; line-height:1.7; }
-.playground-counter { flex:none; text-align:center; padding:10px 24px; border-left:1px solid var(--line); }
-.playground-counter strong { display:block; font-size:42px; color:var(--link); font-weight:600; }
-.playground-counter span { font-size:12px; color:var(--muted); }
-.activity-gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:28px; }
-.activity-gallery > button { display:flex; flex-direction:column; align-items:flex-start; gap:9px; text-align:left; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--ink); min-width:0; transition:border-color .15s,transform .15s; }
-.activity-gallery > button:hover { border-color:var(--link); transform:translateY(-2px); }
+.activity-gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%, 200px),1fr)); gap:16px; margin-bottom:32px; }
+.activity-gallery > button { display:flex; flex-direction:column; align-items:flex-start; gap:12px; text-align:left; padding:20px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); color:var(--ink); min-width:0; transition:border-color .15s,background .15s; }
+.activity-gallery > button:hover { border-color:var(--link); background:var(--subtle); }
 .activity-gallery > button[aria-pressed=true] { background:var(--accent-soft); border-color:var(--link); box-shadow:inset 0 0 0 1px var(--link); }
 .gallery-card-top { display:flex; align-items:center; justify-content:space-between; width:100%; color:var(--link); }
 .gallery-number { font-size:11px; font-variant-numeric:tabular-nums; color:var(--muted); }
-.gallery-new { color:var(--link); background:var(--accent-soft); border-radius:20px; font-size:10px; padding:3px 7px; }
 .activity-gallery strong { font-size:14px; }
 .activity-gallery button > span:not(.gallery-card-top) { font-size:12px; color:var(--muted); line-height:1.6; }
-.activity-gallery small { margin-top:auto; padding-top:6px; color:var(--muted); font-size:10px; }
-.activity-playground .lab-preview-panel { max-width:900px; }
-.playground-question-meta { display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px; color:var(--muted); font-size:11px; letter-spacing:.5px; }
+.activity-gallery small { margin-top:auto; padding-top:4px; color:var(--muted); font-size:12px; }
+.activity-playground .lab-preview-panel { max-width:none; padding:var(--panel-padding); }
+.activity-playground .formatting-preview { max-width:none; }
+.playground-question-meta { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; color:var(--muted); font-size:12px; }
 .activity-playground .assessment-question-content { font-size:19px; font-weight:500; line-height:1.65; }
 .practice-feedback { display:flex; align-items:flex-start; gap:12px; background:var(--subtle); border:1px solid var(--line); border-radius:12px; padding:18px; margin-top:22px; font-size:14px; }
 .practice-feedback p { color:var(--muted); font-size:13px; line-height:1.6; margin-top:5px; }
@@ -97,13 +90,10 @@
 .activity-playground .lab-preview-note { margin-bottom:0; }
 .interactive-question button:focus-visible, .interactive-question input:focus-visible { outline:3px solid var(--link); outline-offset:3px; }
 @media(max-width:540px) {
-  .playground-intro { padding:20px; }
-  .playground-intro h2 { font-size:21px; }
-  .playground-counter { display:none; }
-  .activity-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
-  .activity-gallery > button { padding:13px; }
+  .activity-gallery { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .activity-gallery > button { padding:16px; }
   .activity-gallery strong { font-size:13px; }
-  .activity-gallery button > span:not(.gallery-card-top) { font-size:11px; }
+  .activity-gallery button > span:not(.gallery-card-top) { font-size:12px; }
   .activity-mission { padding:14px; gap:10px; flex-wrap:wrap; }
   .activity-mission progress { width:100%; }
   .pair-board { grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr); }

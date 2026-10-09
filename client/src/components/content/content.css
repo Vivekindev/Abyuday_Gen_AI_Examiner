@@ -39,7 +39,11 @@
 .rich-content .hljs-title, .rich-content .hljs-name, .rich-content .hljs-selector-class { color: var(--link); }
 .rich-content .hljs-meta, .rich-content .hljs-symbol, .rich-content .hljs-variable { color: var(--negative); }
 .question-body .assessment-question-content { font-size: 20px; line-height: 1.65; font-weight: 500; margin-bottom: 16px; }
-.formatting-preview { margin-top: 24px; max-width: 820px; padding: 24px; }
-.formatting-preview textarea { width: 100%; min-height: 220px; resize: vertical; font-family: ui-monospace, monospace; font-size: 13px; }
-.formatting-preview-output { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 20px; }
-@media (max-width: 540px) { .question-body .assessment-question-content { font-size: 18px; } .formatting-preview { padding: 16px; } }
+.formatting-preview { margin-top: 32px; }
+.formatting-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.formatting-preview textarea { width: 100%; min-height: 360px; resize: vertical; font-family: ui-monospace, monospace; font-size: 13px; }
+.formatting-preview-output { min-width: 0; }
+.formatting-preview-output > h3 { font-family: inherit; font-size: 14px; font-weight: 500; letter-spacing: normal; margin-bottom: 12px; }
+.formatting-preview-output > .rich-content { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-control); }
+@media (max-width: 767px) { .formatting-preview-grid { grid-template-columns: minmax(0, 1fr); } .formatting-preview textarea { min-height: 240px; font-size: 16px; } }
+@media (max-width: 540px) { .question-body .assessment-question-content { font-size: 18px; } }
