@@ -9,6 +9,7 @@ const schema = new mongoose.Schema({
   team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team', default: null, index: true },
   testID: { type: String, index: true },
   invite: { type: mongoose.Schema.Types.ObjectId, ref: 'TeamInvite', default: null, index: true },
+  platformAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'PlatformAdmin', default: null },
   requiresMembership: { type: Boolean, default: true },
   requiredRoles: { type: [String], enum: ['owner', 'admin', 'member'], default: [] },
   payload: { type: mongoose.Schema.Types.Mixed, select: false },

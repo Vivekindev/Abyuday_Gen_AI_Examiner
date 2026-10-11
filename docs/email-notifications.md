@@ -36,9 +36,11 @@ password and keep its replacement in local or deployment secrets.
 | Member leaves or is removed | Current owners/admins; removed member receives a separate notice |
 | Ownership transferred or team deleted | Other team members |
 | Password changed | Account holder |
+| Platform admin access granted | Account receiving access |
 
 Users can disable generation and team emails in **Settings → Notifications**.
-Invitations and security messages are transactional and remain enabled.
+Invitations and security messages, including platform admin access notifications,
+are transactional and remain enabled.
 Answer saves, page views, and ordinary test activity do not generate emails.
 
 ## Delivery
@@ -52,9 +54,15 @@ expire after 30 days.
 The web process and `npm run worker` start a mail worker. Set
 `RUN_MAIL_WORKER=false` on processes that should not deliver mail. Atomic leases
 allow multiple processes to share the outbox. Delivery retries up to six times
-with increasing delays. SMTP errors do not fail generation or team actions.
+with increasing delays. SMTP errors do not fail generation, team actions, or
+platform admin access grants.
 Invitations display queued, sending, sent, retrying, failed, or disabled status.
 "Sent" means SMTP accepted the email; it does not guarantee inbox delivery.
+
+After granting platform admin access, the owner sees whether the notification
+was queued or email delivery is unavailable. Queueing failures are reported
+without undoing the access grant. The email identifies the new role and who
+granted it, with a link to the Admin area.
 
 After creating an invitation, the dialog follows its delivery status while it
 is open. Queued/sending messages refresh every five seconds; other states
@@ -76,11 +84,14 @@ Generation notifications reconcile after a crash. Duplicate generation event
 records are suppressed by their assessment, generation attempt, and recipient.
 SMTP cannot promise exactly-once delivery if a process stops after sending but
 before recording success; deterministic Message-IDs help mail clients recognize
-such redeliveries.
+such redeliveries. Platform admin notifications are deduplicated by their access
+grant and recipient; granting access again after revocation creates a new event.
 
 Before sending, the worker checks preferences, current membership, assessment
-status, and invitation validity. Revoked/accepted invitations and deleted teams
-or assessments cancel pending mail. An SMTP send already in flight cannot be
+status, invitation validity, and the specific platform admin access grant.
+Revoking access cancels its pending grant notification when the worker processes
+it, even if the account is granted access again later. Revoked/accepted
+invitations and deleted teams or assessments cancel pending mail. An SMTP send already in flight cannot be
 recalled. Raw invitation links are never exposed by the invitation list API.
 
 Tests use an injected mock sender; they never send mail to real recipients.

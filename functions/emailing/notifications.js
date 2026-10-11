@@ -6,10 +6,10 @@ import { difficultyLabel } from '../../shared/difficulty.js';
 import { emailEnabled } from './transport.js';
 import { sealPayload } from './payload.js';
 
-export async function queueEmail({ key, event, category, email, user = null, team = null, testID, invite = null, requiresMembership = true, requiredRoles = [], payload }) {
+export async function queueEmail({ key, event, category, email, user = null, team = null, testID, invite = null, platformAdmin = null, requiresMembership = true, requiredRoles = [], payload }) {
   if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return false;
   const recipient = email.trim().toLowerCase();
-  await EmailOutbox.updateOne({ key: `${key}:${recipient}` }, { $setOnInsert: { event, category, email: recipient, user, team, testID, invite, requiresMembership, requiredRoles, payload: sealPayload(payload) } }, { upsert: true });
+  await EmailOutbox.updateOne({ key: `${key}:${recipient}` }, { $setOnInsert: { event, category, email: recipient, user, team, testID, invite, platformAdmin, requiresMembership, requiredRoles, payload: sealPayload(payload) } }, { upsert: true });
   return true;
 }
 
@@ -25,6 +25,27 @@ async function queueForUsers(userIds, notification) {
 async function safelyQueue(action) {
   try { await action(); return emailEnabled() ? 'queued' : 'disabled'; }
   catch (error) { console.error('Could not queue notification:', { code: error.code || 'QUEUE_ERROR' }); return 'failed'; }
+}
+
+export function notifyPlatformAdminGranted({ admin, user, actor }) {
+  return safelyQueue(async () => {
+    const queued = await queueEmail({
+      key: `platform.admin_granted:${admin._id}`, event: 'platform.admin_granted', category: 'security',
+      email: user.email, user: user._id, platformAdmin: admin._id,
+      payload: {
+        name: user.userName || 'there',
+        title: 'You now have platform admin access',
+        heading: 'Platform admin access granted',
+        preheader: 'Your account can now access the Admin area on Abyuday.',
+        message: 'Your account now has platform admin access on Abyuday. Open the Admin area to view users, teams, assessments, results, and usage across the app.',
+        details: [['Role', 'Platform admin'], ['Granted by', actor.userName || actor.email || 'Platform owner']],
+        actionLabel: 'Open Admin', actionPath: '/dashboard/admin',
+        note: `Sign in with ${user.email}. Contact the platform owner if you weren’t expecting this access change.`,
+        preferences: false,
+      },
+    });
+    if (!queued) throw Object.assign(new Error('Invalid notification recipient.'), { code: 'INVALID_RECIPIENT' });
+  });
 }
 
 export function notifyInvite(invite, token, team, actor) {

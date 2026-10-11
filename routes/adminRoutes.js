@@ -10,6 +10,7 @@ import PlatformAdmin from "../models/platformAdmin.js";
 import AdminAudit from "../models/adminAudit.js";
 import Generated from "../models/generatedTests.js";
 import { EngineRequest } from "../models/assessmentEngine.js";
+import { notifyPlatformAdminGranted } from "../functions/emailing/notifications.js";
 
 const router = Router();
 router.use("/admin", authenticateToken, requirePlatformAdmin);
@@ -380,7 +381,8 @@ router.post("/admin/members", ownerOnly, async (req, res, next) => {
       throw error;
     }
     req.activity = { action: 'platform.admin_granted', targetUser: target._id };
-    res.status(201).json({ ...person(target), role: "admin" });
+    const emailStatus = await notifyPlatformAdminGranted({ admin, user: target, actor: req.platform.user });
+    res.status(201).json({ ...person(target), role: "admin", emailStatus });
   } catch (error) {
     if (error.code === 11000)
       return res

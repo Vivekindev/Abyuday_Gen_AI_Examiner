@@ -96,14 +96,27 @@ export default function Admin() {
     setBusy(true);
     setError("");
     try {
-      if (confirm.action === "grant")
-        await api.post("/admin/members", { email: confirm.email });
-      else if (confirm.action === "delete-assessment") await api.delete(`/admin/assessments/${encodeURIComponent(confirm.testID)}`);
-      else await api.delete(`/admin/members/${confirm.id}`);
-      toast.success(
+      let emailStatus;
+      if (confirm.action === "grant") {
+        const response = await api.post("/admin/members", { email: confirm.email });
+        emailStatus = response.data.emailStatus;
+      } else if (confirm.action === "delete-assessment") {
+        await api.delete(`/admin/assessments/${encodeURIComponent(confirm.testID)}`);
+      } else {
+        await api.delete(`/admin/members/${confirm.id}`);
+      }
+      const notify = ["disabled", "failed"].includes(emailStatus) ? toast.warning : toast.success;
+      notify(
         confirm.action === "grant"
           ? "Admin access granted"
           : confirm.action === "delete-assessment" ? "Assessment deleted" : "Admin access removed",
+        {
+          description: {
+            queued: `Email notification queued for ${confirm.email}.`,
+            disabled: "Email delivery is unavailable. Let this person know directly.",
+            failed: "The email notification couldn’t be queued. Let this person know directly.",
+          }[emailStatus],
+        },
       );
       setConfirm(null);
       setEmail("");

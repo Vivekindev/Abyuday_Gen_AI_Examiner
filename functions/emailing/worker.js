@@ -4,6 +4,7 @@ import Users from '../../models/usersData.js';
 import Team from '../../models/team.js';
 import TeamInvite from '../../models/teamInvite.js';
 import Tasks from '../../models/pendingTasksDB.js';
+import PlatformAdmin from '../../models/platformAdmin.js';
 import { applicationUrl, createMailTransport, emailEnabled } from './transport.js';
 import { renderNotification } from './templates.js';
 import { notifyGeneration } from './notifications.js';
@@ -17,6 +18,11 @@ async function stillRelevant(mail) {
   if (mail.user) {
     const user = await Users.findById(mail.user).select('email emailPreferences');
     if (!user || user.email !== mail.email || user.emailPreferences?.[mail.category] === false) return false;
+  }
+  if (mail.event === 'platform.admin_granted') {
+    if (!mail.platformAdmin || !mail.user) return false;
+    const grant = await PlatformAdmin.exists({ _id: mail.platformAdmin, user: mail.user });
+    if (!grant) return false;
   }
   if (mail.team) {
     const team = await Team.findOne({ _id: mail.team, deletingAt: null });
